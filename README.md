@@ -71,3 +71,16 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## API Documentation
+
+Interactive API docs are generated from `supabase/api-schema.json` using Redoc.
+Open them locally with any static server, for example:
+
+```sh
+# from the project root
+python3 -m http.server --directory supabase 5005
+# then visit http://localhost:5005/api-docs.html
+```
+
+The documentation will load `api-schema.json` and render it using Redoc.
