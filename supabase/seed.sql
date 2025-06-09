@@ -30,3 +30,8 @@ SELECT r.id, p.id
 FROM roles r
 CROSS JOIN permissions p
 WHERE r.name = 'organizer';
+
+-- Basic status codes
+INSERT INTO status_codes (context, code, label) VALUES
+  ('generic', 'active', 'Active'),
+  ('generic', 'inactive', 'Inactive');

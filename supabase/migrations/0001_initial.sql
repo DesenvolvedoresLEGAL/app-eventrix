@@ -64,7 +64,7 @@ CREATE TABLE venues (
     capacity integer,
     location text,
     amenities text,
-    status text,
+    status_id integer REFERENCES status_codes(id),
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -96,7 +96,7 @@ CREATE TABLE lectures (
     description text,
     start_time timestamptz,
     end_time timestamptz,
-    status text,
+    status_id integer REFERENCES status_codes(id),
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -119,6 +119,7 @@ CREATE TABLE activities (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_activities_event_id ON activities(event_id);
+CREATE INDEX idx_activities_start_time ON activities(start_time);
 
 -- Table: exhibitors
 CREATE TABLE exhibitors (
@@ -127,7 +128,7 @@ CREATE TABLE exhibitors (
     name text NOT NULL,
     category text,
     stand text,
-    status text,
+    status_id integer REFERENCES status_codes(id),
     email text,
     phone text,
     created_at timestamptz NOT NULL DEFAULT now(),
@@ -146,7 +147,7 @@ CREATE TABLE suppliers (
     phone text,
     services text,
     rating numeric,
-    status text,
+    status_id integer REFERENCES status_codes(id),
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -155,15 +156,15 @@ CREATE INDEX idx_suppliers_event_id ON suppliers(event_id);
 -- Table: visitors
 CREATE TABLE visitors (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id uuid NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-    user_id uuid REFERENCES auth.users(id),
+    event_id uuid NOT NULL CONSTRAINT fk_visitors_event REFERENCES events(id) ON DELETE CASCADE,
+    user_id uuid CONSTRAINT fk_visitors_user REFERENCES auth.users(id),
     name text NOT NULL,
     email text,
     phone text,
     company text,
     position text,
     registered_at timestamptz DEFAULT now(),
-    status text,
+    status_id integer REFERENCES status_codes(id),
     checked_in boolean DEFAULT false,
     qr_code text,
     updated_at timestamptz NOT NULL DEFAULT now()
@@ -205,14 +206,14 @@ CREATE TABLE role_permissions (
 -- Table: staff
 CREATE TABLE staff (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    event_id uuid REFERENCES events(id) ON DELETE CASCADE,
+    user_id uuid NOT NULL CONSTRAINT fk_staff_user REFERENCES auth.users(id) ON DELETE CASCADE,
+    event_id uuid CONSTRAINT fk_staff_event REFERENCES events(id) ON DELETE CASCADE,
     name text NOT NULL,
     department text,
     email text,
     phone text,
-    status text,
-    role_id uuid REFERENCES roles(id),
+    status_id integer REFERENCES status_codes(id),
+    role_id uuid CONSTRAINT fk_staff_role REFERENCES roles(id),
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT staff_user_event_unique UNIQUE (user_id, event_id)
@@ -253,7 +254,7 @@ CREATE TABLE checklists (
     category text,
     priority text,
     due_date date,
-    status text,
+    status_id integer REFERENCES status_codes(id),
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -273,6 +274,7 @@ CREATE TABLE tasks (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_tasks_assignee_id ON tasks(assignee_id);
+CREATE INDEX idx_tasks_due_date ON tasks(due_date);
 
 -- Table: checkins
 CREATE TABLE checkins (
@@ -284,7 +286,7 @@ CREATE TABLE checkins (
     checkout_at timestamptz,
     method text,
     device text,
-    status text,
+    status_id integer REFERENCES status_codes(id),
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -294,7 +296,7 @@ CREATE INDEX idx_checkins_checkin_at ON checkins(checkin_at);
 -- Table: access_logs
 CREATE TABLE access_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id uuid CONSTRAINT fk_webhooks_user REFERENCES auth.users(id) ON DELETE CASCADE,
     event_id uuid REFERENCES events(id) ON DELETE CASCADE,
     action text,
     ip text,
@@ -307,7 +309,7 @@ CREATE INDEX idx_access_logs_event_id ON access_logs(event_id);
 -- Table: api_keys
 CREATE TABLE api_keys (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id uuid CONSTRAINT fk_api_keys_user REFERENCES auth.users(id) ON DELETE CASCADE,
     name text,
     api_key text NOT NULL UNIQUE,
     created_at timestamptz NOT NULL DEFAULT now(),
@@ -334,13 +336,14 @@ CREATE TABLE api_endpoints (
 -- Table: api_logs
 CREATE TABLE api_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    api_key_id uuid REFERENCES api_keys(id) ON DELETE SET NULL,
-    endpoint_id uuid REFERENCES api_endpoints(id) ON DELETE SET NULL,
+    api_key_id uuid CONSTRAINT fk_api_logs_key REFERENCES api_keys(id) ON DELETE SET NULL,
+    endpoint_id uuid CONSTRAINT fk_api_logs_endpoint REFERENCES api_endpoints(id) ON DELETE SET NULL,
     timestamp timestamptz DEFAULT now(),
     response_code integer,
     response_time integer
 );
 CREATE INDEX idx_api_logs_api_key ON api_logs(api_key_id);
+CREATE INDEX idx_api_logs_endpoint_time ON api_logs(endpoint_id, timestamp);
 
 -- Table: webhooks
 CREATE TABLE webhooks (
@@ -348,7 +351,7 @@ CREATE TABLE webhooks (
     user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
     url text,
     events_subscribed text[],
-    status text,
+    status_id integer REFERENCES status_codes(id),
     last_delivery timestamptz,
     last_success timestamptz,
     created_at timestamptz NOT NULL DEFAULT now(),
@@ -396,7 +399,7 @@ CREATE INDEX idx_dynamic_pricing_event_id ON dynamic_pricing_rules(event_id);
 CREATE TABLE landing_pages (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id uuid REFERENCES events(id) ON DELETE CASCADE,
-    slug text UNIQUE,
+    slug text,
     title text,
     content text,
     visits integer DEFAULT 0,
@@ -405,6 +408,7 @@ CREATE TABLE landing_pages (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_landing_pages_event_id ON landing_pages(event_id);
+CREATE UNIQUE INDEX uq_landing_pages_event_slug ON landing_pages(event_id, slug);
 
 -- Table: email_campaigns
 CREATE TABLE email_campaigns (
@@ -419,6 +423,7 @@ CREATE TABLE email_campaigns (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_email_campaigns_event_id ON email_campaigns(event_id);
+CREATE INDEX idx_email_campaigns_sent_at ON email_campaigns(sent_at);
 
 -- Table: entity_logs
 CREATE TABLE entity_logs (
