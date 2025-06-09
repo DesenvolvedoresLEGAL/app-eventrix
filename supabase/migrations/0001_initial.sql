@@ -18,6 +18,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger function to log entity changes
+CREATE OR REPLACE FUNCTION log_entity_change()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO entity_logs (entity_type, entity_id, action, performed_by, old_value, new_value)
+  VALUES (
+    TG_TABLE_NAME,
+    COALESCE(NEW.id, OLD.id),
+    TG_OP,
+    auth.uid(),
+    to_jsonb(OLD),
+    to_jsonb(NEW)
+  );
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
 
 -- Table: events
 CREATE TABLE events (
@@ -333,7 +350,9 @@ CREATE TABLE webhooks (
     events_subscribed text[],
     status text,
     last_delivery timestamptz,
-    last_success timestamptz
+    last_success timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_webhooks_user_id ON webhooks(user_id);
 CREATE INDEX idx_webhooks_status ON webhooks(status);
@@ -439,3 +458,11 @@ CREATE TRIGGER trg_dynamic_pricing_rules_updated BEFORE UPDATE ON dynamic_pricin
 CREATE TRIGGER trg_landing_pages_updated BEFORE UPDATE ON landing_pages FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_email_campaigns_updated BEFORE UPDATE ON email_campaigns FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_entity_logs_updated BEFORE UPDATE ON entity_logs FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Logging triggers
+CREATE TRIGGER trg_events_log AFTER INSERT OR UPDATE OR DELETE ON events
+  FOR EACH ROW EXECUTE FUNCTION log_entity_change();
+CREATE TRIGGER trg_lectures_log AFTER INSERT OR UPDATE OR DELETE ON lectures
+  FOR EACH ROW EXECUTE FUNCTION log_entity_change();
+CREATE TRIGGER trg_visitors_log AFTER INSERT OR UPDATE OR DELETE ON visitors
+  FOR EACH ROW EXECUTE FUNCTION log_entity_change();
