@@ -541,7 +541,6 @@ CREATE TABLE legal_documents (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_legal_documents_event_id ON legal_documents(event_id);
-
 -- Table: entity_logs
 CREATE TABLE entity_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -584,6 +583,7 @@ CREATE TRIGGER trg_notifications_updated BEFORE UPDATE ON notifications FOR EACH
 CREATE TRIGGER trg_document_validations_updated BEFORE UPDATE ON document_validations FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_heatmap_data_updated BEFORE UPDATE ON heatmap_data FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_legal_documents_updated BEFORE UPDATE ON legal_documents FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 CREATE TRIGGER trg_email_campaigns_updated BEFORE UPDATE ON email_campaigns FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_entity_logs_updated BEFORE UPDATE ON entity_logs FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 

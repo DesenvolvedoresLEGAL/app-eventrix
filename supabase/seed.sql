@@ -12,7 +12,7 @@ INSERT INTO modules (name) VALUES
     ('events'),
     ('marketing'),
     ('integrations');
-
+    
 -- Example subscription plans
 INSERT INTO plans (id, name, billing_cycle, price, features, popular)
 VALUES
@@ -24,7 +24,6 @@ INSERT INTO integrations (id, name, description, category)
 VALUES
   (gen_random_uuid(), 'Zapier', 'Automation platform', 'automation'),
   (gen_random_uuid(), 'Stripe', 'Payments integration', 'payments');
-
 -- Insert permissions with module mapping
 INSERT INTO permissions (id, name, description, module_id)
 SELECT gen_random_uuid(), perm, initcap(perm) || ' permission', m.id
