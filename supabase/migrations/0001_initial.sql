@@ -498,7 +498,7 @@ CREATE TABLE notifications (
     title text,
     body text,
     read boolean DEFAULT false,
-    sent_at timestamptz DEFAULT now(),
+    sent_at timestamptz,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -516,6 +516,7 @@ CREATE TABLE document_validations (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_document_validations_event_id ON document_validations(event_id);
+CREATE INDEX idx_document_validations_user_id ON document_validations(user_id);
 
 -- Table: heatmap_data
 CREATE TABLE heatmap_data (
@@ -528,6 +529,7 @@ CREATE TABLE heatmap_data (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_heatmap_event_id ON heatmap_data(event_id);
+CREATE INDEX idx_heatmap_visitor_id ON heatmap_data(visitor_id);
 
 -- Table: legal_documents
 CREATE TABLE legal_documents (
@@ -541,6 +543,7 @@ CREATE TABLE legal_documents (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_legal_documents_event_id ON legal_documents(event_id);
+CREATE INDEX idx_legal_documents_user_id ON legal_documents(user_id);
 -- Table: entity_logs
 CREATE TABLE entity_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -584,6 +587,18 @@ CREATE TRIGGER trg_document_validations_updated BEFORE UPDATE ON document_valida
 CREATE TRIGGER trg_heatmap_data_updated BEFORE UPDATE ON heatmap_data FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_legal_documents_updated BEFORE UPDATE ON legal_documents FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+CREATE TRIGGER trg_plans_log AFTER INSERT OR UPDATE OR DELETE ON plans
+  FOR EACH ROW EXECUTE FUNCTION log_entity_change();
+CREATE TRIGGER trg_integrations_log AFTER INSERT OR UPDATE OR DELETE ON integrations
+  FOR EACH ROW EXECUTE FUNCTION log_entity_change();
+CREATE TRIGGER trg_notifications_log AFTER INSERT OR UPDATE OR DELETE ON notifications
+  FOR EACH ROW EXECUTE FUNCTION log_entity_change();
+CREATE TRIGGER trg_document_validations_log AFTER INSERT OR UPDATE OR DELETE ON document_validations
+  FOR EACH ROW EXECUTE FUNCTION log_entity_change();
+CREATE TRIGGER trg_heatmap_data_log AFTER INSERT OR UPDATE OR DELETE ON heatmap_data
+  FOR EACH ROW EXECUTE FUNCTION log_entity_change();
+CREATE TRIGGER trg_legal_documents_log AFTER INSERT OR UPDATE OR DELETE ON legal_documents
+  FOR EACH ROW EXECUTE FUNCTION log_entity_change();
 CREATE TRIGGER trg_email_campaigns_updated BEFORE UPDATE ON email_campaigns FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_entity_logs_updated BEFORE UPDATE ON entity_logs FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
