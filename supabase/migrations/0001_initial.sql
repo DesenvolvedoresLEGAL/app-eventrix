@@ -467,6 +467,81 @@ CREATE TABLE email_campaigns (
 CREATE INDEX idx_email_campaigns_event_id ON email_campaigns(event_id);
 CREATE INDEX idx_email_campaigns_sent_at ON email_campaigns(sent_at);
 
+-- Table: plans
+CREATE TABLE plans (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    name text NOT NULL,
+    billing_cycle text NOT NULL,
+    price numeric NOT NULL,
+    features text[],
+    popular boolean DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Table: integrations
+CREATE TABLE integrations (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    name text NOT NULL,
+    description text,
+    icon_url text,
+    category text,
+    enabled boolean DEFAULT true,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Table: notifications
+CREATE TABLE notifications (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    title text,
+    body text,
+    read boolean DEFAULT false,
+    sent_at timestamptz DEFAULT now(),
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+
+-- Table: document_validations
+CREATE TABLE document_validations (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+    event_id uuid REFERENCES events(id) ON DELETE CASCADE,
+    document_url text,
+    result jsonb,
+    status text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_document_validations_event_id ON document_validations(event_id);
+
+-- Table: heatmap_data
+CREATE TABLE heatmap_data (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id uuid REFERENCES events(id) ON DELETE CASCADE,
+    visitor_id uuid REFERENCES visitors(id) ON DELETE SET NULL,
+    area text,
+    captured_at timestamptz NOT NULL DEFAULT now(),
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_heatmap_event_id ON heatmap_data(event_id);
+
+-- Table: legal_documents
+CREATE TABLE legal_documents (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id uuid REFERENCES events(id) ON DELETE CASCADE,
+    user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+    title text,
+    content text,
+    ai_summary text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_legal_documents_event_id ON legal_documents(event_id);
+
 -- Table: entity_logs
 CREATE TABLE entity_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -503,6 +578,12 @@ CREATE TRIGGER trg_webhook_subscriptions_updated BEFORE UPDATE ON webhook_subscr
 CREATE TRIGGER trg_ai_interactions_updated BEFORE UPDATE ON ai_interactions FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_dynamic_pricing_rules_updated BEFORE UPDATE ON dynamic_pricing_rules FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_landing_pages_updated BEFORE UPDATE ON landing_pages FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_plans_updated BEFORE UPDATE ON plans FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_integrations_updated BEFORE UPDATE ON integrations FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_notifications_updated BEFORE UPDATE ON notifications FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_document_validations_updated BEFORE UPDATE ON document_validations FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_heatmap_data_updated BEFORE UPDATE ON heatmap_data FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_legal_documents_updated BEFORE UPDATE ON legal_documents FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_email_campaigns_updated BEFORE UPDATE ON email_campaigns FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_entity_logs_updated BEFORE UPDATE ON entity_logs FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 

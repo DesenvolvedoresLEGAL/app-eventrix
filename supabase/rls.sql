@@ -17,6 +17,12 @@ ALTER TABLE landing_pages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dynamic_pricing_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_interactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE integrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE document_validations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE heatmap_data ENABLE ROW LEVEL SECURITY;
+ALTER TABLE legal_documents ENABLE ROW LEVEL SECURITY;
 
 -- Policy: staff can view events they belong to
 CREATE POLICY "staff_select_event" ON events
@@ -388,6 +394,57 @@ CREATE POLICY "organizer_manage_ai_interactions" ON ai_interactions
       JOIN roles ON roles.id = staff.role_id
       WHERE staff.user_id = auth.uid()
         AND staff.event_id = ai_interactions.event_id
+        AND roles.name = 'organizer'
+    )
+  );
+
+-- Notifications policies
+CREATE POLICY "user_select_notifications" ON notifications
+  FOR SELECT USING (
+    notifications.user_id = auth.uid()
+  );
+
+CREATE POLICY "user_manage_notifications" ON notifications
+  FOR ALL USING (
+    notifications.user_id = auth.uid()
+  ) WITH CHECK (
+    notifications.user_id = auth.uid()
+  );
+
+-- Document validations policies
+CREATE POLICY "user_manage_document_validations" ON document_validations
+  FOR ALL USING (
+    document_validations.user_id = auth.uid()
+  ) WITH CHECK (
+    document_validations.user_id = auth.uid()
+  );
+
+-- Heatmap data policies
+CREATE POLICY "staff_select_heatmap" ON heatmap_data
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM staff
+      WHERE staff.user_id = auth.uid()
+        AND staff.event_id = heatmap_data.event_id
+    )
+  );
+
+-- Legal documents policies
+CREATE POLICY "organizer_manage_legal_docs" ON legal_documents
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM staff
+      JOIN roles ON roles.id = staff.role_id
+      WHERE staff.user_id = auth.uid()
+        AND staff.event_id = legal_documents.event_id
+        AND roles.name = 'organizer'
+    )
+  ) WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM staff
+      JOIN roles ON roles.id = staff.role_id
+      WHERE staff.user_id = auth.uid()
+        AND staff.event_id = legal_documents.event_id
         AND roles.name = 'organizer'
     )
   );
