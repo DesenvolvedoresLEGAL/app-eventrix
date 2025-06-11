@@ -201,6 +201,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const redirectUrl = `${window.location.origin}/dashboard`;
       
+      // Log dos dados que serão enviados
+      console.log('Dados de registro sendo enviados:', {
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        companyName: userData.companyName,
+        position: userData.position,
+        phone: userData.phone
+      });
+      
       const { data, error } = await supabase.auth.signUp({
         email: userData.email.trim().toLowerCase(),
         password: userData.password,
@@ -218,6 +228,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (error) {
+        console.error('Erro no registro:', error);
         await logAuthEvent('register_failed');
         
         if (error.message.includes('already registered')) {
@@ -230,6 +241,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       if (data.user) {
+        console.log('Usuário criado com sucesso:', data.user.id);
+        console.log('Metadados enviados:', data.user.user_metadata);
+        
         // Log successful registration
         await logAuthEvent('register', data.user.id);
         
@@ -244,6 +258,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
     } catch (error: any) {
+      console.error('Erro completo no registro:', error);
       toast({
         title: "Erro no cadastro",
         description: error.message,
