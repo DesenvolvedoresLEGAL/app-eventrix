@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 
 interface User {
@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // Fetch user profile and role
-  const fetchUserProfile = async (supabaseUser: User) => {
+  const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
       // Get profile data
       const { data: profile } = await supabase
@@ -124,8 +124,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           // Log successful auth events
           if (event === 'SIGNED_IN') {
             await logAuthEvent('login', session.user.id);
-          } else if (event === 'SIGNED_UP') {
-            await logAuthEvent('register', session.user.id);
+          } else if (event === 'TOKEN_REFRESHED') {
+            // Handle token refresh, but don't log as a new login
+            console.log('Token refreshed for user:', session.user.email);
           }
         } else {
           setUser(null);
@@ -229,6 +230,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       if (data.user) {
+        // Log successful registration
+        await logAuthEvent('register', data.user.id);
+        
         toast({
           title: "Conta criada com sucesso!",
           description: "Verifique seu email para confirmar a conta",
