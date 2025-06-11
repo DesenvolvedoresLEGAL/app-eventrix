@@ -2,22 +2,47 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Zap } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const { login, resetPassword, loading } = useAuth();
   const navigate = useNavigate();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     
-    // Simulate authentication
-    setTimeout(() => {
-      setLoading(false);
-      navigate('/dashboard');
-    }, 1500);
+    if (!email.trim() || !password.trim()) {
+      return;
+    }
+    
+    try {
+      await login(email, password);
+    } catch (error) {
+      // Error handling is done in the AuthContext
+      console.error('Login error:', error);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      alert('Por favor, digite seu email primeiro');
+      return;
+    }
+    
+    setIsResettingPassword(true);
+    
+    try {
+      await resetPassword(email);
+    } catch (error) {
+      console.error('Password reset error:', error);
+    } finally {
+      setIsResettingPassword(false);
+    }
   };
   
   return (
@@ -91,13 +116,21 @@ const Login = () => {
                   className="tech-input w-full"
                   placeholder="seu@email.com"
                   required
+                  disabled={loading}
                 />
               </div>
               
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label htmlFor="password" className="block text-sm font-semibold">Senha</label>
-                  <a href="#" className="text-sm text-primary hover:text-primary/80 font-medium transition-colors">Esqueceu?</a>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={isResettingPassword || !email.trim()}
+                    className="text-sm text-primary hover:text-primary/80 font-medium transition-colors disabled:opacity-50"
+                  >
+                    {isResettingPassword ? 'Enviando...' : 'Esqueceu?'}
+                  </button>
                 </div>
                 <input
                   id="password"
@@ -107,6 +140,7 @@ const Login = () => {
                   className="tech-input w-full"
                   placeholder="********"
                   required
+                  disabled={loading}
                 />
               </div>
               

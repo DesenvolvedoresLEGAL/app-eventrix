@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/context/AuthContext';
 
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const { register, loading } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -45,13 +46,59 @@ const Register = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = () => {
-    setLoading(true);
-    // Simular criação de conta
-    setTimeout(() => {
-      setLoading(false);
-      navigate('/dashboard');
-    }, 2000);
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        return !!(
+          formData.firstName.trim() &&
+          formData.lastName.trim() &&
+          formData.email.trim() &&
+          formData.password.trim() &&
+          formData.confirmPassword.trim() &&
+          formData.password === formData.confirmPassword &&
+          formData.password.length >= 6
+        );
+      case 2:
+        return !!(
+          formData.companyName.trim() &&
+          formData.companySize &&
+          formData.position.trim()
+        );
+      case 3:
+        return !!(
+          formData.eventTypes &&
+          formData.eventsPerYear &&
+          formData.avgVisitors
+        );
+      default:
+        return false;
+    }
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      nextStep();
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!validateStep(3)) {
+      return;
+    }
+
+    try {
+      await register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        companyName: formData.companyName,
+        position: formData.position,
+        phone: formData.phone
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+    }
   };
 
   const renderStep = () => {
@@ -74,6 +121,7 @@ const Register = () => {
                   value={formData.firstName}
                   onChange={(e) => updateFormData('firstName', e.target.value)}
                   placeholder="Seu nome"
+                  disabled={loading}
                 />
               </div>
               <div>
@@ -82,6 +130,7 @@ const Register = () => {
                   value={formData.lastName}
                   onChange={(e) => updateFormData('lastName', e.target.value)}
                   placeholder="Seu sobrenome"
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -93,6 +142,7 @@ const Register = () => {
                 value={formData.email}
                 onChange={(e) => updateFormData('email', e.target.value)}
                 placeholder="seu@email.com"
+                disabled={loading}
               />
             </div>
 
@@ -102,6 +152,7 @@ const Register = () => {
                 value={formData.phone}
                 onChange={(e) => updateFormData('phone', e.target.value)}
                 placeholder="(11) 99999-9999"
+                disabled={loading}
               />
             </div>
 
@@ -111,7 +162,8 @@ const Register = () => {
                 type="password"
                 value={formData.password}
                 onChange={(e) => updateFormData('password', e.target.value)}
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínimo 6 caracteres"
+                disabled={loading}
               />
             </div>
 
@@ -122,7 +174,11 @@ const Register = () => {
                 value={formData.confirmPassword}
                 onChange={(e) => updateFormData('confirmPassword', e.target.value)}
                 placeholder="Digite a senha novamente"
+                disabled={loading}
               />
+              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                <p className="text-sm text-red-500 mt-1">As senhas não coincidem</p>
+              )}
             </div>
           </div>
         );
@@ -144,12 +200,13 @@ const Register = () => {
                 value={formData.companyName}
                 onChange={(e) => updateFormData('companyName', e.target.value)}
                 placeholder="Nome da sua empresa"
+                disabled={loading}
               />
             </div>
 
             <div>
               <Label>Tamanho da Empresa *</Label>
-              <Select onValueChange={(value) => updateFormData('companySize', value)}>
+              <Select onValueChange={(value) => updateFormData('companySize', value)} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tamanho" />
                 </SelectTrigger>
@@ -169,6 +226,7 @@ const Register = () => {
                 value={formData.position}
                 onChange={(e) => updateFormData('position', e.target.value)}
                 placeholder="Ex: Gerente de Eventos"
+                disabled={loading}
               />
             </div>
 
@@ -178,6 +236,7 @@ const Register = () => {
                 value={formData.website}
                 onChange={(e) => updateFormData('website', e.target.value)}
                 placeholder="https://suaempresa.com"
+                disabled={loading}
               />
             </div>
           </div>
@@ -196,7 +255,7 @@ const Register = () => {
 
             <div>
               <Label>Tipos de Eventos *</Label>
-              <Select onValueChange={(value) => updateFormData('eventTypes', value)}>
+              <Select onValueChange={(value) => updateFormData('eventTypes', value)} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo principal" />
                 </SelectTrigger>
@@ -214,7 +273,7 @@ const Register = () => {
 
             <div>
               <Label>Eventos por Ano *</Label>
-              <Select onValueChange={(value) => updateFormData('eventsPerYear', value)}>
+              <Select onValueChange={(value) => updateFormData('eventsPerYear', value)} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue placeholder="Quantos eventos você organiza?" />
                 </SelectTrigger>
@@ -229,7 +288,7 @@ const Register = () => {
 
             <div>
               <Label>Média de Visitantes *</Label>
-              <Select onValueChange={(value) => updateFormData('avgVisitors', value)}>
+              <Select onValueChange={(value) => updateFormData('avgVisitors', value)} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue placeholder="Média de participantes por evento" />
                 </SelectTrigger>
@@ -315,7 +374,12 @@ const Register = () => {
 
             <div className="flex justify-between mt-8 gap-4">
               {currentStep > 1 && (
-                <Button variant="outline" onClick={prevStep} className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={prevStep} 
+                  className="flex items-center gap-2"
+                  disabled={loading}
+                >
                   <ArrowLeft size={16} />
                   Voltar
                 </Button>
@@ -324,14 +388,18 @@ const Register = () => {
               <div className="flex-1" />
 
               {currentStep < 3 ? (
-                <Button onClick={nextStep} className="tech-button flex items-center gap-2">
+                <Button 
+                  onClick={handleNext} 
+                  className="tech-button flex items-center gap-2"
+                  disabled={!validateStep(currentStep) || loading}
+                >
                   Próximo
                   <ArrowRight size={16} />
                 </Button>
               ) : (
                 <Button 
                   onClick={handleSubmit} 
-                  disabled={loading}
+                  disabled={!validateStep(3) || loading}
                   className="tech-button flex items-center gap-2"
                 >
                   {loading ? 'Criando conta...' : 'Criar Conta'}
