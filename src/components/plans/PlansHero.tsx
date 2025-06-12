@@ -21,19 +21,17 @@ const PlansHero: React.FC<PlansHeroProps> = ({ billingCycle, setBillingCycle }) 
     <div className="bg-background py-6 md:py-12 px-4 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
 
       {/* Back to Login Button - Mobile: top left, Desktop: top right */}
-      <div className="flex flex-row justify-start w-fit mb-4 ml-0 md:ml-6 lg:ml-6 xl:ml-6 md:mb-6">
-        <div className="flex justify-start md:justify-end">
+      <div className="w-fit mb-4 ml-0 md:ml-6 lg:ml-6 xl:ml-6 md:mb-6">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleBackToLogin}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors min-h-[44px] px-3 py-2"
+            className="flex flex-row items-center gap-2 text-muted-foreground hover:text-foreground transition-colors min-h-[44px] px-3 py-2"
             aria-label="Voltar para a página de login"
           >
             <ArrowLeft size={16} />
             <span className="text-sm font-medium">Voltar ao login</span>
           </Button>
-        </div>
       </div>
       {/* Billing Toggle Section - Centered */}
       <div className="text-center w-full mr-0 md:mr-6 lg:mr12 xl:mr-12 mb-6 md:mb-8 col-span-4">
@@ -61,9 +59,11 @@ const PlansHero: React.FC<PlansHeroProps> = ({ billingCycle, setBillingCycle }) 
               }`}
             >
               Cobrança Anual
+              {billingCycle !== 'annual' ?
               <Badge className="bg-secondary text-white border-0 text-xs">
                 Economize 25%
-              </Badge>
+              </Badge> : ''
+            }
             </button>
           </div>
           
