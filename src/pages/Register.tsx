@@ -98,6 +98,8 @@ const Register = () => {
       });
     } catch (error) {
       console.error('Registration error:', error);
+    } finally {
+      navigate("/login");
     }
   };
 
