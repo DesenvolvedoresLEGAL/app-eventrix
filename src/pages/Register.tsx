@@ -82,7 +82,10 @@ const Register = () => {
   };
 
   const handleSubmit = async () => {
+    let successfullyRegister: boolean = true;
+
     if (!validateStep(3)) {
+      successfullyRegister = false;
       return;
     }
 
@@ -97,9 +100,12 @@ const Register = () => {
         phone: formData.phone
       });
     } catch (error) {
+      successfullyRegister = false;
       console.error('Registration error:', error);
     } finally {
-      navigate("/login");
+      if (successfullyRegister) {
+        navigate("/login");
+      }
     }
   };
 
