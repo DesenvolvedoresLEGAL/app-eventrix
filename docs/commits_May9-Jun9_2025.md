@@ -1,0 +1,66 @@
+# Commit History (May 9 - Jun 9, 2025)
+
+The following is a chronological list of commits between May 9 and June 9, 2025. Each entry shows the short hash, date, author, and commit message.
+
+- 6c65f28 (2025-05-09) gpt-engineer-app[bot]: Use tech stack vite_react_shadcn_ts
+- 3b16ca0 (2025-05-09) gpt-engineer-app[bot]: feat: Implement HUBX platform
+- a6bb348 (2025-06-03) gpt-engineer-app[bot]: Rename HUBX™ to Eventrix™
+- 96304e0 (2025-06-03) gpt-engineer-app[bot]: Refactor: Implement Eventrix™ app navigation menu
+- 27ac6fc (2025-06-03) gpt-engineer-app[bot]: Remove sidebar scrollbar and redundant "New Event" button
+- 7f1d49e (2025-06-03) gpt-engineer-app[bot]: Fix: Sidebar scroll behavior
+- 704344d (2025-06-04) gpt-engineer-app[bot]: feat: Implement new event onboarding wizard
+- 4157aef (2025-06-04) gpt-engineer-app[bot]: Fix: React Query Provider error
+- 92377ec (2025-06-04) gpt-engineer-app[bot]: feat: Implement visitor, staff, and supplier pages
+- 9c85ece (2025-06-04) gpt-engineer-app[bot]: feat: Add Permissions/Profiles and Agenda pages
+- f73d9f3 (2025-06-04) gpt-engineer-app[bot]: feat: Create checklist, team tasks, QR/badge, check-in, and access history pages
+- d0caa1a (2025-06-04) gpt-engineer-app[bot]: Fix: Import missing components in App.tsx
+- 19ae356 (2025-06-04) gpt-engineer-app[bot]: Refactor: Update menu and create new pages
+- 323fdcd (2025-06-04) gpt-engineer-app[bot]: Fix: Resolve duplicate 'Link' identifier
+- 34018a9 (2025-06-04) gpt-engineer-app[bot]: feat: Implement Analytics pages and submenus
+- 32801ab (2025-06-04) gpt-engineer-app[bot]: Fix: Reports page import error
+- 1c70fb9 (2025-06-04) gpt-engineer-app[bot]: feat: Create Analytics, Integrations, and AI pages
+- 07e5cf6 (2025-06-05) gpt-engineer-app[bot]: Fix: Resolve runtime error with useEffect
+- 74d8967 (2025-06-05) gpt-engineer-app[bot]: Fix type errors and missing imports
+- eee14ee (2025-06-05) gpt-engineer-app[bot]: Fix LegalAI.tsx errors
+- f98a45d (2025-06-05) gpt-engineer-app[bot]: Refactor: Implement LEGAL AI branding and pages
+- f403771 (2025-06-05) gpt-engineer-app[bot]: Refactor: Apply minimal future tech style
+- 569a28f (2025-06-05) gpt-engineer-app[bot]: Fix: Improve sidebar and main page readability
+- 7f62b71 (2025-06-05) gpt-engineer-app[bot]: Fix: Sidebar scroll issue
+- d5579a9 (2025-06-05) gpt-engineer-app[bot]: Refactor: Improve sidebar UX/UI
+- 75624a6 (2025-06-05) gpt-engineer-app[bot]: Fix: Restore menu items and apply visual identity
+- 8446d36 (2025-06-05) gpt-engineer-app[bot]: Fix: Resolve 'Star' icon import error
+- a7a690b (2025-06-05) gpt-engineer-app[bot]: Refactor: Implement sidebar with accordion and menu structure
+- 4b7a956 (2025-06-05) gpt-engineer-app[bot]: Fix: Import PresentationChart from lucide-react
+- 30fe2c5 (2025-06-05) gpt-engineer-app[bot]: Refactor: Sidebar component into smaller files
+- 03f2b22 (2025-06-05) gpt-engineer-app[bot]: feat: Add "Sair" button to sidebar footer
+- f80ae0c (2025-06-05) gpt-engineer-app[bot]: Fix: Remove sidebar scrollbar
+- 597a4ef (2025-06-05) gpt-engineer-app[bot]: Fix: Logout button position and scrollbar issues
+- 1cddc2d (2025-06-05) gpt-engineer-app[bot]: Fix: Remove scrollbar from sidebar
+- a60aa50 (2025-06-05) gpt-engineer-app[bot]: Refactor: Apply dashboard visual identity to login page
+- 8124a35 (2025-06-05) gpt-engineer-app[bot]: Add account creation and pricing pages
+- 362e618 (2025-06-05) gpt-engineer-app[bot]: Fix: Improve plans page design
+- 405da8a (2025-06-05) gpt-engineer-app[bot]: Refactor: Split Plans.tsx into smaller components
+- 93d63d6 (2025-06-05) gpt-engineer-app[bot]: Fix: Plans page not updating
+- bdc79c3 (2025-06-05) gpt-engineer-app[bot]: Fix: Implement plan for plans and sidebar
+- 618e020 (2025-06-05) gpt-engineer-app[bot]: Fix: Sidebar should be fixed
+- 28f8c77 (2025-06-05) gpt-engineer-app[bot]: Fix plans page layout and sidebar footer
+- 0ef4178 (2025-06-06) gpt-engineer-app[bot]: Refactor pages to use DashboardLayout
+- 3f50367 (2025-06-06) gpt-engineer-app[bot]: Fix: Resolve casing conflict in import
+- 04ea1bb (2025-06-06) gpt-engineer-app[bot]: Refactor: Split API Management page into components
+- 54a68b5 (2025-06-06) gpt-engineer-app[bot]: Fix /integrations and /heatmap routes
+- 678c389 (2025-06-06) gpt-engineer-app[bot]: Implement hero section improvements
+- 57ccb57 (2025-06-06) gpt-engineer-app[bot]: Refactor: Implement Apollo-style plans page
+- 8d37a85 (2025-06-06) gpt-engineer-app[bot]: Code edited in Lovable Code Editor
+- 6ee81ba (2025-06-06) gpt-engineer-app[bot]: Code edited in Lovable Code Editor
+- 3906a6f (2025-06-06) gpt-engineer-app[bot]: Fix: Syntax error in PlansHero.tsx
+- 57518fe (2025-06-07) gpt-engineer-app[bot]: Refactor: Mobile-first adjustments
+- c1f8959 (2025-06-09) gpt-engineer-app[bot]: feat: Add plan comparison to /plans page
+- 404e11b (2025-06-09) Gustavo Macedo: refactor: alterando posição do PlanComparison em src/pages/Plans.tsx
+- 4a2d4ac (2025-06-09) gpt-engineer-app[bot]: Add "Voltar ao login" button
+- 80aab85 (2025-06-09) Gustavo Macedo: feat: adicionando botão de voltar à página de planos em src/components/plans/PlansHero.tsx
+- 856b5ac (2025-06-09) Gustavo Macedo: fix: mudando favicon.ico do projeto
+- 38cbbd9 (2025-06-09) Gustavo Macedo: Refine initial migration
+- bc3bd55 (2025-06-09) Gustavo Macedo: Add seed data, RLS policies and sample edge function
+- 21eb467 (2025-06-09) Gustavo Macedo: Add logging triggers and timestamps
+- a38f214 (2025-06-09) Gustavo Macedo: Refine migration with status references and extra indexes
+- 1ea0af4 (2025-06-09) Gustavo Macedo: Add interactive API docs viewer
