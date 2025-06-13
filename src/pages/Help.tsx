@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/layout/Dashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -69,7 +68,7 @@ const Help = () => {
   ];
 
   return (
-    <DashboardLayout title="Ajuda & Suporte">
+    
       <div className="space-y-8 legal-tech-grid min-h-full">
         {/* Header with LEGAL branding */}
         <div className="legal-card p-8 relative overflow-hidden">
@@ -305,7 +304,7 @@ const Help = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+    
   );
 };
 

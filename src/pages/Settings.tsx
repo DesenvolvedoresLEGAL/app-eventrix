@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/layout/Dashboard';
 import { User, Users, Lock, Globe, Webhook, Shield, Settings as SettingsIcon, Check, Zap } from 'lucide-react';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
   
   return (
-    <DashboardLayout title="Configurações">
+    
       <div className="space-y-8 legal-tech-grid min-h-full">
         {/* Header with LEGAL branding */}
         <div className="legal-card p-8 relative overflow-hidden">
@@ -392,7 +391,7 @@ const Settings = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    
   );
 };
 
