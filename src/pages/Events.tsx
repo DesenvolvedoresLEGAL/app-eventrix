@@ -7,7 +7,7 @@ const Events = () => {
   const [view, setView] = useState<'list' | 'create'>('list');
   
   return (
-    
+      <>
       {view === 'list' ? (
         <div>
           <EventsList />
@@ -31,7 +31,7 @@ const Events = () => {
           <CreateEvent />
         </div>
       )}
-    
+    </>
   );
 };
 
