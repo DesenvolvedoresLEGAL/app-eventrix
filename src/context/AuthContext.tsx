@@ -67,7 +67,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         p_user_id: userId || session?.user?.id,
         p_action: action,
         p_ip: ip,
-        p_device: device
+        p_device: device,
+        p_event_id: null
       });
     } catch (error) {
       console.error('Failed to log auth event:', error);
