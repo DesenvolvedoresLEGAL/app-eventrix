@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/layout/Dashboard';
 import EventsList from '@/components/events/EventsList';
 import CreateEvent from '@/components/events/CreateEvent';
 
@@ -8,7 +7,7 @@ const Events = () => {
   const [view, setView] = useState<'list' | 'create'>('list');
   
   return (
-    <DashboardLayout title={view === 'list' ? 'Eventos' : 'Criar Evento'}>
+    
       {view === 'list' ? (
         <div>
           <EventsList />
@@ -32,7 +31,7 @@ const Events = () => {
           <CreateEvent />
         </div>
       )}
-    </DashboardLayout>
+    
   );
 };
 

@@ -1,6 +1,5 @@
 
 import React from 'react';
-import DashboardLayout from '@/components/layout/Dashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +37,7 @@ const Reports = () => {
   ];
 
   return (
-    <DashboardLayout title="Relatórios">
+    
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -143,7 +142,7 @@ const Reports = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    
   );
 };
 

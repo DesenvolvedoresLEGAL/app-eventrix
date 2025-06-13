@@ -1,12 +1,11 @@
 
 import React from 'react';
-import DashboardLayout from '@/components/layout/Dashboard';
 import FacePass from '@/components/ai-tools/FacePass';
 import { QrCode, ChevronRight } from 'lucide-react';
 
 const Registration = () => {
   return (
-    <DashboardLayout title="Credenciamento">
+    
       <div className="space-y-6">
         <div>
           <h2>Credenciamento</h2>
@@ -130,7 +129,7 @@ const Registration = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    
   );
 };
 

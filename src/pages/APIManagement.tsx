@@ -3,7 +3,6 @@ import React from 'react';
 import { Key, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DashboardLayout from '@/components/layout/Dashboard';
 import ApiStats from '@/components/api-management/ApiStats';
 import ApiKeysSection from '@/components/api-management/ApiKeysSection';
 import EndpointsSection from '@/components/api-management/EndpointsSection';
@@ -150,7 +149,7 @@ events = response.json()`,
   };
 
   return (
-    <DashboardLayout title="Gerenciamento de APIs">
+    
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -204,7 +203,7 @@ events = response.json()`,
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+    
   );
 };
 

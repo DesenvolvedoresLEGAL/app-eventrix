@@ -1,11 +1,10 @@
 
 import React from 'react';
-import DashboardLayout from '@/components/layout/Dashboard';
 import LinkAI from '@/components/ai-tools/LinkAI';
 
 const CommunicationLinkAI = () => {
   return (
-    <DashboardLayout title="LinkAI">
+    
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold">LinkAI™</h2>
@@ -16,7 +15,7 @@ const CommunicationLinkAI = () => {
         
         <LinkAI />
       </div>
-    </DashboardLayout>
+    
   );
 };
 
