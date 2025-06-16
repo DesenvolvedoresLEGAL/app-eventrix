@@ -129,8 +129,18 @@ const NewEventWizard = () => {
     return validCategories.includes(category.toLowerCase()) ? category.toLowerCase() : 'other';
   };
 
+  // Helper function to safely convert time fields
+  const sanitizeTimeField = (timeValue: string): string | null => {
+    if (!timeValue || timeValue.trim() === '') {
+      return null;
+    }
+    return timeValue;
+  };
+
   const createEventMutation = useMutation({
     mutationFn: async (eventData: any) => {
+      console.log('🚀 Starting event creation with payload:', eventData);
+      
       // Insert event
       const { data: eventResult, error: eventError } = await supabase
         .from('events')
@@ -138,10 +148,16 @@ const NewEventWizard = () => {
         .select()
         .single();
 
-      if (eventError) throw eventError;
+      if (eventError) {
+        console.error('❌ Event creation failed:', eventError);
+        throw eventError;
+      }
+
+      console.log('✅ Event created successfully:', eventResult);
 
       // Insert organizer
       if (formData.organizerName && formData.primaryEmail) {
+        console.log('📝 Creating organizer...');
         const { error: organizerError } = await supabase
           .from('event_organizers')
           .insert({
@@ -152,11 +168,16 @@ const NewEventWizard = () => {
             company: formData.company || null,
           });
 
-        if (organizerError) throw organizerError;
+        if (organizerError) {
+          console.error('❌ Organizer creation failed:', organizerError);
+          throw organizerError;
+        }
+        console.log('✅ Organizer created successfully');
       }
 
       // Insert team members
       if (formData.teamMembers.length > 0) {
+        console.log('👥 Creating team members...');
         const teamInserts = formData.teamMembers.map(member => ({
           event_id: eventResult.id,
           name: member.name,
@@ -168,7 +189,11 @@ const NewEventWizard = () => {
           .from('event_team')
           .insert(teamInserts);
 
-        if (teamError) throw teamError;
+        if (teamError) {
+          console.error('❌ Team creation failed:', teamError);
+          throw teamError;
+        }
+        console.log('✅ Team created successfully');
       }
 
       return eventResult;
@@ -217,15 +242,19 @@ const NewEventWizard = () => {
     setIsDraft(true);
     
     try {
+      console.log('💾 Saving draft...');
+      
       // Upload files if present
       let logoUrl = null;
       let bannerUrl = null;
 
       if (formData.logo) {
+        console.log('📤 Uploading logo...');
         logoUrl = await uploadFile(formData.logo, 'event-logos', 'logos');
       }
 
       if (formData.banner) {
+        console.log('📤 Uploading banner...');
         bannerUrl = await uploadFile(formData.banner, 'event-banners', 'banners');
       }
 
@@ -236,8 +265,8 @@ const NewEventWizard = () => {
         category: formData.category ? mapCategory(formData.category) : null,
         start_date: formData.startDate?.toISOString().split('T')[0] || null,
         end_date: formData.endDate?.toISOString().split('T')[0] || null,
-        start_time: formData.startTime || null,
-        end_time: formData.endTime || null,
+        start_time: sanitizeTimeField(formData.startTime),
+        end_time: sanitizeTimeField(formData.endTime),
         official_website: formData.website || null,
         full_address: formData.address || null,
         city: formData.city || null,
@@ -261,6 +290,8 @@ const NewEventWizard = () => {
         accepted_eventrix_terms: formData.termsAccepted,
       };
 
+      console.log('📋 Draft payload before sending:', JSON.stringify(eventPayload, null, 2));
+      
       await createEventMutation.mutateAsync(eventPayload);
       
       toast({
@@ -268,6 +299,7 @@ const NewEventWizard = () => {
         description: "Suas informações foram salvas com sucesso.",
       });
     } catch (error: any) {
+      console.error('❌ Draft save failed:', error);
       toast({
         title: "Erro ao salvar rascunho",
         description: error.message || "Erro inesperado",
@@ -291,11 +323,23 @@ const NewEventWizard = () => {
     setIsLoading(true);
     
     try {
+      console.log('🎯 Creating final event...');
+      console.log('📊 Form data before processing:', {
+        name: formData.name,
+        description: formData.description,
+        category: formData.category,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        startDate: formData.startDate,
+        endDate: formData.endDate
+      });
+      
       // Upload files if present
       let logoUrl = null;
       let bannerUrl = null;
 
       if (formData.logo) {
+        console.log('📤 Uploading logo...');
         logoUrl = await uploadFile(formData.logo, 'event-logos', 'logos');
         if (!logoUrl) {
           throw new Error('Falha no upload do logo');
@@ -303,6 +347,7 @@ const NewEventWizard = () => {
       }
 
       if (formData.banner) {
+        console.log('📤 Uploading banner...');
         bannerUrl = await uploadFile(formData.banner, 'event-banners', 'banners');
       }
 
@@ -313,8 +358,8 @@ const NewEventWizard = () => {
         category: mapCategory(formData.category),
         start_date: formData.startDate?.toISOString().split('T')[0],
         end_date: formData.endDate?.toISOString().split('T')[0],
-        start_time: formData.startTime,
-        end_time: formData.endTime,
+        start_time: sanitizeTimeField(formData.startTime),
+        end_time: sanitizeTimeField(formData.endTime),
         official_website: formData.website || null,
         full_address: formData.address,
         city: formData.city,
@@ -338,6 +383,14 @@ const NewEventWizard = () => {
         accepted_eventrix_terms: formData.termsAccepted,
       };
 
+      console.log('📋 Final payload before sending:', JSON.stringify(eventPayload, null, 2));
+      console.log('🔍 Time fields specifically:', {
+        start_time: eventPayload.start_time,
+        end_time: eventPayload.end_time,
+        start_time_type: typeof eventPayload.start_time,
+        end_time_type: typeof eventPayload.end_time
+      });
+
       await createEventMutation.mutateAsync(eventPayload);
       
       toast({
@@ -351,6 +404,7 @@ const NewEventWizard = () => {
       setIsDraft(false);
       
     } catch (error: any) {
+      console.error('❌ Event creation failed:', error);
       toast({
         title: "Erro ao criar evento",
         description: error.message || "Erro inesperado ao criar o evento",
