@@ -4,6 +4,9 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useMutation } from '@tanstack/react-query';
+import { useFileUpload } from '@/hooks/useFileUpload';
 import BasicInfoStep from './wizard-steps/BasicInfoStep';
 import LocationStep from './wizard-steps/LocationStep';
 import VisualIdentityStep from './wizard-steps/VisualIdentityStep';
@@ -107,6 +110,70 @@ const NewEventWizard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const { toast } = useToast();
+  const { uploadFile, isUploading } = useFileUpload();
+
+  // Font style mapping to match database ENUMs
+  const mapFontStyle = (fontStyle: string) => {
+    const fontMapping: Record<string, string> = {
+      'modern': 'sans-serif',
+      'classic': 'serif',
+      'elegant': 'script',
+      'tech': 'monospace'
+    };
+    return fontMapping[fontStyle] || 'sans-serif';
+  };
+
+  // Event category mapping
+  const mapCategory = (category: string) => {
+    const validCategories = ['fair', 'congress', 'symposium', 'festival', 'other'];
+    return validCategories.includes(category.toLowerCase()) ? category.toLowerCase() : 'other';
+  };
+
+  const createEventMutation = useMutation({
+    mutationFn: async (eventData: any) => {
+      // Insert event
+      const { data: eventResult, error: eventError } = await supabase
+        .from('events')
+        .insert(eventData)
+        .select()
+        .single();
+
+      if (eventError) throw eventError;
+
+      // Insert organizer
+      if (formData.organizerName && formData.primaryEmail) {
+        const { error: organizerError } = await supabase
+          .from('event_organizers')
+          .insert({
+            event_id: eventResult.id,
+            full_name: formData.organizerName,
+            main_email: formData.primaryEmail,
+            phone_whatsapp: formData.phone || null,
+            company: formData.company || null,
+          });
+
+        if (organizerError) throw organizerError;
+      }
+
+      // Insert team members
+      if (formData.teamMembers.length > 0) {
+        const teamInserts = formData.teamMembers.map(member => ({
+          event_id: eventResult.id,
+          name: member.name,
+          email: member.email,
+          role: member.role,
+        }));
+
+        const { error: teamError } = await supabase
+          .from('event_team')
+          .insert(teamInserts);
+
+        if (teamError) throw teamError;
+      }
+
+      return eventResult;
+    },
+  });
 
   const updateFormData = (data: Partial<EventFormData>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -149,15 +216,66 @@ const NewEventWizard = () => {
     setIsLoading(true);
     setIsDraft(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Rascunho salvo",
-      description: "Suas informações foram salvas com sucesso.",
-    });
-    
-    setIsLoading(false);
+    try {
+      // Upload files if present
+      let logoUrl = null;
+      let bannerUrl = null;
+
+      if (formData.logo) {
+        logoUrl = await uploadFile(formData.logo, 'event-logos', 'logos');
+      }
+
+      if (formData.banner) {
+        bannerUrl = await uploadFile(formData.banner, 'event-banners', 'banners');
+      }
+
+      const eventPayload = {
+        tenant_id: '00000000-0000-0000-0000-000000000000', // TODO: Replace with actual tenant context
+        name: formData.name || 'Rascunho',
+        short_description: formData.description || null,
+        category: formData.category ? mapCategory(formData.category) : null,
+        start_date: formData.startDate?.toISOString().split('T')[0] || null,
+        end_date: formData.endDate?.toISOString().split('T')[0] || null,
+        start_time: formData.startTime || null,
+        end_time: formData.endTime || null,
+        official_website: formData.website || null,
+        full_address: formData.address || null,
+        city: formData.city || null,
+        state: formData.state || null,
+        country: formData.country || null,
+        venue_name: formData.venueName || null,
+        total_area: formData.totalArea ? parseFloat(formData.totalArea) : null,
+        estimated_capacity: formData.capacity ? parseInt(formData.capacity) : null,
+        has_accessibility: formData.accessibility,
+        logo_url: logoUrl,
+        banner_url: bannerUrl,
+        primary_color: formData.primaryColor || null,
+        secondary_color: formData.secondaryColor || null,
+        font_style: formData.fontStyle ? mapFontStyle(formData.fontStyle) : null,
+        status: 'upcoming',
+        is_public_registration: formData.publicRegistration,
+        has_online_broadcast: formData.isHybrid,
+        broadcast_platform: formData.isHybrid ? formData.streamingPlatform : null,
+        notes: formData.specialRequirements || null,
+        accepted_lgpd: formData.lgpdAccepted,
+        accepted_eventrix_terms: formData.termsAccepted,
+      };
+
+      await createEventMutation.mutateAsync(eventPayload);
+      
+      toast({
+        title: "Rascunho salvo",
+        description: "Suas informações foram salvas com sucesso.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao salvar rascunho",
+        description: error.message || "Erro inesperado",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCreateEvent = async () => {
@@ -172,16 +290,75 @@ const NewEventWizard = () => {
 
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    toast({
-      title: "Evento criado com sucesso!",
-      description: "Seu evento foi cadastrado e está pronto para configuração.",
-    });
-    
-    setIsLoading(false);
-    // Here you would redirect to the event dashboard
+    try {
+      // Upload files if present
+      let logoUrl = null;
+      let bannerUrl = null;
+
+      if (formData.logo) {
+        logoUrl = await uploadFile(formData.logo, 'event-logos', 'logos');
+        if (!logoUrl) {
+          throw new Error('Falha no upload do logo');
+        }
+      }
+
+      if (formData.banner) {
+        bannerUrl = await uploadFile(formData.banner, 'event-banners', 'banners');
+      }
+
+      const eventPayload = {
+        tenant_id: '00000000-0000-0000-0000-000000000000', // TODO: Replace with actual tenant context
+        name: formData.name,
+        short_description: formData.description,
+        category: mapCategory(formData.category),
+        start_date: formData.startDate?.toISOString().split('T')[0],
+        end_date: formData.endDate?.toISOString().split('T')[0],
+        start_time: formData.startTime,
+        end_time: formData.endTime,
+        official_website: formData.website || null,
+        full_address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        country: formData.country,
+        venue_name: formData.venueName || null,
+        total_area: formData.totalArea ? parseFloat(formData.totalArea) : null,
+        estimated_capacity: formData.capacity ? parseInt(formData.capacity) : null,
+        has_accessibility: formData.accessibility,
+        logo_url: logoUrl,
+        banner_url: bannerUrl,
+        primary_color: formData.primaryColor,
+        secondary_color: formData.secondaryColor,
+        font_style: mapFontStyle(formData.fontStyle),
+        status: 'upcoming',
+        is_public_registration: formData.publicRegistration,
+        has_online_broadcast: formData.isHybrid,
+        broadcast_platform: formData.isHybrid ? formData.streamingPlatform : null,
+        notes: formData.specialRequirements || null,
+        accepted_lgpd: formData.lgpdAccepted,
+        accepted_eventrix_terms: formData.termsAccepted,
+      };
+
+      await createEventMutation.mutateAsync(eventPayload);
+      
+      toast({
+        title: "Evento criado com sucesso!",
+        description: "Seu evento foi cadastrado e está pronto para configuração.",
+      });
+      
+      // Reset form
+      setFormData(initialFormData);
+      setCurrentStep(1);
+      setIsDraft(false);
+      
+    } catch (error: any) {
+      toast({
+        title: "Erro ao criar evento",
+        description: error.message || "Erro inesperado ao criar o evento",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const progress = (currentStep / steps.length) * 100;
@@ -256,7 +433,7 @@ const NewEventWizard = () => {
           <Button
             variant="outline"
             onClick={handleSaveDraft}
-            disabled={isLoading}
+            disabled={isLoading || isUploading}
             className="flex items-center gap-2"
           >
             <Save size={16} />
@@ -269,7 +446,7 @@ const NewEventWizard = () => {
             <Button
               variant="outline"
               onClick={handlePrevious}
-              disabled={isLoading}
+              disabled={isLoading || isUploading}
               className="flex items-center gap-2"
             >
               <ChevronLeft size={16} />
@@ -280,7 +457,7 @@ const NewEventWizard = () => {
           {currentStep < steps.length ? (
             <Button
               onClick={handleNext}
-              disabled={isLoading}
+              disabled={isLoading || isUploading}
               className="flex items-center gap-2"
             >
               Próximo
@@ -289,10 +466,10 @@ const NewEventWizard = () => {
           ) : (
             <Button
               onClick={handleCreateEvent}
-              disabled={isLoading}
+              disabled={isLoading || isUploading}
               className="flex items-center gap-2 bg-primary hover:bg-primary/90"
             >
-              {isLoading ? 'Criando...' : 'Criar Evento'}
+              {isLoading || isUploading ? 'Criando...' : 'Criar Evento'}
             </Button>
           )}
         </div>

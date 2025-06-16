@@ -218,12 +218,15 @@ export type Database = {
         | "other"
       event_status_enum: "upcoming" | "in_progress" | "completed"
       font_style_enum:
-        | "arial"
+        | "sans-serif"
         | "roboto"
         | "montserrat"
         | "open_sans"
         | "lato"
         | "nunito"
+        | "serif"
+        | "script"
+        | "monospace"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -348,12 +351,15 @@ export const Constants = {
       ],
       event_status_enum: ["upcoming", "in_progress", "completed"],
       font_style_enum: [
-        "arial",
+        "sans-serif",
         "roboto",
         "montserrat",
         "open_sans",
         "lato",
         "nunito",
+        "serif",
+        "script",
+        "monospace",
       ],
     },
   },
