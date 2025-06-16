@@ -9,18 +9,196 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      users: {
+      event_organizers: {
         Row: {
-          id: number | null
-          name: string | null
+          company: string | null
+          created_at: string | null
+          event_id: string
+          full_name: string
+          id: string
+          main_email: string
+          phone_whatsapp: string | null
+          updated_at: string | null
         }
         Insert: {
-          id?: number | null
-          name?: string | null
+          company?: string | null
+          created_at?: string | null
+          event_id: string
+          full_name: string
+          id?: string
+          main_email: string
+          phone_whatsapp?: string | null
+          updated_at?: string | null
         }
         Update: {
-          id?: number | null
-          name?: string | null
+          company?: string | null
+          created_at?: string | null
+          event_id?: string
+          full_name?: string
+          id?: string
+          main_email?: string
+          phone_whatsapp?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_organizers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_team: {
+        Row: {
+          created_at: string | null
+          email: string
+          event_id: string
+          id: string
+          name: string
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          event_id: string
+          id?: string
+          name: string
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          event_id?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_team_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          accepted_eventrix_terms: boolean
+          accepted_lgpd: boolean
+          accepted_privacy_policy: boolean | null
+          banner_url: string | null
+          broadcast_platform: string | null
+          category: Database["public"]["Enums"]["event_category_enum"] | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          end_date: string | null
+          end_time: string | null
+          estimated_capacity: number | null
+          exhibitors_count: number | null
+          font_style: Database["public"]["Enums"]["font_style_enum"] | null
+          full_address: string | null
+          has_accessibility: boolean | null
+          has_online_broadcast: boolean | null
+          id: string
+          is_public_registration: boolean | null
+          location: string | null
+          logo_url: string | null
+          name: string
+          notes: string | null
+          official_website: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          short_description: string | null
+          start_date: string | null
+          start_time: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["event_status_enum"] | null
+          tenant_id: string
+          total_area: number | null
+          updated_at: string | null
+          venue_name: string | null
+        }
+        Insert: {
+          accepted_eventrix_terms?: boolean
+          accepted_lgpd?: boolean
+          accepted_privacy_policy?: boolean | null
+          banner_url?: string | null
+          broadcast_platform?: string | null
+          category?: Database["public"]["Enums"]["event_category_enum"] | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          estimated_capacity?: number | null
+          exhibitors_count?: number | null
+          font_style?: Database["public"]["Enums"]["font_style_enum"] | null
+          full_address?: string | null
+          has_accessibility?: boolean | null
+          has_online_broadcast?: boolean | null
+          id?: string
+          is_public_registration?: boolean | null
+          location?: string | null
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          official_website?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          short_description?: string | null
+          start_date?: string | null
+          start_time?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["event_status_enum"] | null
+          tenant_id: string
+          total_area?: number | null
+          updated_at?: string | null
+          venue_name?: string | null
+        }
+        Update: {
+          accepted_eventrix_terms?: boolean
+          accepted_lgpd?: boolean
+          accepted_privacy_policy?: boolean | null
+          banner_url?: string | null
+          broadcast_platform?: string | null
+          category?: Database["public"]["Enums"]["event_category_enum"] | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          estimated_capacity?: number | null
+          exhibitors_count?: number | null
+          font_style?: Database["public"]["Enums"]["font_style_enum"] | null
+          full_address?: string | null
+          has_accessibility?: boolean | null
+          has_online_broadcast?: boolean | null
+          id?: string
+          is_public_registration?: boolean | null
+          location?: string | null
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          official_website?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          short_description?: string | null
+          start_date?: string | null
+          start_time?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["event_status_enum"] | null
+          tenant_id?: string
+          total_area?: number | null
+          updated_at?: string | null
+          venue_name?: string | null
         }
         Relationships: []
       }
@@ -32,7 +210,20 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      event_category_enum:
+        | "fair"
+        | "congress"
+        | "symposium"
+        | "festival"
+        | "other"
+      event_status_enum: "upcoming" | "in_progress" | "completed"
+      font_style_enum:
+        | "arial"
+        | "roboto"
+        | "montserrat"
+        | "open_sans"
+        | "lato"
+        | "nunito"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -147,6 +338,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      event_category_enum: [
+        "fair",
+        "congress",
+        "symposium",
+        "festival",
+        "other",
+      ],
+      event_status_enum: ["upcoming", "in_progress", "completed"],
+      font_style_enum: [
+        "arial",
+        "roboto",
+        "montserrat",
+        "open_sans",
+        "lato",
+        "nunito",
+      ],
+    },
   },
 } as const
