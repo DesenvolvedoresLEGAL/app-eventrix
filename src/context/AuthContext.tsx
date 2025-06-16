@@ -57,50 +57,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return navigator.userAgent || 'unknown';
   };
 
-  // Log authentication events
+  // Log authentication events - simplified version without RPC function
   const logAuthEvent = async (action: string, userId?: string) => {
     try {
       const ip = await getUserIP();
       const device = getDeviceInfo();
       
-      await supabase.rpc('log_auth_event', {
-        p_user_id: userId || session?.user?.id,
-        p_action: action,
-        p_ip: ip,
-        p_device: device,
-        p_event_id: null
+      console.log('Auth event:', {
+        user_id: userId || session?.user?.id,
+        action: action,
+        ip: ip,
+        device: device,
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
       console.error('Failed to log auth event:', error);
     }
   };
 
-  // Fetch user profile and role
-  const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
+  // Simplified user profile creation - just use data from Supabase user
+  const createUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
-      // Get profile data
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', supabaseUser.id)
-        .single();
-
-      // Get user role
-      const { data: roleData } = await supabase
-        .rpc('get_user_role_for_event', {
-          p_user_id: supabaseUser.id
-        });
-
       const userProfile: User = {
         id: supabaseUser.id,
-        name: profile?.name || supabaseUser.email?.split('@')[0] || 'User',
+        name: supabaseUser.user_metadata?.name || 
+              `${supabaseUser.user_metadata?.firstName || ''} ${supabaseUser.user_metadata?.lastName || ''}`.trim() ||
+              supabaseUser.email?.split('@')[0] || 'User',
         email: supabaseUser.email || '',
-        role: roleData || 'user'
+        role: 'user' // Default role for now
       };
 
       setUser(userProfile);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Error creating user profile:', error);
       // Fallback user data
       setUser({
         id: supabaseUser.id,
@@ -120,7 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setSession(session);
         
         if (session?.user) {
-          await fetchUserProfile(session.user);
+          await createUserProfile(session.user);
           
           // Log successful auth events
           if (event === 'SIGNED_IN') {
@@ -144,7 +133,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setSession(session);
-        fetchUserProfile(session.user);
+        createUserProfile(session.user);
       }
       setLoading(false);
     });
