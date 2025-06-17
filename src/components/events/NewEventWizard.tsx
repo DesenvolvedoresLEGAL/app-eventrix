@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -140,6 +139,32 @@ const NewEventWizard = () => {
     return timeValue;
   };
 
+  // Validate organizer data before creating
+  const validateOrganizerData = () => {
+    console.log('🔍 Validating organizer data:', {
+      organizerName: formData.organizerName,
+      primaryEmail: formData.primaryEmail,
+      hasName: !!formData.organizerName?.trim(),
+      hasEmail: !!formData.primaryEmail?.trim()
+    });
+
+    if (!formData.organizerName?.trim()) {
+      throw new Error('Nome do organizador é obrigatório');
+    }
+
+    if (!formData.primaryEmail?.trim()) {
+      throw new Error('Email do organizador é obrigatório');
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.primaryEmail.trim())) {
+      throw new Error('Email do organizador deve ser válido');
+    }
+
+    return true;
+  };
+
   // Reset all form states to initial values
   const resetFormState = () => {
     console.log('🔄 Resetting form state to initial values');
@@ -179,53 +204,94 @@ const NewEventWizard = () => {
     mutationFn: async (eventData: any) => {
       console.log('🚀 Starting event creation process...');
       
-      // Step 1: Create the organizer first
-      console.log('📝 Creating organizer...');
+      // Step 1: Validate organizer data first
+      try {
+        validateOrganizerData();
+        console.log('✅ Organizer data validation passed');
+      } catch (error: any) {
+        console.error('❌ Organizer validation failed:', error.message);
+        throw error;
+      }
+
+      // Step 2: Create the organizer
+      console.log('📝 Creating organizer with data:', {
+        full_name: formData.organizerName,
+        main_email: formData.primaryEmail,
+        phone_whatsapp: formData.phone || null,
+        company: formData.company || null,
+      });
+
       const { data: organizerResult, error: organizerError } = await supabase
         .from('event_organizers')
         .insert({
-          full_name: formData.organizerName,
-          main_email: formData.primaryEmail,
-          phone_whatsapp: formData.phone || null,
-          company: formData.company || null,
+          full_name: formData.organizerName.trim(),
+          main_email: formData.primaryEmail.trim(),
+          phone_whatsapp: formData.phone?.trim() || null,
+          company: formData.company?.trim() || null,
         })
         .select()
         .single();
 
       if (organizerError) {
         console.error('❌ Organizer creation failed:', organizerError);
-        throw new Error(`Erro ao criar organizador: ${organizerError.message}`);
+        
+        // If organizer creation fails, try to use default organizer as fallback
+        console.log('🔄 Attempting to use default organizer as fallback...');
+        const { data: defaultOrganizer, error: defaultError } = await supabase
+          .from('event_organizers')
+          .select()
+          .eq('id', '0ce5d7a0-6d92-4502-93cb-946caf74ea53')
+          .single();
+
+        if (defaultError || !defaultOrganizer) {
+          console.error('❌ Default organizer not found:', defaultError);
+          throw new Error(`Erro ao criar organizador: ${organizerError.message}`);
+        }
+
+        console.log('✅ Using default organizer as fallback:', defaultOrganizer);
+        // Use default organizer but show warning
+        toast({
+          title: "Aviso",
+          description: "Usando organizador padrão devido a erro na criação. Você pode editar depois.",
+          variant: "default",
+        });
+        
+        // Update eventData to use default organizer
+        eventData.organizer_id = defaultOrganizer.id;
+      } else {
+        console.log('✅ Organizer created successfully:', organizerResult);
+        // Update eventData to use the new organizer
+        eventData.organizer_id = organizerResult.id;
       }
 
-      console.log('✅ Organizer created successfully:', organizerResult);
+      // Step 3: Log the complete payload AFTER adding organizer_id
+      console.log('📋 Final event payload with organizer_id:', JSON.stringify(eventData, null, 2));
 
-      // Step 2: Create the event with the organizer_id
-      const eventPayloadWithOrganizer = {
-        ...eventData,
-        organizer_id: organizerResult.id,
-      };
-
-      console.log('📋 Creating event with organizer_id:', organizerResult.id);
+      // Step 4: Create the event
+      console.log('📋 Creating event...');
       
       const { data: eventResult, error: eventError } = await supabase
         .from('events')
-        .insert(eventPayloadWithOrganizer)
+        .insert(eventData)
         .select()
         .single();
 
       if (eventError) {
         console.error('❌ Event creation failed:', eventError);
-        // If event creation fails, we should clean up the organizer
-        await supabase
-          .from('event_organizers')
-          .delete()
-          .eq('id', organizerResult.id);
+        // If event creation fails and we created a new organizer, clean it up
+        if (organizerResult && !organizerError) {
+          console.log('🧹 Cleaning up created organizer due to event creation failure');
+          await supabase
+            .from('event_organizers')
+            .delete()
+            .eq('id', organizerResult.id);
+        }
         throw new Error(`Erro ao criar evento: ${eventError.message}`);
       }
 
       console.log('✅ Event created successfully:', eventResult);
 
-      // Step 3: Insert team members if any
+      // Step 5: Insert team members if any
       if (formData.teamMembers.length > 0) {
         console.log('👥 Creating team members...');
         const teamInserts = formData.teamMembers.map(member => ({
@@ -246,7 +312,10 @@ const NewEventWizard = () => {
         console.log('✅ Team created successfully');
       }
 
-      return { event: eventResult, organizer: organizerResult };
+      return { 
+        event: eventResult, 
+        organizer: organizerResult || { id: '0ce5d7a0-6d92-4502-93cb-946caf74ea53' } 
+      };
     },
   });
 
@@ -356,7 +425,7 @@ const NewEventWizard = () => {
         // Note: organizer_id will be set by the mutation function
       };
 
-      console.log('📋 Draft payload with tenant_id:', JSON.stringify(eventPayload, null, 2));
+      console.log('📋 Draft payload (before organizer creation):', JSON.stringify(eventPayload, null, 2));
       
       await createEventMutation.mutateAsync(eventPayload);
       
@@ -415,6 +484,8 @@ const NewEventWizard = () => {
         name: formData.name,
         description: formData.description,
         category: formData.category,
+        organizerName: formData.organizerName,
+        primaryEmail: formData.primaryEmail,
         hasLogo: !!formData.logo,
         hasBanner: !!formData.banner
       });
@@ -466,7 +537,7 @@ const NewEventWizard = () => {
         // Note: organizer_id will be set by the mutation function
       };
 
-      console.log('📋 Final payload before sending:', JSON.stringify(eventPayload, null, 2));
+      console.log('📋 Final payload (before organizer creation):', JSON.stringify(eventPayload, null, 2));
 
       await createEventMutation.mutateAsync(eventPayload);
       
