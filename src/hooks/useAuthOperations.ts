@@ -63,7 +63,7 @@ export const useAuthOperations = () => {
     try {
       const redirectUrl = `${window.location.origin}/dashboard`;
       
-      console.log('Starting registration process for:', userData.email);
+      console.log('🚀 Starting registration process for:', userData.email);
       
       // Step 1: Create user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -83,7 +83,7 @@ export const useAuthOperations = () => {
       });
 
       if (authError) {
-        console.error('Auth registration error:', authError);
+        console.error('❌ Auth registration error:', authError);
         await logAuthEvent('register_failed');
         
         if (authError.message.includes('already registered')) {
@@ -99,7 +99,7 @@ export const useAuthOperations = () => {
         throw new Error('Falha ao criar usuário no sistema de autenticação');
       }
 
-      console.log('Auth user created successfully:', authData.user.id);
+      console.log('✅ Auth user created successfully:', authData.user.id);
 
       // Step 2: Create profile in public.profiles
       try {
@@ -112,8 +112,14 @@ export const useAuthOperations = () => {
           position: userData.position || null
         };
 
+        console.log('📝 Creating profile with data:', profileData);
         const profile = await createProfile(profileData);
-        console.log('Profile created successfully:', profile?.uuid);
+        
+        if (profile) {
+          console.log('✅ Profile created successfully:', profile.uuid);
+        } else {
+          console.warn('⚠️ Profile creation returned null but no error was thrown');
+        }
 
         // Log successful registration
         await logAuthEvent('register', authData.user.id);
@@ -129,35 +135,24 @@ export const useAuthOperations = () => {
         }
 
       } catch (profileError: any) {
-        console.error('Profile creation failed, attempting rollback:', profileError);
+        console.error('❌ Profile creation failed:', profileError);
         
-        // Step 3: Rollback - Delete auth user if profile creation failed
-        try {
-          console.log('Attempting to delete auth user due to profile creation failure');
-          const { error: deleteError } = await supabase.auth.admin.deleteUser(authData.user.id);
-          
-          if (deleteError) {
-            console.error('Failed to rollback auth user:', deleteError);
-            // Log critical error - manual cleanup might be needed
-            console.error('CRITICAL: Auth user created but profile failed, and rollback failed', {
-              authUserId: authData.user.id,
-              email: userData.email,
-              profileError: profileError.message,
-              rollbackError: deleteError.message
-            });
-          } else {
-            console.log('Auth user successfully rolled back');
-          }
-        } catch (rollbackError) {
-          console.error('Rollback operation failed:', rollbackError);
-        }
+        // Log the error for manual cleanup if needed
+        console.error('🚨 MANUAL CLEANUP NEEDED:', {
+          authUserId: authData.user.id,
+          email: userData.email,
+          profileError: profileError.message,
+          timestamp: new Date().toISOString()
+        });
         
-        await logAuthEvent('register_rollback_failed');
-        throw profileError;
+        await logAuthEvent('register_profile_failed');
+        
+        // Don't attempt client-side rollback, just show the error
+        throw new Error(`Erro ao criar perfil: ${profileError.message}`);
       }
 
     } catch (error: any) {
-      console.error('Registration process failed:', error);
+      console.error('❌ Registration process failed:', error);
       toast({
         title: "Erro no cadastro",
         description: error.message,
@@ -165,6 +160,7 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
+      // Always reset loading state
       setLoading(false);
     }
   };

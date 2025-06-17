@@ -12,7 +12,7 @@ export const useProfile = () => {
     setLoading(true);
     
     try {
-      console.log('Creating profile with data:', profileData);
+      console.log('📝 Attempting to create profile with data:', JSON.stringify(profileData, null, 2));
       
       const { data, error } = await supabase
         .from('profiles')
@@ -21,14 +21,25 @@ export const useProfile = () => {
         .single();
 
       if (error) {
-        console.error('Error creating profile:', error);
+        console.error('❌ Supabase error during profile creation:', {
+          error: error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
 
-      console.log('Profile created successfully:', data);
+      if (!data) {
+        console.error('❌ No data returned from profile creation');
+        throw new Error('Nenhum dado retornado da criação do perfil');
+      }
+
+      console.log('✅ Profile created successfully:', data);
       return data;
     } catch (error: any) {
-      console.error('Profile creation failed:', error);
+      console.error('❌ Profile creation failed with error:', error);
       
       // Handle specific errors
       if (error.code === '23505') {
@@ -39,7 +50,18 @@ export const useProfile = () => {
         }
       }
       
-      throw new Error('Erro ao criar perfil do usuário');
+      // Check for permission errors (when RLS is not configured)
+      if (error.code === '42501' || error.message.includes('permission denied')) {
+        console.error('🚨 Permission denied - RLS may need configuration');
+        throw new Error('Erro de permissão ao criar perfil. Contate o administrador.');
+      }
+      
+      // Check for connection errors
+      if (error.message.includes('Failed to fetch') || error.message.includes('network')) {
+        throw new Error('Erro de conexão. Verifique sua internet.');
+      }
+      
+      throw new Error(`Erro ao criar perfil: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -49,6 +71,8 @@ export const useProfile = () => {
     setLoading(true);
     
     try {
+      console.log('🔍 Fetching profile for auth user:', authUserId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -56,13 +80,14 @@ export const useProfile = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('❌ Error fetching profile:', error);
         throw error;
       }
 
+      console.log('📋 Profile fetch result:', data ? 'Found' : 'Not found');
       return data;
     } catch (error: any) {
-      console.error('Profile fetch failed:', error);
+      console.error('❌ Profile fetch failed:', error);
       throw new Error('Erro ao buscar perfil do usuário');
     } finally {
       setLoading(false);
@@ -73,6 +98,8 @@ export const useProfile = () => {
     setLoading(true);
     
     try {
+      console.log('📝 Updating profile:', uuid, 'with:', updates);
+      
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
@@ -81,13 +108,14 @@ export const useProfile = () => {
         .single();
 
       if (error) {
-        console.error('Error updating profile:', error);
+        console.error('❌ Error updating profile:', error);
         throw error;
       }
 
+      console.log('✅ Profile updated successfully:', data);
       return data;
     } catch (error: any) {
-      console.error('Profile update failed:', error);
+      console.error('❌ Profile update failed:', error);
       throw new Error('Erro ao atualizar perfil');
     } finally {
       setLoading(false);
