@@ -108,6 +108,7 @@ const NewEventWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<EventFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false); // New state to prevent multiple operations
   const [isDraft, setIsDraft] = useState(false);
   const { toast } = useToast();
   const { uploadFile, isUploading } = useFileUpload();
@@ -135,6 +136,16 @@ const NewEventWizard = () => {
       return null;
     }
     return timeValue;
+  };
+
+  // Reset all form states to initial values
+  const resetFormState = () => {
+    console.log('🔄 Resetting form state to initial values');
+    setFormData(initialFormData);
+    setCurrentStep(1);
+    setIsDraft(false);
+    setIsLoading(false);
+    setIsProcessing(false);
   };
 
   const createEventMutation = useMutation({
@@ -238,7 +249,14 @@ const NewEventWizard = () => {
   };
 
   const handleSaveDraft = async () => {
+    // Prevent multiple simultaneous operations
+    if (isProcessing || isLoading) {
+      console.log('⚠️ Operation already in progress, skipping draft save');
+      return;
+    }
+
     setIsLoading(true);
+    setIsProcessing(true);
     setIsDraft(true);
     
     try {
@@ -250,12 +268,22 @@ const NewEventWizard = () => {
 
       if (formData.logo) {
         console.log('📤 Uploading logo...');
-        logoUrl = await uploadFile(formData.logo, 'event-logos', 'logos');
+        try {
+          logoUrl = await uploadFile(formData.logo, 'event-logos', 'logos');
+        } catch (uploadError) {
+          console.warn('⚠️ Logo upload failed, continuing without logo:', uploadError);
+          // Continue without logo for draft
+        }
       }
 
       if (formData.banner) {
         console.log('📤 Uploading banner...');
-        bannerUrl = await uploadFile(formData.banner, 'event-banners', 'banners');
+        try {
+          bannerUrl = await uploadFile(formData.banner, 'event-banners', 'banners');
+        } catch (uploadError) {
+          console.warn('⚠️ Banner upload failed, continuing without banner:', uploadError);
+          // Continue without banner for draft
+        }
       }
 
       const eventPayload = {
@@ -307,10 +335,17 @@ const NewEventWizard = () => {
       });
     } finally {
       setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
   const handleCreateEvent = async () => {
+    // Prevent multiple simultaneous operations
+    if (isProcessing || isLoading) {
+      console.log('⚠️ Event creation already in progress, preventing duplicate operation');
+      return;
+    }
+
     if (!validateStep(5)) {
       toast({
         title: "Erro na validação",
@@ -321,6 +356,7 @@ const NewEventWizard = () => {
     }
 
     setIsLoading(true);
+    setIsProcessing(true);
     
     try {
       console.log('🎯 Creating final event...');
@@ -340,15 +376,28 @@ const NewEventWizard = () => {
 
       if (formData.logo) {
         console.log('📤 Uploading logo...');
-        logoUrl = await uploadFile(formData.logo, 'event-logos', 'logos');
-        if (!logoUrl) {
-          throw new Error('Falha no upload do logo');
+        try {
+          logoUrl = await uploadFile(formData.logo, 'event-logos', 'logos');
+          if (!logoUrl) {
+            console.warn('⚠️ Logo upload returned null, continuing without logo');
+          }
+        } catch (uploadError) {
+          console.warn('⚠️ Logo upload failed, continuing without logo:', uploadError);
+          toast({
+            title: "Aviso",
+            description: "Falha no upload do logo, evento será criado sem logo.",
+            variant: "default",
+          });
         }
       }
 
       if (formData.banner) {
         console.log('📤 Uploading banner...');
-        bannerUrl = await uploadFile(formData.banner, 'event-banners', 'banners');
+        try {
+          bannerUrl = await uploadFile(formData.banner, 'event-banners', 'banners');
+        } catch (uploadError) {
+          console.warn('⚠️ Banner upload failed, continuing without banner:', uploadError);
+        }
       }
 
       const eventPayload = {
@@ -398,10 +447,9 @@ const NewEventWizard = () => {
         description: "Seu evento foi cadastrado e está pronto para configuração.",
       });
       
-      // Reset form
-      setFormData(initialFormData);
-      setCurrentStep(1);
-      setIsDraft(false);
+      // Reset form completely after successful creation
+      console.log('✅ Event created successfully, resetting form');
+      resetFormState();
       
     } catch (error: any) {
       console.error('❌ Event creation failed:', error);
@@ -412,10 +460,12 @@ const NewEventWizard = () => {
       });
     } finally {
       setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
   const progress = (currentStep / steps.length) * 100;
+  const isOperationInProgress = isLoading || isUploading || isProcessing;
 
   const renderStep = () => {
     switch (currentStep) {
@@ -487,7 +537,7 @@ const NewEventWizard = () => {
           <Button
             variant="outline"
             onClick={handleSaveDraft}
-            disabled={isLoading || isUploading}
+            disabled={isOperationInProgress}
             className="flex items-center gap-2"
           >
             <Save size={16} />
@@ -500,7 +550,7 @@ const NewEventWizard = () => {
             <Button
               variant="outline"
               onClick={handlePrevious}
-              disabled={isLoading || isUploading}
+              disabled={isOperationInProgress}
               className="flex items-center gap-2"
             >
               <ChevronLeft size={16} />
@@ -511,7 +561,7 @@ const NewEventWizard = () => {
           {currentStep < steps.length ? (
             <Button
               onClick={handleNext}
-              disabled={isLoading || isUploading}
+              disabled={isOperationInProgress}
               className="flex items-center gap-2"
             >
               Próximo
@@ -520,10 +570,10 @@ const NewEventWizard = () => {
           ) : (
             <Button
               onClick={handleCreateEvent}
-              disabled={isLoading || isUploading}
+              disabled={isOperationInProgress}
               className="flex items-center gap-2 bg-primary hover:bg-primary/90"
             >
-              {isLoading || isUploading ? 'Criando...' : 'Criar Evento'}
+              {isOperationInProgress ? 'Criando...' : 'Criar Evento'}
             </Button>
           )}
         </div>
