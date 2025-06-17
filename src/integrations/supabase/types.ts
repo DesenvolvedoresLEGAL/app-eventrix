@@ -13,7 +13,6 @@ export type Database = {
         Row: {
           company: string | null
           created_at: string | null
-          event_id: string
           full_name: string
           id: string
           main_email: string
@@ -23,7 +22,6 @@ export type Database = {
         Insert: {
           company?: string | null
           created_at?: string | null
-          event_id: string
           full_name: string
           id?: string
           main_email: string
@@ -33,22 +31,13 @@ export type Database = {
         Update: {
           company?: string | null
           created_at?: string | null
-          event_id?: string
           full_name?: string
           id?: string
           main_email?: string
           phone_whatsapp?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "event_organizers_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       event_team: {
         Row: {
@@ -114,6 +103,7 @@ export type Database = {
           name: string
           notes: string | null
           official_website: string | null
+          organizer_id: string
           primary_color: string | null
           secondary_color: string | null
           short_description: string | null
@@ -151,6 +141,7 @@ export type Database = {
           name: string
           notes?: string | null
           official_website?: string | null
+          organizer_id: string
           primary_color?: string | null
           secondary_color?: string | null
           short_description?: string | null
@@ -188,6 +179,7 @@ export type Database = {
           name?: string
           notes?: string | null
           official_website?: string | null
+          organizer_id?: string
           primary_color?: string | null
           secondary_color?: string | null
           short_description?: string | null
@@ -200,7 +192,15 @@ export type Database = {
           updated_at?: string | null
           venue_name?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_events_organizer_id"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "event_organizers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

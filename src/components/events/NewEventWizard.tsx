@@ -177,43 +177,55 @@ const NewEventWizard = () => {
 
   const createEventMutation = useMutation({
     mutationFn: async (eventData: any) => {
-      console.log('🚀 Starting event creation with payload:', eventData);
+      console.log('🚀 Starting event creation process...');
       
-      // Insert event
+      // Step 1: Create the organizer first
+      console.log('📝 Creating organizer...');
+      const { data: organizerResult, error: organizerError } = await supabase
+        .from('event_organizers')
+        .insert({
+          full_name: formData.organizerName,
+          main_email: formData.primaryEmail,
+          phone_whatsapp: formData.phone || null,
+          company: formData.company || null,
+        })
+        .select()
+        .single();
+
+      if (organizerError) {
+        console.error('❌ Organizer creation failed:', organizerError);
+        throw new Error(`Erro ao criar organizador: ${organizerError.message}`);
+      }
+
+      console.log('✅ Organizer created successfully:', organizerResult);
+
+      // Step 2: Create the event with the organizer_id
+      const eventPayloadWithOrganizer = {
+        ...eventData,
+        organizer_id: organizerResult.id,
+      };
+
+      console.log('📋 Creating event with organizer_id:', organizerResult.id);
+      
       const { data: eventResult, error: eventError } = await supabase
         .from('events')
-        .insert(eventData)
+        .insert(eventPayloadWithOrganizer)
         .select()
         .single();
 
       if (eventError) {
         console.error('❌ Event creation failed:', eventError);
-        throw eventError;
+        // If event creation fails, we should clean up the organizer
+        await supabase
+          .from('event_organizers')
+          .delete()
+          .eq('id', organizerResult.id);
+        throw new Error(`Erro ao criar evento: ${eventError.message}`);
       }
 
       console.log('✅ Event created successfully:', eventResult);
 
-      // Insert organizer
-      if (formData.organizerName && formData.primaryEmail) {
-        console.log('📝 Creating organizer...');
-        const { error: organizerError } = await supabase
-          .from('event_organizers')
-          .insert({
-            event_id: eventResult.id,
-            full_name: formData.organizerName,
-            main_email: formData.primaryEmail,
-            phone_whatsapp: formData.phone || null,
-            company: formData.company || null,
-          });
-
-        if (organizerError) {
-          console.error('❌ Organizer creation failed:', organizerError);
-          throw organizerError;
-        }
-        console.log('✅ Organizer created successfully');
-      }
-
-      // Insert team members
+      // Step 3: Insert team members if any
       if (formData.teamMembers.length > 0) {
         console.log('👥 Creating team members...');
         const teamInserts = formData.teamMembers.map(member => ({
@@ -229,12 +241,12 @@ const NewEventWizard = () => {
 
         if (teamError) {
           console.error('❌ Team creation failed:', teamError);
-          throw teamError;
+          throw new Error(`Erro ao criar equipe: ${teamError.message}`);
         }
         console.log('✅ Team created successfully');
       }
 
-      return eventResult;
+      return { event: eventResult, organizer: organizerResult };
     },
   });
 
@@ -341,6 +353,7 @@ const NewEventWizard = () => {
         notes: formData.specialRequirements || null,
         accepted_lgpd: formData.lgpdAccepted,
         accepted_eventrix_terms: formData.termsAccepted,
+        // Note: organizer_id will be set by the mutation function
       };
 
       console.log('📋 Draft payload with tenant_id:', JSON.stringify(eventPayload, null, 2));
@@ -450,9 +463,10 @@ const NewEventWizard = () => {
         notes: formData.specialRequirements || null,
         accepted_lgpd: formData.lgpdAccepted,
         accepted_eventrix_terms: formData.termsAccepted,
+        // Note: organizer_id will be set by the mutation function
       };
 
-      console.log('📋 Final payload with correct tenant_id before sending:', JSON.stringify(eventPayload, null, 2));
+      console.log('📋 Final payload before sending:', JSON.stringify(eventPayload, null, 2));
 
       await createEventMutation.mutateAsync(eventPayload);
       
