@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -68,10 +67,11 @@ export const useProfile = () => {
   };
 
   const getProfileByAuthId = async (authUserId: string): Promise<Profile | null> => {
+    console.log('🔍 Starting profile fetch for auth user:', authUserId);
     setLoading(true);
     
     try {
-      console.log('🔍 Fetching profile for auth user:', authUserId);
+      console.log('📡 Making Supabase query...');
       
       const { data, error } = await supabase
         .from('profiles')
@@ -80,16 +80,17 @@ export const useProfile = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ Error fetching profile:', error);
+        console.error('❌ Supabase error during profile fetch:', error);
         throw error;
       }
 
-      console.log('📋 Profile fetch result:', data ? 'Found' : 'Not found');
+      console.log('📋 Profile fetch result:', data ? `Found profile ${data.uuid}` : 'Profile not found');
       return data;
     } catch (error: any) {
       console.error('❌ Profile fetch failed:', error);
       throw new Error('Erro ao buscar perfil do usuário');
     } finally {
+      console.log('✅ Profile fetch completed, resetting loading state');
       setLoading(false);
     }
   };
