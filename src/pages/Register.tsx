@@ -7,14 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/context/AuthContext';
+import { WizardFormData } from '@/types/profile';
 
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const { register, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    // Passo 1 - Dados pessoais
+  const [formData, setFormData] = useState<WizardFormData>({
+    // Step 1 - Personal data
     firstName: '',
     lastName: '',
     email: '',
@@ -22,19 +23,19 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     
-    // Passo 2 - Dados da empresa
+    // Step 2 - Company data
     companyName: '',
     companySize: '',
     position: '',
     website: '',
     
-    // Passo 3 - Sobre os eventos
+    // Step 3 - Events data
     eventTypes: '',
     eventsPerYear: '',
     avgVisitors: ''
   });
 
-  const updateFormData = (field: string, value: string) => {
+  const updateFormData = (field: keyof WizardFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -82,14 +83,12 @@ const Register = () => {
   };
 
   const handleSubmit = async () => {
-    let successfullyRegister: boolean = true;
-
     if (!validateStep(3)) {
-      successfullyRegister = false;
       return;
     }
 
     try {
+      // Map wizard data to register function expected format
       await register({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -97,15 +96,21 @@ const Register = () => {
         password: formData.password,
         companyName: formData.companyName,
         position: formData.position,
-        phone: formData.phone
+        phone: formData.phone || undefined
       });
+      
+      // Note: Company size, website, and event data are stored in metadata for now
+      // These could be moved to separate tables in future iterations
+      console.log('Additional wizard data (stored in metadata):', {
+        companySize: formData.companySize,
+        website: formData.website,
+        eventTypes: formData.eventTypes,
+        eventsPerYear: formData.eventsPerYear,
+        avgVisitors: formData.avgVisitors
+      });
+
     } catch (error) {
-      successfullyRegister = false;
       console.error('Registration error:', error);
-    } finally {
-      if (successfullyRegister) {
-        navigate("/login");
-      }
     }
   };
 

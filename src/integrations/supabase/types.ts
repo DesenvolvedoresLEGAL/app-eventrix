@@ -202,6 +202,42 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          auth_user_id: string
+          created_at: string
+          email: string
+          first_name: string
+          last_name: string
+          phone: string | null
+          position: string | null
+          updated_at: string
+          uuid: string
+        }
+        Insert: {
+          auth_user_id: string
+          created_at?: string
+          email: string
+          first_name: string
+          last_name: string
+          phone?: string | null
+          position?: string | null
+          updated_at?: string
+          uuid?: string
+        }
+        Update: {
+          auth_user_id?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          last_name?: string
+          phone?: string | null
+          position?: string | null
+          updated_at?: string
+          uuid?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
