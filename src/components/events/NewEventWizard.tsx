@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -108,7 +107,7 @@ const NewEventWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<EventFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false); // New state to prevent multiple operations
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const { toast } = useToast();
   const { uploadFile, isUploading } = useFileUpload();
@@ -146,6 +145,31 @@ const NewEventWizard = () => {
     setIsDraft(false);
     setIsLoading(false);
     setIsProcessing(false);
+  };
+
+  // Helper function to safely handle file uploads with proper error handling
+  const safeUploadFile = async (file: File, bucket: string, folder: string): Promise<string | null> => {
+    try {
+      console.log(`📤 Attempting to upload ${folder}:`, file.name);
+      const url = await uploadFile(file, bucket, folder);
+      
+      if (url) {
+        console.log(`✅ ${folder} upload successful:`, url);
+      } else {
+        console.warn(`⚠️ ${folder} upload returned null`);
+      }
+      
+      return url;
+      
+    } catch (error: any) {
+      console.error(`❌ ${folder} upload failed:`, error);
+      toast({
+        title: `Erro no upload do ${folder}`,
+        description: `Falha ao fazer upload do ${folder}. O evento será criado sem este arquivo.`,
+        variant: "default",
+      });
+      return null;
+    }
   };
 
   const createEventMutation = useMutation({
@@ -250,44 +274,31 @@ const NewEventWizard = () => {
 
   const handleSaveDraft = async () => {
     // Prevent multiple simultaneous operations
-    if (isProcessing || isLoading) {
+    if (isProcessing || isLoading || isUploading) {
       console.log('⚠️ Operation already in progress, skipping draft save');
       return;
     }
 
+    console.log('💾 Starting draft save process...');
     setIsLoading(true);
     setIsProcessing(true);
     setIsDraft(true);
     
     try {
-      console.log('💾 Saving draft...');
-      
-      // Upload files if present
+      // Upload files if present with proper error handling
       let logoUrl = null;
       let bannerUrl = null;
 
       if (formData.logo) {
-        console.log('📤 Uploading logo...');
-        try {
-          logoUrl = await uploadFile(formData.logo, 'event-logos', 'logos');
-        } catch (uploadError) {
-          console.warn('⚠️ Logo upload failed, continuing without logo:', uploadError);
-          // Continue without logo for draft
-        }
+        logoUrl = await safeUploadFile(formData.logo, 'event-logos', 'logos');
       }
 
       if (formData.banner) {
-        console.log('📤 Uploading banner...');
-        try {
-          bannerUrl = await uploadFile(formData.banner, 'event-banners', 'banners');
-        } catch (uploadError) {
-          console.warn('⚠️ Banner upload failed, continuing without banner:', uploadError);
-          // Continue without banner for draft
-        }
+        bannerUrl = await safeUploadFile(formData.banner, 'event-banners', 'banners');
       }
 
       const eventPayload = {
-        tenant_id: '00000000-0000-0000-0000-000000000000', // TODO: Replace with actual tenant context
+        tenant_id: '00000000-0000-0000-0000-000000000000',
         name: formData.name || 'Rascunho',
         short_description: formData.description || null,
         category: formData.category ? mapCategory(formData.category) : null,
@@ -318,7 +329,7 @@ const NewEventWizard = () => {
         accepted_eventrix_terms: formData.termsAccepted,
       };
 
-      console.log('📋 Draft payload before sending:', JSON.stringify(eventPayload, null, 2));
+      console.log('📋 Draft payload:', JSON.stringify(eventPayload, null, 2));
       
       await createEventMutation.mutateAsync(eventPayload);
       
@@ -326,6 +337,7 @@ const NewEventWizard = () => {
         title: "Rascunho salvo",
         description: "Suas informações foram salvas com sucesso.",
       });
+      
     } catch (error: any) {
       console.error('❌ Draft save failed:', error);
       toast({
@@ -334,6 +346,7 @@ const NewEventWizard = () => {
         variant: "destructive",
       });
     } finally {
+      console.log('🏁 Draft save process completed, resetting states');
       setIsLoading(false);
       setIsProcessing(false);
     }
@@ -341,7 +354,7 @@ const NewEventWizard = () => {
 
   const handleCreateEvent = async () => {
     // Prevent multiple simultaneous operations
-    if (isProcessing || isLoading) {
+    if (isProcessing || isLoading || isUploading) {
       console.log('⚠️ Event creation already in progress, preventing duplicate operation');
       return;
     }
@@ -355,53 +368,35 @@ const NewEventWizard = () => {
       return;
     }
 
+    console.log('🎯 Starting final event creation process...');
     setIsLoading(true);
     setIsProcessing(true);
     
     try {
-      console.log('🎯 Creating final event...');
       console.log('📊 Form data before processing:', {
         name: formData.name,
         description: formData.description,
         category: formData.category,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        startDate: formData.startDate,
-        endDate: formData.endDate
+        hasLogo: !!formData.logo,
+        hasBanner: !!formData.banner
       });
       
-      // Upload files if present
+      // Upload files if present with proper error handling
       let logoUrl = null;
       let bannerUrl = null;
 
       if (formData.logo) {
-        console.log('📤 Uploading logo...');
-        try {
-          logoUrl = await uploadFile(formData.logo, 'event-logos', 'logos');
-          if (!logoUrl) {
-            console.warn('⚠️ Logo upload returned null, continuing without logo');
-          }
-        } catch (uploadError) {
-          console.warn('⚠️ Logo upload failed, continuing without logo:', uploadError);
-          toast({
-            title: "Aviso",
-            description: "Falha no upload do logo, evento será criado sem logo.",
-            variant: "default",
-          });
-        }
+        logoUrl = await safeUploadFile(formData.logo, 'event-logos', 'logos');
       }
 
       if (formData.banner) {
-        console.log('📤 Uploading banner...');
-        try {
-          bannerUrl = await uploadFile(formData.banner, 'event-banners', 'banners');
-        } catch (uploadError) {
-          console.warn('⚠️ Banner upload failed, continuing without banner:', uploadError);
-        }
+        bannerUrl = await safeUploadFile(formData.banner, 'event-banners', 'banners');
       }
 
+      console.log('📤 Upload results:', { logoUrl, bannerUrl });
+
       const eventPayload = {
-        tenant_id: '00000000-0000-0000-0000-000000000000', // TODO: Replace with actual tenant context
+        tenant_id: '00000000-0000-0000-0000-000000000000',
         name: formData.name,
         short_description: formData.description,
         category: mapCategory(formData.category),
@@ -433,12 +428,6 @@ const NewEventWizard = () => {
       };
 
       console.log('📋 Final payload before sending:', JSON.stringify(eventPayload, null, 2));
-      console.log('🔍 Time fields specifically:', {
-        start_time: eventPayload.start_time,
-        end_time: eventPayload.end_time,
-        start_time_type: typeof eventPayload.start_time,
-        end_time_type: typeof eventPayload.end_time
-      });
 
       await createEventMutation.mutateAsync(eventPayload);
       
@@ -459,6 +448,7 @@ const NewEventWizard = () => {
         variant: "destructive",
       });
     } finally {
+      console.log('🏁 Event creation process completed, resetting states');
       setIsLoading(false);
       setIsProcessing(false);
     }
