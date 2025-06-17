@@ -84,7 +84,7 @@ export type Database = {
           accepted_privacy_policy: boolean | null
           banner_url: string | null
           broadcast_platform: string | null
-          category: Database["public"]["Enums"]["event_category_enum"] | null
+          category: Database["public"]["Enums"]["event_category_enum"]
           city: string | null
           country: string | null
           created_at: string | null
@@ -122,7 +122,7 @@ export type Database = {
           accepted_privacy_policy?: boolean | null
           banner_url?: string | null
           broadcast_platform?: string | null
-          category?: Database["public"]["Enums"]["event_category_enum"] | null
+          category?: Database["public"]["Enums"]["event_category_enum"]
           city?: string | null
           country?: string | null
           created_at?: string | null
@@ -160,7 +160,7 @@ export type Database = {
           accepted_privacy_policy?: boolean | null
           banner_url?: string | null
           broadcast_platform?: string | null
-          category?: Database["public"]["Enums"]["event_category_enum"] | null
+          category?: Database["public"]["Enums"]["event_category_enum"]
           city?: string | null
           country?: string | null
           created_at?: string | null
@@ -247,11 +247,17 @@ export type Database = {
     }
     Enums: {
       event_category_enum:
-        | "fair"
-        | "congress"
-        | "symposium"
+        | "conferencia"
+        | "workshop"
+        | "seminario"
+        | "feira/exposicao"
         | "festival"
-        | "other"
+        | "congresso"
+        | "treinamento"
+        | "lancamento de produto"
+        | "networking"
+        | "webinar"
+        | "outro"
       event_status_enum: "upcoming" | "in_progress" | "completed"
       font_style_enum:
         | "sans-serif"
@@ -379,11 +385,17 @@ export const Constants = {
   public: {
     Enums: {
       event_category_enum: [
-        "fair",
-        "congress",
-        "symposium",
+        "conferencia",
+        "workshop",
+        "seminario",
+        "feira/exposicao",
         "festival",
-        "other",
+        "congresso",
+        "treinamento",
+        "lancamento de produto",
+        "networking",
+        "webinar",
+        "outro",
       ],
       event_status_enum: ["upcoming", "in_progress", "completed"],
       font_style_enum: [

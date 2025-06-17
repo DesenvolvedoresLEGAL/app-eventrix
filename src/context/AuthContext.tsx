@@ -16,20 +16,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { user, createUserProfile, clearUser } = useUserProfile();
   const authOperations = useAuthOperations();
 
-  // Memoize the auth state handler to prevent recreation on every render
+  // Otimizado: filtra eventos e remove redundância
   const handleAuthStateChange = useCallback(async (event: string, session: Session | null) => {
-    console.log('🔄 Auth state changed:', event, session?.user?.email);
+    console.log('🔄 Auth state changed:', event, session?.user?.email || 'no user');
     
     setSession(session);
     
     if (session?.user) {
-      console.log('👤 User found in session, creating profile...');
-      await createUserProfile(session.user);
-      
-      // Log successful auth events
-      if (event === 'SIGNED_IN') {
-        await logAuthEvent('login', session.user.id);
+      // Apenas buscar perfil em eventos específicos (INITIAL_SESSION e SIGNED_IN)
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        console.log('👤 Loading user profile for event:', event);
+        await createUserProfile(session.user);
+        
+        // Log apenas para login explícito
+        if (event === 'SIGNED_IN') {
+          await logAuthEvent('login', session.user.id);
+        }
       } else if (event === 'TOKEN_REFRESHED') {
+        // Apenas log, sem recarregar perfil (otimização de performance)
         console.log('🔄 Token refreshed for user:', session.user.email);
       }
     } else {
@@ -44,28 +48,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [createUserProfile, clearUser]);
 
   useEffect(() => {
-    console.log('🚀 Setting up auth state listener...');
+    console.log('🚀 Setting up optimized auth state listener...');
     
-    // Set up auth state listener
+    // OTIMIZAÇÃO: Remove chamada manual getSession() - onAuthStateChange já emite INITIAL_SESSION
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    // Check for existing session - but don't call createUserProfile here to avoid duplication
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('🔍 Initial session check:', session?.user?.email || 'No session');
-      
-      if (session) {
-        // This will trigger the onAuthStateChange listener above
-        setSession(session);
-      } else {
-        setLoading(false);
-      }
-    });
 
     return () => {
       console.log('🧹 Cleaning up auth subscription...');
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array - no dependencies to prevent infinite loops
+  }, [handleAuthStateChange]);
 
   return (
     <AuthContext.Provider value={{ 
