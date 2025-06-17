@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation } from '@tanstack/react-query';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -110,6 +112,7 @@ const NewEventWizard = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   const { uploadFile, isUploading } = useFileUpload();
 
   // Font style mapping to match database ENUMs
@@ -279,7 +282,18 @@ const NewEventWizard = () => {
       return;
     }
 
+    // Check if user is authenticated
+    if (!user?.id) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para salvar um rascunho.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     console.log('💾 Starting draft save process...');
+    console.log('👤 Using tenant_id (user ID):', user.id);
     setIsLoading(true);
     setIsProcessing(true);
     setIsDraft(true);
@@ -298,7 +312,7 @@ const NewEventWizard = () => {
       }
 
       const eventPayload = {
-        tenant_id: '00000000-0000-0000-0000-000000000000',
+        tenant_id: user.id,
         name: formData.name || 'Rascunho',
         short_description: formData.description || null,
         category: formData.category ? mapCategory(formData.category) : null,
@@ -329,7 +343,7 @@ const NewEventWizard = () => {
         accepted_eventrix_terms: formData.termsAccepted,
       };
 
-      console.log('📋 Draft payload:', JSON.stringify(eventPayload, null, 2));
+      console.log('📋 Draft payload with tenant_id:', JSON.stringify(eventPayload, null, 2));
       
       await createEventMutation.mutateAsync(eventPayload);
       
@@ -359,6 +373,16 @@ const NewEventWizard = () => {
       return;
     }
 
+    // Check if user is authenticated
+    if (!user?.id) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para criar um evento.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!validateStep(5)) {
       toast({
         title: "Erro na validação",
@@ -369,6 +393,7 @@ const NewEventWizard = () => {
     }
 
     console.log('🎯 Starting final event creation process...');
+    console.log('👤 Using tenant_id (user ID):', user.id);
     setIsLoading(true);
     setIsProcessing(true);
     
@@ -396,7 +421,7 @@ const NewEventWizard = () => {
       console.log('📤 Upload results:', { logoUrl, bannerUrl });
 
       const eventPayload = {
-        tenant_id: '00000000-0000-0000-0000-000000000000',
+        tenant_id: user.id,
         name: formData.name,
         short_description: formData.description,
         category: mapCategory(formData.category),
@@ -427,7 +452,7 @@ const NewEventWizard = () => {
         accepted_eventrix_terms: formData.termsAccepted,
       };
 
-      console.log('📋 Final payload before sending:', JSON.stringify(eventPayload, null, 2));
+      console.log('📋 Final payload with correct tenant_id before sending:', JSON.stringify(eventPayload, null, 2));
 
       await createEventMutation.mutateAsync(eventPayload);
       
