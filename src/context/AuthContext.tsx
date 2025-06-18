@@ -16,13 +16,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { user, createUserProfile, clearUser } = useUserProfile();
   const authOperations = useAuthOperations();
 
-  // CORREÇÃO: Função para gerenciar loading com timeout de segurança reduzido
-  const safeSetLoading = useCallback((value: boolean, timeoutMs: number = 3000) => {
+  // CORREÇÃO: Função para gerenciar loading com timeout de segurança menor
+  const safeSetLoading = useCallback((value: boolean, timeoutMs: number = 2000) => {
     console.log('🔄 AuthContext loading state changed to:', value);
     setLoading(value);
     
     if (value) {
-      // Safety timeout reduzido para 3 segundos
+      // Safety timeout reduzido para 2 segundos
       setTimeout(() => {
         console.warn('🚨 AuthContext loading timeout reached, forcing loading to false');
         setLoading(false);
@@ -30,40 +30,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  // CORREÇÃO: Handler otimizado com controle de loading mais rigoroso
+  // CORREÇÃO: Handler otimizado com propagação imediata do user state
   const handleAuthStateChange = useCallback(async (event: string, session: Session | null) => {
     console.log('🔄 Auth state changed:', event, session?.user?.email || 'no user');
     
     setSession(session);
     
-    // CORREÇÃO: Controle de loading mais granular - apenas para operações que requerem profile
-    if (event === 'INITIAL_SESSION' && session?.user) {
-      safeSetLoading(true, 3000);
-    }
-    
     if (session?.user) {
-      // Apenas buscar perfil em eventos específicos (INITIAL_SESSION e SIGNED_IN)
+      console.log('👤 User authenticated, processing profile...');
+      
+      // CORREÇÃO: Propagação imediata do user state - não esperar profile
+      const immediateUser: User = {
+        id: session.user.id,
+        name: session.user.user_metadata?.name || 
+              `${session.user.user_metadata?.firstName || ''} ${session.user.user_metadata?.lastName || ''}`.trim() ||
+              session.user.email?.split('@')[0] || 'User',
+        email: session.user.email || '',
+        role: 'user'
+      };
+      
+      // Definir user imediatamente para permitir redirecionamento
+      console.log('✅ Setting immediate user state for redirect');
+      
+      // Apenas buscar perfil detalhado para eventos específicos
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-        console.log('👤 Loading user profile for event:', event);
+        safeSetLoading(true, 2000);
         
         try {
-          await createUserProfile(session.user);
+          // Criar perfil com callback de sucesso
+          await createUserProfile(session.user, (fullUser) => {
+            console.log('✅ Full user profile loaded successfully');
+            // Profile já foi atualizado pelo callback
+          });
           
           // Log apenas para login explícito
           if (event === 'SIGNED_IN') {
             await logAuthEvent('login', session.user.id);
           }
         } catch (profileError) {
-          console.error('❌ Error creating user profile:', profileError);
+          console.warn('⚠️ Error loading profile, using fallback user:', profileError);
+          // Manter o user imediato mesmo se profile falhar
         } finally {
-          // CORREÇÃO: Sempre limpar loading após operações de perfil
           console.log('🧹 Cleaning AuthContext loading after profile operations');
           setLoading(false);
         }
-      } else if (event === 'TOKEN_REFRESHED') {
-        // Apenas log, sem recarregar perfil (otimização de performance)
-        console.log('🔄 Token refreshed for user:', session.user.email);
-        // CORREÇÃO: Não ativar loading para refresh de token
+      } else {
+        // Para outros eventos, apenas limpar loading
+        console.log('🔄 Auth event processed, clearing loading');
         setLoading(false);
       }
     } else {
@@ -76,12 +89,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           console.error('❌ Error logging logout event:', logError);
         }
       }
-      // CORREÇÃO: Sempre limpar loading quando não há usuário
-      setLoading(false);
-    }
-    
-    // CORREÇÃO: Para eventos que não requerem operações assíncronas, limpar loading
-    if (!['INITIAL_SESSION', 'SIGNED_IN'].includes(event) || !session?.user) {
       setLoading(false);
     }
   }, [createUserProfile, clearUser, safeSetLoading]);
@@ -89,7 +96,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     console.log('🚀 Setting up optimized auth state listener...');
     
-    // OTIMIZAÇÃO: Remove chamada manual getSession() - onAuthStateChange já emite INITIAL_SESSION
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
     return () => {
@@ -98,18 +104,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [handleAuthStateChange]);
 
-  // CORREÇÃO: Usar apenas loading do AuthContext - não combinar com authOperations.loading
-  // Isso evita o problema de loading combinado que causava loading infinito
-  
-  // Debug logging para rastrear estados de loading
+  // Debug logging para rastrear estados
   useEffect(() => {
-    console.log('🔍 Loading states - AuthContext:', loading, 'AuthOperations:', authOperations.loading);
-  }, [loading, authOperations.loading]);
+    console.log('🔍 Auth States - User:', user?.email || 'none', 'Loading:', loading);
+  }, [user, loading]);
 
   return (
     <AuthContext.Provider value={{ 
       user, 
-      loading: loading, // CORREÇÃO: Usar apenas loading do AuthContext
+      loading, 
       ...authOperations
     }}>
       {children}

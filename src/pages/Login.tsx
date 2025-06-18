@@ -8,39 +8,41 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false); // CORREÇÃO: Estado local para login
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { login, resetPassword, loading: authContextLoading, user } = useAuth();
   const navigate = useNavigate();
 
-  // CORREÇÃO: Redirecionamento quando usuário já está logado
+  // CORREÇÃO: Redirecionamento reforçado quando usuário está autenticado
   useEffect(() => {
-    if (user) {
-      console.log('👤 User already authenticated, redirecting to dashboard');
-      navigate('/dashboard');
+    console.log('🔍 Login useEffect - User state:', user?.email || 'none', 'Loading:', authContextLoading);
+    
+    if (user && !authContextLoading) {
+      console.log('✅ User authenticated and not loading, redirecting to dashboard');
+      navigate('/dashboard', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, authContextLoading, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email.trim() || !password.trim()) {
+      console.warn('⚠️ Login form submitted with empty fields');
       return;
     }
     
     console.log('🔄 Login form submitted for:', email);
-    
-    // CORREÇÃO: Usar estado local para controlar loading do botão
     setIsLoggingIn(true);
     
     try {
+      console.log('🚀 Calling login function...');
       await login(email, password);
-      console.log('✅ Login completed successfully');
-      // CORREÇÃO: Redirecionamento será feito pelo useEffect quando user mudar
+      console.log('✅ Login function completed');
+      
+      // Redirecionamento será feito pelo useEffect quando user mudar
     } catch (error) {
       console.error('❌ Login error in component:', error);
-      // Toast já é mostrado no useAuthOperations, não precisamos duplicar
+      // Toast já é mostrado no useAuthOperations
     } finally {
-      // CORREÇÃO: Sempre limpar estado local de login
       console.log('🧹 Cleaning local login loading state');
       setIsLoggingIn(false);
     }
@@ -63,18 +65,17 @@ const Login = () => {
     } catch (error) {
       console.error('❌ Password reset error in component:', error);
     } finally {
-      // CORREÇÃO: Sempre limpar estado local de reset
       console.log('🧹 Cleaning password reset state');
       setIsResettingPassword(false);
     }
   };
 
-  // CORREÇÃO: Combinar loading states para UI - usando OR lógico mas com estados isolados
+  // CORREÇÃO: Loading combinado apenas para UI, não para lógica de redirecionamento
   const isPageLoading = authContextLoading || isLoggingIn;
   
-  // Debug do estado de loading
+  // Debug adicional do estado de loading
   useEffect(() => {
-    console.log('🔍 Login component loading states - AuthContext:', authContextLoading, 'Local:', isLoggingIn, 'Combined:', isPageLoading);
+    console.log('🔍 Login loading states - AuthContext:', authContextLoading, 'Local:', isLoggingIn, 'Combined:', isPageLoading);
   }, [authContextLoading, isLoggingIn, isPageLoading]);
   
   return (
@@ -122,7 +123,7 @@ const Login = () => {
         </div>
       </div>
       
-      {/* Right side - Login form com tech design */}
+      {/* Right side - Login form */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
           <div className="tech-card p-8 mb-8">

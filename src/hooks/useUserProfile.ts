@@ -8,42 +8,62 @@ export const useUserProfile = () => {
   const [user, setUser] = useState<User | null>(null);
   const { getProfileByAuthId } = useProfile();
 
-  // Create user profile from database profile data
-  const createUserProfile = useCallback(async (supabaseUser: SupabaseUser) => {
+  // CORREÇÃO: Create user profile com callback de sucesso
+  const createUserProfile = useCallback(async (
+    supabaseUser: SupabaseUser, 
+    onSuccess?: (user: User) => void
+  ) => {
     try {
       console.log('📝 Creating user profile for:', supabaseUser.email);
       
-      // Try to get profile from database first
-      const profile = await getProfileByAuthId(supabaseUser.id);
+      // Criar user básico imediatamente
+      const basicUser: User = {
+        id: supabaseUser.id,
+        name: supabaseUser.user_metadata?.name || 
+              `${supabaseUser.user_metadata?.firstName || ''} ${supabaseUser.user_metadata?.lastName || ''}`.trim() ||
+              supabaseUser.email?.split('@')[0] || 'User',
+        email: supabaseUser.email || '',
+        role: 'user'
+      };
       
-      if (profile) {
-        console.log('✅ Profile found in database:', profile.uuid);
-        const userProfile: User = {
-          id: supabaseUser.id,
-          name: `${profile.first_name} ${profile.last_name}`.trim(),
-          email: profile.email,
-          role: 'user',
-          profile: profile
-        };
-        setUser(userProfile);
-        console.log('✅ User profile created successfully');
-      } else {
-        console.log('⚠️ No profile found in database, using fallback data');
-        // Fallback to metadata if no profile in database
-        const userProfile: User = {
-          id: supabaseUser.id,
-          name: supabaseUser.user_metadata?.name || 
-                `${supabaseUser.user_metadata?.firstName || ''} ${supabaseUser.user_metadata?.lastName || ''}`.trim() ||
-                supabaseUser.email?.split('@')[0] || 'User',
-          email: supabaseUser.email || '',
-          role: 'user'
-        };
-        setUser(userProfile);
-        console.log('✅ Fallback user profile created');
+      // Definir user básico imediatamente
+      setUser(basicUser);
+      console.log('✅ Basic user profile set immediately');
+      
+      // Chamar callback de sucesso se fornecido
+      if (onSuccess) {
+        onSuccess(basicUser);
       }
+      
+      // Tentar buscar perfil detalhado em background
+      try {
+        const profile = await getProfileByAuthId(supabaseUser.id);
+        
+        if (profile) {
+          console.log('✅ Detailed profile found, updating user');
+          const detailedUser: User = {
+            id: supabaseUser.id,
+            name: `${profile.first_name} ${profile.last_name}`.trim(),
+            email: profile.email,
+            role: 'user',
+            profile: profile
+          };
+          setUser(detailedUser);
+          
+          // Chamar callback novamente com perfil detalhado
+          if (onSuccess) {
+            onSuccess(detailedUser);
+          }
+        }
+      } catch (profileError) {
+        console.warn('⚠️ Could not load detailed profile, keeping basic user:', profileError);
+        // Manter user básico se profile detalhado falhar
+      }
+      
     } catch (error) {
       console.error('❌ Error creating user profile:', error);
-      // Fallback user data
+      
+      // Fallback mínimo mesmo em caso de erro
       const fallbackProfile: User = {
         id: supabaseUser.id,
         name: supabaseUser.email?.split('@')[0] || 'User',
@@ -52,6 +72,10 @@ export const useUserProfile = () => {
       };
       setUser(fallbackProfile);
       console.log('⚠️ Using minimal fallback profile due to error');
+      
+      if (onSuccess) {
+        onSuccess(fallbackProfile);
+      }
     }
   }, [getProfileByAuthId]);
 
