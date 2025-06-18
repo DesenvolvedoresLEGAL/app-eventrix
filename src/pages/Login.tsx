@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Zap } from 'lucide-react';
@@ -12,13 +11,17 @@ const Login = () => {
   const { login, resetPassword, loading: authContextLoading, user } = useAuth();
   const navigate = useNavigate();
 
-  // CORREÇÃO: Redirecionamento reforçado quando usuário está autenticado
+  // CORREÇÃO FASE 4: Redirecionamento simplificado e robusto
   useEffect(() => {
     console.log('🔍 Login useEffect - User state:', user?.email || 'none', 'Loading:', authContextLoading);
     
+    // CORREÇÃO: Redirecionamento apenas quando há user E loading está false
     if (user && !authContextLoading) {
-      console.log('✅ User authenticated and not loading, redirecting to dashboard');
-      navigate('/dashboard', { replace: true });
+      console.log('✅ User authenticated and loading complete, redirecting to dashboard');
+      // Usar timeout para garantir que o estado foi totalmente processado
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 50);
     }
   }, [user, authContextLoading, navigate]);
   
@@ -38,7 +41,7 @@ const Login = () => {
       await login(email, password);
       console.log('✅ Login function completed');
       
-      // Redirecionamento será feito pelo useEffect quando user mudar
+      // CORREÇÃO: Redirecionamento será feito pelo useEffect quando user mudar
     } catch (error) {
       console.error('❌ Login error in component:', error);
       // Toast já é mostrado no useAuthOperations
@@ -70,8 +73,8 @@ const Login = () => {
     }
   };
 
-  // CORREÇÃO: Loading combinado apenas para UI, não para lógica de redirecionamento
-  const isPageLoading = authContextLoading || isLoggingIn;
+  // CORREÇÃO FASE 3: Loading simplificado
+  const isPageLoading = isLoggingIn; // Removido authContextLoading redundante
   
   // Debug adicional do estado de loading
   useEffect(() => {

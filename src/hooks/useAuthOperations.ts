@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,23 +13,17 @@ export const useAuthOperations = () => {
   const { toast } = useToast();
   const { createProfile } = useProfile();
 
-  // CORREÇÃO: Função para garantir limpeza de loading com timeout menor
-  const safeSetLoading = (value: boolean, timeoutMs: number = 5000) => {
-    console.log('🔄 useAuthOperations loading state changed to:', value);
-    setLoading(value);
-    
-    if (value) {
-      // Safety timeout reduzido para 5 segundos
-      setTimeout(() => {
-        console.warn('🚨 useAuthOperations loading timeout reached, forcing loading to false');
-        setLoading(false);
-      }, timeoutMs);
-    }
+  // CORREÇÃO FASE 5: Função de navegação centralizada
+  const safeNavigate = (path: string, delay: number = 100) => {
+    setTimeout(() => {
+      console.log('🔄 Navigating to:', path);
+      navigate(path, { replace: true });
+    }, delay);
   };
 
   const login = async (email: string, password: string) => {
     console.log('🔄 Starting login process for:', email);
-    safeSetLoading(true);
+    setLoading(true);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -60,8 +53,8 @@ export const useAuthOperations = () => {
           description: "Bem-vindo de volta ao Eventrix™",
         });
         
-        // CORREÇÃO: Redirecionamento será gerenciado pelo AuthContext após profile load
-        console.log('✅ Login completed, navigation will be handled by AuthContext');
+        // CORREÇÃO FASE 5: Navegação centralizada após pequeno delay
+        safeNavigate('/dashboard', 200);
       }
     } catch (error: any) {
       console.error('❌ Login error caught:', error.message);
@@ -72,15 +65,13 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // CORREÇÃO: Sempre limpar loading do useAuthOperations
-      console.log('🧹 Cleaning useAuthOperations loading state');
       setLoading(false);
     }
   };
 
   const register = async (userData: RegisterData) => {
     console.log('🔄 Starting registration process for:', userData.email);
-    safeSetLoading(true);
+    setLoading(true);
     
     try {
       const redirectUrl = `${window.location.origin}/dashboard`;
@@ -182,15 +173,13 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // CORREÇÃO: Sempre limpar loading
-      console.log('🧹 Cleaning registration loading state');
       setLoading(false);
     }
   };
 
   const resetPassword = async (email: string) => {
     console.log('🔄 Starting password reset for:', email);
-    safeSetLoading(true);
+    setLoading(true);
     
     try {
       const redirectUrl = `${window.location.origin}/login`;
@@ -222,15 +211,13 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // CORREÇÃO: Sempre limpar loading
-      console.log('🧹 Cleaning password reset loading state');
       setLoading(false);
     }
   };
 
   const updatePassword = async (password: string) => {
     console.log('🔄 Starting password update');
-    safeSetLoading(true);
+    setLoading(true);
     
     try {
       const { error } = await supabase.auth.updateUser({
@@ -259,15 +246,13 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // CORREÇÃO: Sempre limpar loading
-      console.log('🧹 Cleaning password update loading state');
       setLoading(false);
     }
   };
 
   const logout = async () => {
     console.log('🔄 Starting logout process');
-    safeSetLoading(true);
+    setLoading(true);
     
     try {
       await logAuthEvent('logout');
@@ -285,14 +270,13 @@ export const useAuthOperations = () => {
         description: "Você foi desconectado com sucesso",
       });
       
-      navigate('/login');
+      // CORREÇÃO FASE 5: Navegação centralizada
+      safeNavigate('/login');
     } catch (error) {
       console.error('❌ Logout failed:', error);
-      // Force logout even if there's an error
-      navigate('/login');
+      // Force navegação mesmo com erro
+      safeNavigate('/login');
     } finally {
-      // CORREÇÃO: Sempre limpar loading
-      console.log('🧹 Cleaning logout loading state');
       setLoading(false);
     }
   };

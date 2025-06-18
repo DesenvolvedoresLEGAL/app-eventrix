@@ -8,74 +8,53 @@ export const useUserProfile = () => {
   const [user, setUser] = useState<User | null>(null);
   const { getProfileByAuthId } = useProfile();
 
-  // CORREÇÃO: Create user profile com callback de sucesso
+  // CORREÇÃO FASE 2: Simplificar criação de perfil - sem promessas desnecessárias
   const createUserProfile = useCallback(async (
     supabaseUser: SupabaseUser, 
     onSuccess?: (user: User) => void
   ) => {
     try {
-      console.log('📝 Creating user profile for:', supabaseUser.email);
+      console.log('📝 Enhancing user profile for:', supabaseUser.email);
       
-      // Criar user básico imediatamente
-      const basicUser: User = {
-        id: supabaseUser.id,
-        name: supabaseUser.user_metadata?.name || 
-              `${supabaseUser.user_metadata?.firstName || ''} ${supabaseUser.user_metadata?.lastName || ''}`.trim() ||
-              supabaseUser.email?.split('@')[0] || 'User',
-        email: supabaseUser.email || '',
-        role: 'user'
-      };
+      // Tentar buscar perfil detalhado
+      const profile = await getProfileByAuthId(supabaseUser.id);
       
-      // Definir user básico imediatamente
-      setUser(basicUser);
-      console.log('✅ Basic user profile set immediately');
-      
-      // Chamar callback de sucesso se fornecido
-      if (onSuccess) {
-        onSuccess(basicUser);
-      }
-      
-      // Tentar buscar perfil detalhado em background
-      try {
-        const profile = await getProfileByAuthId(supabaseUser.id);
+      if (profile) {
+        console.log('✅ Detailed profile found, updating user');
+        const detailedUser: User = {
+          id: supabaseUser.id,
+          name: `${profile.first_name} ${profile.last_name}`.trim(),
+          email: profile.email,
+          role: 'user',
+          profile: profile
+        };
         
-        if (profile) {
-          console.log('✅ Detailed profile found, updating user');
-          const detailedUser: User = {
-            id: supabaseUser.id,
-            name: `${profile.first_name} ${profile.last_name}`.trim(),
-            email: profile.email,
-            role: 'user',
-            profile: profile
-          };
-          setUser(detailedUser);
-          
-          // Chamar callback novamente com perfil detalhado
-          if (onSuccess) {
-            onSuccess(detailedUser);
-          }
+        setUser(detailedUser);
+        
+        if (onSuccess) {
+          onSuccess(detailedUser);
         }
-      } catch (profileError) {
-        console.warn('⚠️ Could not load detailed profile, keeping basic user:', profileError);
-        // Manter user básico se profile detalhado falhar
+      } else {
+        console.log('ℹ️ No detailed profile found, keeping basic user');
+        // Manter user básico se não houver profile detalhado
+        const basicUser: User = {
+          id: supabaseUser.id,
+          name: supabaseUser.user_metadata?.name || 
+                `${supabaseUser.user_metadata?.firstName || ''} ${supabaseUser.user_metadata?.lastName || ''}`.trim() ||
+                supabaseUser.email?.split('@')[0] || 'User',
+          email: supabaseUser.email || '',
+          role: 'user'
+        };
+        
+        if (onSuccess) {
+          onSuccess(basicUser);
+        }
       }
       
     } catch (error) {
-      console.error('❌ Error creating user profile:', error);
-      
-      // Fallback mínimo mesmo em caso de erro
-      const fallbackProfile: User = {
-        id: supabaseUser.id,
-        name: supabaseUser.email?.split('@')[0] || 'User',
-        email: supabaseUser.email || '',
-        role: 'user'
-      };
-      setUser(fallbackProfile);
-      console.log('⚠️ Using minimal fallback profile due to error');
-      
-      if (onSuccess) {
-        onSuccess(fallbackProfile);
-      }
+      console.error('❌ Error enhancing user profile:', error);
+      // Não fazer nada - manter user básico já definido
+      throw error;
     }
   }, [getProfileByAuthId]);
 

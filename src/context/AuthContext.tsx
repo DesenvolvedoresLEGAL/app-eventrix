@@ -12,102 +12,132 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   
-  const { user, createUserProfile, clearUser } = useUserProfile();
+  const { user, createUserProfile, clearUser, setUser } = useUserProfile();
   const authOperations = useAuthOperations();
 
-  // CORREÇÃO: Função para gerenciar loading com timeout de segurança menor
-  const safeSetLoading = useCallback((value: boolean, timeoutMs: number = 2000) => {
-    console.log('🔄 AuthContext loading state changed to:', value);
-    setLoading(value);
-    
-    if (value) {
-      // Safety timeout reduzido para 2 segundos
-      setTimeout(() => {
-        console.warn('🚨 AuthContext loading timeout reached, forcing loading to false');
-        setLoading(false);
-      }, timeoutMs);
-    }
+  // CORREÇÃO FASE 1: Criar user básico imediatamente de uma sessão
+  const createImmediateUser = useCallback((session: Session): User => {
+    return {
+      id: session.user.id,
+      name: session.user.user_metadata?.name || 
+            `${session.user.user_metadata?.firstName || ''} ${session.user.user_metadata?.lastName || ''}`.trim() ||
+            session.user.email?.split('@')[0] || 'User',
+      email: session.user.email || '',
+      role: 'user'
+    };
   }, []);
 
-  // CORREÇÃO: Handler otimizado com propagação imediata do user state
-  const handleAuthStateChange = useCallback(async (event: string, session: Session | null) => {
+  // CORREÇÃO FASE 2: Handler síncrono otimizado
+  const handleAuthStateChange = useCallback((event: string, session: Session | null) => {
     console.log('🔄 Auth state changed:', event, session?.user?.email || 'no user');
     
+    // Sempre atualizar sessão imediatamente
     setSession(session);
     
     if (session?.user) {
-      console.log('👤 User authenticated, processing profile...');
+      console.log('👤 User authenticated, setting immediate user state');
       
-      // CORREÇÃO: Propagação imediata do user state - não esperar profile
-      const immediateUser: User = {
-        id: session.user.id,
-        name: session.user.user_metadata?.name || 
-              `${session.user.user_metadata?.firstName || ''} ${session.user.user_metadata?.lastName || ''}`.trim() ||
-              session.user.email?.split('@')[0] || 'User',
-        email: session.user.email || '',
-        role: 'user'
-      };
+      // CORREÇÃO: Criar e definir user imediatamente - SEM AWAIT
+      const immediateUser = createImmediateUser(session);
+      setUser(immediateUser);
+      console.log('✅ Immediate user state set for:', immediateUser.email);
       
-      // Definir user imediatamente para permitir redirecionamento
-      console.log('✅ Setting immediate user state for redirect');
-      
-      // Apenas buscar perfil detalhado para eventos específicos
+      // CORREÇÃO: Buscar perfil detalhado apenas em background, sem bloquear
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-        safeSetLoading(true, 2000);
-        
-        try {
-          // Criar perfil com callback de sucesso
-          await createUserProfile(session.user, (fullUser) => {
-            console.log('✅ Full user profile loaded successfully');
-            // Profile já foi atualizado pelo callback
+        // Usar setTimeout(0) para evitar bloqueio
+        setTimeout(() => {
+          createUserProfile(session.user, (fullUser) => {
+            console.log('✅ Enhanced user profile loaded');
+          }).catch((profileError) => {
+            console.warn('⚠️ Profile enhancement failed, keeping basic user:', profileError);
           });
-          
-          // Log apenas para login explícito
-          if (event === 'SIGNED_IN') {
-            await logAuthEvent('login', session.user.id);
-          }
-        } catch (profileError) {
-          console.warn('⚠️ Error loading profile, using fallback user:', profileError);
-          // Manter o user imediato mesmo se profile falhar
-        } finally {
-          console.log('🧹 Cleaning AuthContext loading after profile operations');
-          setLoading(false);
+        }, 0);
+        
+        // Log apenas para login explícito
+        if (event === 'SIGNED_IN') {
+          setTimeout(() => {
+            logAuthEvent('login', session.user.id).catch(console.error);
+          }, 0);
         }
-      } else {
-        // Para outros eventos, apenas limpar loading
-        console.log('🔄 Auth event processed, clearing loading');
-        setLoading(false);
       }
     } else {
       console.log('👤 No user in session, clearing profile...');
       clearUser();
+      
       if (event === 'SIGNED_OUT') {
-        try {
-          await logAuthEvent('logout');
-        } catch (logError) {
-          console.error('❌ Error logging logout event:', logError);
-        }
+        setTimeout(() => {
+          logAuthEvent('logout').catch(console.error);
+        }, 0);
       }
+    }
+    
+    // CORREÇÃO FASE 3: Simplificar loading - sempre limpar após processar
+    if (isInitialized) {
       setLoading(false);
     }
-  }, [createUserProfile, clearUser, safeSetLoading]);
+  }, [createUserProfile, clearUser, setUser, createImmediateUser, isInitialized]);
 
+  // CORREÇÃO FASE 1: Inicialização correta da sessão
   useEffect(() => {
-    console.log('🚀 Setting up optimized auth state listener...');
+    console.log('🚀 Initializing AuthContext with proper session handling...');
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    return () => {
-      console.log('🧹 Cleaning up auth subscription...');
-      subscription.unsubscribe();
+    let mounted = true;
+    
+    const initializeAuth = async () => {
+      try {
+        // STEP 1: Configurar listener PRIMEIRO
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+        
+        // STEP 2: Buscar sessão existente DEPOIS
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Error getting initial session:', error);
+        }
+        
+        if (mounted) {
+          console.log('📋 Initial session check:', session?.user?.email || 'no session');
+          
+          // Processar sessão inicial se existir
+          if (session) {
+            handleAuthStateChange('INITIAL_SESSION', session);
+          }
+          
+          // Marcar como inicializado
+          setIsInitialized(true);
+          setLoading(false);
+          console.log('✅ AuthContext initialization completed');
+        }
+        
+        return () => {
+          console.log('🧹 Cleaning up auth subscription...');
+          subscription.unsubscribe();
+        };
+      } catch (initError) {
+        console.error('❌ Auth initialization failed:', initError);
+        if (mounted) {
+          setIsInitialized(true);
+          setLoading(false);
+        }
+      }
     };
-  }, [handleAuthStateChange]);
+    
+    const cleanup = initializeAuth();
+    
+    return () => {
+      mounted = false;
+      cleanup.then(cleanupFn => cleanupFn && cleanupFn());
+    };
+  }, []); // CORREÇÃO: Sem dependências para evitar loops
 
-  // Debug logging para rastrear estados
+  // Debug logging otimizado
   useEffect(() => {
-    console.log('🔍 Auth States - User:', user?.email || 'none', 'Loading:', loading);
-  }, [user, loading]);
+    if (isInitialized) {
+      console.log('🔍 Auth States - User:', user?.email || 'none', 'Loading:', loading, 'Initialized:', isInitialized);
+    }
+  }, [user, loading, isInitialized]);
 
   return (
     <AuthContext.Provider value={{ 
