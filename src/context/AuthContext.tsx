@@ -16,36 +16,75 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { user, createUserProfile, clearUser } = useUserProfile();
   const authOperations = useAuthOperations();
 
-  // Otimizado: filtra eventos e remove redundância
+  // CORREÇÃO: Função para gerenciar loading com timeout de segurança
+  const safeSetLoading = useCallback((value: boolean, timeoutMs: number = 8000) => {
+    console.log('🔄 AuthContext loading state changed to:', value);
+    setLoading(value);
+    
+    if (value) {
+      // Safety timeout para evitar loading infinito
+      setTimeout(() => {
+        console.warn('🚨 AuthContext loading timeout reached, forcing loading to false');
+        setLoading(false);
+      }, timeoutMs);
+    }
+  }, []);
+
+  // CORREÇÃO: Handler otimizado com melhor controle de loading
   const handleAuthStateChange = useCallback(async (event: string, session: Session | null) => {
     console.log('🔄 Auth state changed:', event, session?.user?.email || 'no user');
     
     setSession(session);
     
+    // CORREÇÃO: Controle de loading mais granular
+    if (event === 'INITIAL_SESSION') {
+      safeSetLoading(true, 5000); // Timeout menor para sessão inicial
+    }
+    
     if (session?.user) {
       // Apenas buscar perfil em eventos específicos (INITIAL_SESSION e SIGNED_IN)
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
         console.log('👤 Loading user profile for event:', event);
-        await createUserProfile(session.user);
         
-        // Log apenas para login explícito
-        if (event === 'SIGNED_IN') {
-          await logAuthEvent('login', session.user.id);
+        try {
+          await createUserProfile(session.user);
+          
+          // Log apenas para login explícito
+          if (event === 'SIGNED_IN') {
+            await logAuthEvent('login', session.user.id);
+          }
+        } catch (profileError) {
+          console.error('❌ Error creating user profile:', profileError);
+          // CORREÇÃO: Não deixar loading travado mesmo se o perfil falhar
+        } finally {
+          // CORREÇÃO: Sempre limpar loading após operações de perfil
+          console.log('🧹 Cleaning AuthContext loading after profile operations');
+          setLoading(false);
         }
       } else if (event === 'TOKEN_REFRESHED') {
         // Apenas log, sem recarregar perfil (otimização de performance)
         console.log('🔄 Token refreshed for user:', session.user.email);
+        // CORREÇÃO: Não ativar loading para refresh de token
       }
     } else {
       console.log('👤 No user in session, clearing profile...');
       clearUser();
       if (event === 'SIGNED_OUT') {
-        await logAuthEvent('logout');
+        try {
+          await logAuthEvent('logout');
+        } catch (logError) {
+          console.error('❌ Error logging logout event:', logError);
+        }
       }
+      // CORREÇÃO: Sempre limpar loading quando não há usuário
+      setLoading(false);
     }
     
-    setLoading(false);
-  }, [createUserProfile, clearUser]);
+    // CORREÇÃO: Para eventos que não requerem operações assíncronas
+    if (!['INITIAL_SESSION', 'SIGNED_IN'].includes(event)) {
+      setLoading(false);
+    }
+  }, [createUserProfile, clearUser, safeSetLoading]);
 
   useEffect(() => {
     console.log('🚀 Setting up optimized auth state listener...');
@@ -59,10 +98,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [handleAuthStateChange]);
 
+  // CORREÇÃO: Loading combinado com lógica OR isolada para debug
+  const combinedLoading = loading || authOperations.loading;
+  
+  // Debug logging para rastrear estados de loading
+  useEffect(() => {
+    console.log('🔍 Loading states - AuthContext:', loading, 'AuthOperations:', authOperations.loading, 'Combined:', combinedLoading);
+  }, [loading, authOperations.loading, combinedLoading]);
+
   return (
     <AuthContext.Provider value={{ 
       user, 
-      loading: loading || authOperations.loading, 
+      loading: combinedLoading,
       ...authOperations
     }}>
       {children}

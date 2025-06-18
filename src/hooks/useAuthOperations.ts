@@ -14,8 +14,22 @@ export const useAuthOperations = () => {
   const { toast } = useToast();
   const { createProfile } = useProfile();
 
+  // Função para garantir que o loading seja sempre limpo após timeout
+  const safeSetLoading = (value: boolean, timeoutMs: number = 10000) => {
+    setLoading(value);
+    
+    if (value) {
+      // Safety timeout - sempre limpa o loading após timeout
+      setTimeout(() => {
+        console.warn('🚨 Loading timeout reached, forcing loading state to false');
+        setLoading(false);
+      }, timeoutMs);
+    }
+  };
+
   const login = async (email: string, password: string) => {
-    setLoading(true);
+    console.log('🔄 Starting login process for:', email);
+    safeSetLoading(true);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -24,6 +38,7 @@ export const useAuthOperations = () => {
       });
 
       if (error) {
+        console.error('❌ Login failed:', error.message);
         await logAuthEvent('login_failed');
         
         if (error.message.includes('Invalid login credentials')) {
@@ -38,6 +53,7 @@ export const useAuthOperations = () => {
       }
 
       if (data.user) {
+        console.log('✅ Login successful for:', data.user.email);
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta ao Eventrix™",
@@ -46,6 +62,7 @@ export const useAuthOperations = () => {
         navigate('/dashboard');
       }
     } catch (error: any) {
+      console.error('❌ Login error caught:', error.message);
       toast({
         title: "Erro no login",
         description: error.message,
@@ -53,12 +70,15 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
+      // CORREÇÃO: Garantir que loading seja sempre limpo
+      console.log('🧹 Cleaning login loading state');
       setLoading(false);
     }
   };
 
   const register = async (userData: RegisterData) => {
-    setLoading(true);
+    console.log('🔄 Starting registration process for:', userData.email);
+    safeSetLoading(true);
     
     try {
       const redirectUrl = `${window.location.origin}/dashboard`;
@@ -160,12 +180,16 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // Always reset loading state
+      // CORREÇÃO: Garantir que loading seja sempre limpo
+      console.log('🧹 Cleaning registration loading state');
       setLoading(false);
     }
   };
 
   const resetPassword = async (email: string) => {
+    console.log('🔄 Starting password reset for:', email);
+    safeSetLoading(true);
+    
     try {
       const redirectUrl = `${window.location.origin}/login`;
       
@@ -175,10 +199,12 @@ export const useAuthOperations = () => {
       );
 
       if (error) {
+        console.error('❌ Password reset failed:', error.message);
         await logAuthEvent('password_reset_failed');
         throw new Error('Erro ao enviar email de recuperação');
       }
 
+      console.log('✅ Password reset email sent successfully');
       await logAuthEvent('password_reset_requested');
       
       toast({
@@ -186,26 +212,36 @@ export const useAuthOperations = () => {
         description: "Verifique sua caixa de entrada",
       });
     } catch (error: any) {
+      console.error('❌ Password reset error:', error.message);
       toast({
         title: "Erro na recuperação de senha",
         description: error.message,
         variant: "destructive",
       });
       throw error;
+    } finally {
+      // CORREÇÃO: Garantir que loading seja sempre limpo
+      console.log('🧹 Cleaning password reset loading state');
+      setLoading(false);
     }
   };
 
   const updatePassword = async (password: string) => {
+    console.log('🔄 Starting password update');
+    safeSetLoading(true);
+    
     try {
       const { error } = await supabase.auth.updateUser({
         password
       });
 
       if (error) {
+        console.error('❌ Password update failed:', error.message);
         await logAuthEvent('password_change_failed');
         throw new Error('Erro ao alterar senha');
       }
 
+      console.log('✅ Password updated successfully');
       await logAuthEvent('password_changed');
       
       toast({
@@ -213,23 +249,33 @@ export const useAuthOperations = () => {
         description: "Sua senha foi atualizada",
       });
     } catch (error: any) {
+      console.error('❌ Password update error:', error.message);
       toast({
         title: "Erro ao alterar senha",
         description: error.message,
         variant: "destructive",
       });
       throw error;
+    } finally {
+      // CORREÇÃO: Garantir que loading seja sempre limpo
+      console.log('🧹 Cleaning password update loading state');
+      setLoading(false);
     }
   };
 
   const logout = async () => {
+    console.log('🔄 Starting logout process');
+    safeSetLoading(true);
+    
     try {
       await logAuthEvent('logout');
       
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('Logout error:', error);
+        console.error('❌ Logout error:', error);
+      } else {
+        console.log('✅ Logout successful');
       }
       
       toast({
@@ -239,9 +285,13 @@ export const useAuthOperations = () => {
       
       navigate('/login');
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('❌ Logout failed:', error);
       // Force logout even if there's an error
       navigate('/login');
+    } finally {
+      // CORREÇÃO: Garantir que loading seja sempre limpo
+      console.log('🧹 Cleaning logout loading state');
+      setLoading(false);
     }
   };
 

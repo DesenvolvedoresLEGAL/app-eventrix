@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -8,8 +8,16 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const { login, resetPassword, loading } = useAuth();
+  const { login, resetPassword, loading, user } = useAuth();
   const navigate = useNavigate();
+
+  // CORREÇÃO: Redirecionamento quando usuário já está logado
+  useEffect(() => {
+    if (user) {
+      console.log('👤 User already authenticated, redirecting to dashboard');
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,11 +26,16 @@ const Login = () => {
       return;
     }
     
+    console.log('🔄 Login form submitted for:', email);
+    
     try {
       await login(email, password);
+      // CORREÇÃO: Não fazer navigate aqui - deixar o AuthContext/useAuthOperations gerenciar
+      console.log('✅ Login completed successfully');
     } catch (error) {
-      // Error handling is done in the AuthContext
-      console.error('Login error:', error);
+      // CORREÇÃO: Error handling melhorado
+      console.error('❌ Login error in component:', error);
+      // Toast já é mostrado no useAuthOperations, não precisamos duplicar
     }
   };
 
@@ -34,16 +47,25 @@ const Login = () => {
       return;
     }
     
+    console.log('🔄 Password reset requested for:', email);
     setIsResettingPassword(true);
     
     try {
       await resetPassword(email);
+      console.log('✅ Password reset completed successfully');
     } catch (error) {
-      console.error('Password reset error:', error);
+      console.error('❌ Password reset error in component:', error);
     } finally {
+      // CORREÇÃO: Sempre limpar estado local de reset
+      console.log('🧹 Cleaning password reset state');
       setIsResettingPassword(false);
     }
   };
+
+  // CORREÇÃO: Debug do estado de loading
+  useEffect(() => {
+    console.log('🔍 Login component loading state:', loading);
+  }, [loading]);
   
   return (
     <div className="min-h-screen flex flex-col md:flex-row tech-grid">
@@ -126,7 +148,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    disabled={isResettingPassword || !email.trim()}
+                    disabled={isResettingPassword || !email.trim() || loading}
                     className="text-sm text-primary hover:text-primary/80 font-medium transition-colors disabled:opacity-50"
                   >
                     {isResettingPassword ? 'Enviando...' : 'Esqueceu?'}
@@ -146,7 +168,7 @@ const Login = () => {
               
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !email.trim() || !password.trim()}
                 className="tech-button w-full py-3 font-semibold flex items-center justify-center gap-2 disabled:opacity-70"
               >
                 {loading ? 'Entrando...' : (
