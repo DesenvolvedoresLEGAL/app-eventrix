@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 
 const EventsList = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const { events, isLoading, error, hasEvents, refetchEvents } = useEvents();
 
   // Loading state
@@ -78,7 +78,7 @@ const EventsList = () => {
   }
 
   // Not authenticated state
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <div>
         <div className="flex justify-between mb-6">

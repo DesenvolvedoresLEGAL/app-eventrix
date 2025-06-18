@@ -90,7 +90,6 @@ export const useEvents = (filters?: EventFilters) => {
     
     // Flags úteis
     hasEvents: events.length > 0,
-    isAuthenticated: !!user?.id,
   };
 };
 
