@@ -1,80 +1,143 @@
 
 import React from 'react';
-import { Calendar, Edit, Info, MoreHorizontal, Trash2 } from 'lucide-react';
-
-interface Event {
-  id: number;
-  name: string;
-  date: string;
-  location: string;
-  status: 'upcoming' | 'ongoing' | 'completed';
-  exhibitors: number;
-}
+import { Calendar, Edit, Info, Trash2 } from 'lucide-react';
+import { useEvents } from '@/hooks/useEvents';
+import { useAuth } from '@/context/AuthContext';
+import { 
+  formatEventPeriod, 
+  formatEventLocation, 
+  getStatusBadgeClasses, 
+  getStatusLabel 
+} from '@/utils/eventUtils';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 
 const EventsList = () => {
-  // Sample data
-  const events: Event[] = [
-    {
-      id: 1,
-      name: 'Tech Summit 2024',
-      date: '10-12 de Outubro, 2024',
-      location: 'São Paulo, SP',
-      status: 'upcoming',
-      exhibitors: 120,
-    },
-    {
-      id: 2,
-      name: 'Business Expo 2024',
-      date: '15-18 de Setembro, 2024',
-      location: 'Rio de Janeiro, RJ',
-      status: 'upcoming',
-      exhibitors: 85,
-    },
-    {
-      id: 3,
-      name: 'Innovation Conference',
-      date: '20-22 de Julho, 2024',
-      location: 'Belo Horizonte, MG',
-      status: 'ongoing',
-      exhibitors: 50,
-    },
-    {
-      id: 4,
-      name: 'Digital Marketing Forum',
-      date: '5-7 de Junho, 2024',
-      location: 'Florianópolis, SC',
-      status: 'completed',
-      exhibitors: 32,
-    },
-    {
-      id: 5,
-      name: 'Startup Weekend',
-      date: '18-20 de Maio, 2024',
-      location: 'Recife, PE',
-      status: 'completed',
-      exhibitors: 25,
-    },
-  ];
+  const { user, isAuthenticated } = useAuth();
+  const { events, isLoading, error, hasEvents, refetchEvents } = useEvents();
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'upcoming':
-        return <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">Próximo</span>;
-      case 'ongoing':
-        return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Em andamento</span>;
-      case 'completed':
-        return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Concluído</span>;
-      default:
-        return null;
-    }
-  };
+  // Loading state
+  if (isLoading) {
+    return (
+      <div>
+        <div className="flex justify-between mb-6">
+          <div>
+            <h2>Eventos</h2>
+            <p className="text-muted-foreground">Carregando seus eventos...</p>
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
 
+        <Card className="p-6">
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center space-x-4">
+                <Skeleton className="h-8 w-8 rounded" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div>
+        <div className="flex justify-between mb-6">
+          <div>
+            <h2>Eventos</h2>
+            <p className="text-muted-foreground">Gerencie todos os seus eventos</p>
+          </div>
+          <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary-dark transition-colors">
+            + Novo Evento
+          </button>
+        </div>
+
+        <Card className="p-6">
+          <div className="text-center py-8">
+            <p className="text-red-600 mb-4">❌ {error}</p>
+            <button 
+              onClick={refetchEvents}
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary-dark transition-colors"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Not authenticated state
+  if (!isAuthenticated) {
+    return (
+      <div>
+        <div className="flex justify-between mb-6">
+          <div>
+            <h2>Eventos</h2>
+            <p className="text-muted-foreground">Gerencie todos os seus eventos</p>
+          </div>
+        </div>
+
+        <Card className="p-6">
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">
+              Você precisa estar logado para ver seus eventos.
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (!hasEvents) {
+    return (
+      <div>
+        <div className="flex justify-between mb-6">
+          <div>
+            <h2>Eventos</h2>
+            <p className="text-muted-foreground">Gerencie todos os seus eventos</p>
+          </div>
+          <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary-dark transition-colors">
+            + Novo Evento
+          </button>
+        </div>
+
+        <Card className="p-6">
+          <div className="text-center py-8">
+            <Calendar size={48} className="mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Nenhum evento encontrado</h3>
+            <p className="text-muted-foreground mb-4">
+              Você ainda não criou nenhum evento. Comece criando seu primeiro evento!
+            </p>
+            <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary-dark transition-colors">
+              + Criar Primeiro Evento
+            </button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Main content with events
   return (
     <div>
       <div className="flex justify-between mb-6">
         <div>
           <h2>Eventos</h2>
-          <p className="text-muted-foreground">Gerencie todos os seus eventos</p>
+          <p className="text-muted-foreground">
+            Gerencie todos os seus eventos ({events.length} evento{events.length !== 1 ? 's' : ''})
+          </p>
         </div>
         <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary-dark transition-colors">
           + Novo Evento
@@ -105,10 +168,30 @@ const EventsList = () => {
                       <span className="font-medium">{event.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3">{event.date}</td>
-                  <td className="px-4 py-3">{event.location}</td>
-                  <td className="px-4 py-3">{getStatusBadge(event.status)}</td>
-                  <td className="px-4 py-3">{event.exhibitors}</td>
+                  <td className="px-4 py-3">
+                    {formatEventPeriod(
+                      event.start_date, 
+                      event.end_date, 
+                      event.start_time, 
+                      event.end_time
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {formatEventLocation(
+                      event.location,
+                      event.city,
+                      event.state,
+                      event.venue_name
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClasses(event.status)}`}>
+                      {getStatusLabel(event.status)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {event.exhibitors_count || 0}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-center space-x-2">
                       <button className="p-1.5 rounded-md hover:bg-muted">
