@@ -3,6 +3,7 @@ import React from 'react';
 import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SidebarFooterProps {
   isCollapsed: boolean;
@@ -10,9 +11,11 @@ interface SidebarFooterProps {
 
 const SidebarFooter: React.FC<SidebarFooterProps> = ({ isCollapsed }) => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
+    navigate('/login')
   };
 
   return (
