@@ -8,7 +8,8 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const { login, resetPassword, loading, user } = useAuth();
+  const [isLoggingIn, setIsLoggingIn] = useState(false); // CORREÇÃO: Estado local para login
+  const { login, resetPassword, loading: authContextLoading, user } = useAuth();
   const navigate = useNavigate();
 
   // CORREÇÃO: Redirecionamento quando usuário já está logado
@@ -28,14 +29,20 @@ const Login = () => {
     
     console.log('🔄 Login form submitted for:', email);
     
+    // CORREÇÃO: Usar estado local para controlar loading do botão
+    setIsLoggingIn(true);
+    
     try {
       await login(email, password);
-      // CORREÇÃO: Não fazer navigate aqui - deixar o AuthContext/useAuthOperations gerenciar
       console.log('✅ Login completed successfully');
+      // CORREÇÃO: Redirecionamento será feito pelo useEffect quando user mudar
     } catch (error) {
-      // CORREÇÃO: Error handling melhorado
       console.error('❌ Login error in component:', error);
       // Toast já é mostrado no useAuthOperations, não precisamos duplicar
+    } finally {
+      // CORREÇÃO: Sempre limpar estado local de login
+      console.log('🧹 Cleaning local login loading state');
+      setIsLoggingIn(false);
     }
   };
 
@@ -62,10 +69,13 @@ const Login = () => {
     }
   };
 
-  // CORREÇÃO: Debug do estado de loading
+  // CORREÇÃO: Combinar loading states para UI - usando OR lógico mas com estados isolados
+  const isPageLoading = authContextLoading || isLoggingIn;
+  
+  // Debug do estado de loading
   useEffect(() => {
-    console.log('🔍 Login component loading state:', loading);
-  }, [loading]);
+    console.log('🔍 Login component loading states - AuthContext:', authContextLoading, 'Local:', isLoggingIn, 'Combined:', isPageLoading);
+  }, [authContextLoading, isLoggingIn, isPageLoading]);
   
   return (
     <div className="min-h-screen flex flex-col md:flex-row tech-grid">
@@ -138,7 +148,7 @@ const Login = () => {
                   className="tech-input w-full"
                   placeholder="seu@email.com"
                   required
-                  disabled={loading}
+                  disabled={isPageLoading}
                 />
               </div>
               
@@ -148,7 +158,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    disabled={isResettingPassword || !email.trim() || loading}
+                    disabled={isResettingPassword || !email.trim() || isPageLoading}
                     className="text-sm text-primary hover:text-primary/80 font-medium transition-colors disabled:opacity-50"
                   >
                     {isResettingPassword ? 'Enviando...' : 'Esqueceu?'}
@@ -162,16 +172,16 @@ const Login = () => {
                   className="tech-input w-full"
                   placeholder="********"
                   required
-                  disabled={loading}
+                  disabled={isPageLoading}
                 />
               </div>
               
               <button
                 type="submit"
-                disabled={loading || !email.trim() || !password.trim()}
+                disabled={isPageLoading || !email.trim() || !password.trim()}
                 className="tech-button w-full py-3 font-semibold flex items-center justify-center gap-2 disabled:opacity-70"
               >
-                {loading ? 'Entrando...' : (
+                {isLoggingIn ? 'Entrando...' : (
                   <>
                     Entrar
                     <ArrowRight size={16} />
