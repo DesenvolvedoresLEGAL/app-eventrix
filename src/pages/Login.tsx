@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -7,47 +8,21 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const { login, resetPassword, loading: authContextLoading, user } = useAuth();
+  const { login, resetPassword, loading } = useAuth();
   const navigate = useNavigate();
-
-  // CORREÇÃO FASE 4: Redirecionamento simplificado e robusto
-  useEffect(() => {
-    console.log('🔍 Login useEffect - User state:', user?.email || 'none', 'Loading:', authContextLoading);
-    
-    // CORREÇÃO: Redirecionamento apenas quando há user E loading está false
-    if (user && !authContextLoading) {
-      console.log('✅ User authenticated and loading complete, redirecting to dashboard');
-      // Usar timeout para garantir que o estado foi totalmente processado
-      setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 50);
-    }
-  }, [user, authContextLoading, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email.trim() || !password.trim()) {
-      console.warn('⚠️ Login form submitted with empty fields');
       return;
     }
     
-    console.log('🔄 Login form submitted for:', email);
-    setIsLoggingIn(true);
-    
     try {
-      console.log('🚀 Calling login function...');
       await login(email, password);
-      console.log('✅ Login function completed');
-      
-      // CORREÇÃO: Redirecionamento será feito pelo useEffect quando user mudar
     } catch (error) {
-      console.error('❌ Login error in component:', error);
-      // Toast já é mostrado no useAuthOperations
-    } finally {
-      console.log('🧹 Cleaning local login loading state');
-      setIsLoggingIn(false);
+      // Error handling is done in the AuthContext
+      console.error('Login error:', error);
     }
   };
 
@@ -59,27 +34,16 @@ const Login = () => {
       return;
     }
     
-    console.log('🔄 Password reset requested for:', email);
     setIsResettingPassword(true);
     
     try {
       await resetPassword(email);
-      console.log('✅ Password reset completed successfully');
     } catch (error) {
-      console.error('❌ Password reset error in component:', error);
+      console.error('Password reset error:', error);
     } finally {
-      console.log('🧹 Cleaning password reset state');
       setIsResettingPassword(false);
     }
   };
-
-  // CORREÇÃO FASE 3: Loading simplificado
-  const isPageLoading = isLoggingIn; // Removido authContextLoading redundante
-  
-  // Debug adicional do estado de loading
-  useEffect(() => {
-    console.log('🔍 Login loading states - AuthContext:', authContextLoading, 'Local:', isLoggingIn, 'Combined:', isPageLoading);
-  }, [authContextLoading, isLoggingIn, isPageLoading]);
   
   return (
     <div className="min-h-screen flex flex-col md:flex-row tech-grid">
@@ -126,7 +90,7 @@ const Login = () => {
         </div>
       </div>
       
-      {/* Right side - Login form */}
+      {/* Right side - Login form com tech design */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
           <div className="tech-card p-8 mb-8">
@@ -152,7 +116,7 @@ const Login = () => {
                   className="tech-input w-full"
                   placeholder="seu@email.com"
                   required
-                  disabled={isPageLoading}
+                  disabled={loading}
                 />
               </div>
               
@@ -162,7 +126,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    disabled={isResettingPassword || !email.trim() || isPageLoading}
+                    disabled={isResettingPassword || !email.trim()}
                     className="text-sm text-primary hover:text-primary/80 font-medium transition-colors disabled:opacity-50"
                   >
                     {isResettingPassword ? 'Enviando...' : 'Esqueceu?'}
@@ -176,16 +140,16 @@ const Login = () => {
                   className="tech-input w-full"
                   placeholder="********"
                   required
-                  disabled={isPageLoading}
+                  disabled={loading}
                 />
               </div>
               
               <button
                 type="submit"
-                disabled={isPageLoading || !email.trim() || !password.trim()}
+                disabled={loading}
                 className="tech-button w-full py-3 font-semibold flex items-center justify-center gap-2 disabled:opacity-70"
               >
-                {isLoggingIn ? 'Entrando...' : (
+                {loading ? 'Entrando...' : (
                   <>
                     Entrar
                     <ArrowRight size={16} />
