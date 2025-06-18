@@ -16,13 +16,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { user, createUserProfile, clearUser } = useUserProfile();
   const authOperations = useAuthOperations();
 
-  // CORREÇÃO: Função para gerenciar loading com timeout de segurança
-  const safeSetLoading = useCallback((value: boolean, timeoutMs: number = 8000) => {
+  // CORREÇÃO: Função para gerenciar loading com timeout de segurança reduzido
+  const safeSetLoading = useCallback((value: boolean, timeoutMs: number = 3000) => {
     console.log('🔄 AuthContext loading state changed to:', value);
     setLoading(value);
     
     if (value) {
-      // Safety timeout para evitar loading infinito
+      // Safety timeout reduzido para 3 segundos
       setTimeout(() => {
         console.warn('🚨 AuthContext loading timeout reached, forcing loading to false');
         setLoading(false);
@@ -30,15 +30,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  // CORREÇÃO: Handler otimizado com melhor controle de loading
+  // CORREÇÃO: Handler otimizado com controle de loading mais rigoroso
   const handleAuthStateChange = useCallback(async (event: string, session: Session | null) => {
     console.log('🔄 Auth state changed:', event, session?.user?.email || 'no user');
     
     setSession(session);
     
-    // CORREÇÃO: Controle de loading mais granular
-    if (event === 'INITIAL_SESSION') {
-      safeSetLoading(true, 5000); // Timeout menor para sessão inicial
+    // CORREÇÃO: Controle de loading mais granular - apenas para operações que requerem profile
+    if (event === 'INITIAL_SESSION' && session?.user) {
+      safeSetLoading(true, 3000);
     }
     
     if (session?.user) {
@@ -55,7 +55,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         } catch (profileError) {
           console.error('❌ Error creating user profile:', profileError);
-          // CORREÇÃO: Não deixar loading travado mesmo se o perfil falhar
         } finally {
           // CORREÇÃO: Sempre limpar loading após operações de perfil
           console.log('🧹 Cleaning AuthContext loading after profile operations');
@@ -65,6 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Apenas log, sem recarregar perfil (otimização de performance)
         console.log('🔄 Token refreshed for user:', session.user.email);
         // CORREÇÃO: Não ativar loading para refresh de token
+        setLoading(false);
       }
     } else {
       console.log('👤 No user in session, clearing profile...');
@@ -80,8 +80,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     }
     
-    // CORREÇÃO: Para eventos que não requerem operações assíncronas
-    if (!['INITIAL_SESSION', 'SIGNED_IN'].includes(event)) {
+    // CORREÇÃO: Para eventos que não requerem operações assíncronas, limpar loading
+    if (!['INITIAL_SESSION', 'SIGNED_IN'].includes(event) || !session?.user) {
       setLoading(false);
     }
   }, [createUserProfile, clearUser, safeSetLoading]);
@@ -98,18 +98,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [handleAuthStateChange]);
 
-  // CORREÇÃO: Loading combinado com lógica OR isolada para debug
-  const combinedLoading = loading || authOperations.loading;
+  // CORREÇÃO: Usar apenas loading do AuthContext - não combinar com authOperations.loading
+  // Isso evita o problema de loading combinado que causava loading infinito
   
   // Debug logging para rastrear estados de loading
   useEffect(() => {
-    console.log('🔍 Loading states - AuthContext:', loading, 'AuthOperations:', authOperations.loading, 'Combined:', combinedLoading);
-  }, [loading, authOperations.loading, combinedLoading]);
+    console.log('🔍 Loading states - AuthContext:', loading, 'AuthOperations:', authOperations.loading);
+  }, [loading, authOperations.loading]);
 
   return (
     <AuthContext.Provider value={{ 
       user, 
-      loading: combinedLoading,
+      loading: loading, // CORREÇÃO: Usar apenas loading do AuthContext
       ...authOperations
     }}>
       {children}

@@ -14,14 +14,15 @@ export const useAuthOperations = () => {
   const { toast } = useToast();
   const { createProfile } = useProfile();
 
-  // Função para garantir que o loading seja sempre limpo após timeout
-  const safeSetLoading = (value: boolean, timeoutMs: number = 10000) => {
+  // CORREÇÃO: Função para garantir limpeza de loading com timeout menor
+  const safeSetLoading = (value: boolean, timeoutMs: number = 5000) => {
+    console.log('🔄 useAuthOperations loading state changed to:', value);
     setLoading(value);
     
     if (value) {
-      // Safety timeout - sempre limpa o loading após timeout
+      // Safety timeout reduzido para 5 segundos
       setTimeout(() => {
-        console.warn('🚨 Loading timeout reached, forcing loading state to false');
+        console.warn('🚨 useAuthOperations loading timeout reached, forcing loading to false');
         setLoading(false);
       }, timeoutMs);
     }
@@ -59,7 +60,8 @@ export const useAuthOperations = () => {
           description: "Bem-vindo de volta ao Eventrix™",
         });
         
-        navigate('/dashboard');
+        // CORREÇÃO: Redirecionamento será gerenciado pelo AuthContext após profile load
+        console.log('✅ Login completed, navigation will be handled by AuthContext');
       }
     } catch (error: any) {
       console.error('❌ Login error caught:', error.message);
@@ -70,8 +72,8 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // CORREÇÃO: Garantir que loading seja sempre limpo
-      console.log('🧹 Cleaning login loading state');
+      // CORREÇÃO: Sempre limpar loading do useAuthOperations
+      console.log('🧹 Cleaning useAuthOperations loading state');
       setLoading(false);
     }
   };
@@ -180,7 +182,7 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // CORREÇÃO: Garantir que loading seja sempre limpo
+      // CORREÇÃO: Sempre limpar loading
       console.log('🧹 Cleaning registration loading state');
       setLoading(false);
     }
@@ -220,7 +222,7 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // CORREÇÃO: Garantir que loading seja sempre limpo
+      // CORREÇÃO: Sempre limpar loading
       console.log('🧹 Cleaning password reset loading state');
       setLoading(false);
     }
@@ -257,7 +259,7 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // CORREÇÃO: Garantir que loading seja sempre limpo
+      // CORREÇÃO: Sempre limpar loading
       console.log('🧹 Cleaning password update loading state');
       setLoading(false);
     }
@@ -289,7 +291,7 @@ export const useAuthOperations = () => {
       // Force logout even if there's an error
       navigate('/login');
     } finally {
-      // CORREÇÃO: Garantir que loading seja sempre limpo
+      // CORREÇÃO: Sempre limpar loading
       console.log('🧹 Cleaning logout loading state');
       setLoading(false);
     }
