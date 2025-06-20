@@ -1,4 +1,3 @@
-
 import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { EventStatus, EventCategory } from '@/types/events';
@@ -74,20 +73,38 @@ export const formatEventPeriod = (
     return 'Data não definida';
   }
   
-  if (formattedStart === formattedEnd) {
+  // Verificar se é o mesmo dia
+  const isSameDay = formattedStart === formattedEnd;
+  
+  if (isSameDay) {
     // Mesmo dia
     if (startTime && endTime) {
       return `${formattedStart}, ${startTime} - ${endTime}`;
+    } else if (startTime) {
+      return `${formattedStart} às ${startTime}`;
     }
     return formattedStart;
+  } else {
+    // Dias diferentes
+    let result = '';
+    
+    if (formattedStart) {
+      result += formattedStart;
+      if (startTime) {
+        result += ` ${startTime}`;
+      }
+    }
+    
+    if (formattedEnd) {
+      if (result) result += ' - ';
+      result += formattedEnd;
+      if (endTime) {
+        result += ` ${endTime}`;
+      }
+    }
+    
+    return result || (formattedStart || formattedEnd);
   }
-  
-  // Dias diferentes
-  if (formattedStart && formattedEnd) {
-    return `${formattedStart} - ${formattedEnd}`;
-  }
-  
-  return formattedStart || formattedEnd;
 };
 
 /**
