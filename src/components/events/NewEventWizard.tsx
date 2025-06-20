@@ -128,7 +128,8 @@ const NewEventWizard = () => {
   // Event category mapping
   const mapCategory = (category: string) => {
     const validCategories = ['conferencia', 'workshop', 'seminario', 'feira/exposicao', 'festival', 'congresso', 'treinamento', 'lancamento de produto', 'networking', 'webinar', 'outro'];
-    return validCategories.includes(category.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "")) ? category.toLowerCase() : 'other';
+    const cleanCategory = category.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    return validCategories.includes(cleanCategory) ? cleanCategory : 'other';
   };
 
   // Helper function to safely convert time fields
