@@ -1,5 +1,4 @@
-
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Calendar, Edit, Info, Trash2 } from 'lucide-react';
 import { useEvents } from '@/hooks/useEvents';
 import { useAuth } from '@/context/AuthContext';
@@ -12,16 +11,27 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
+import EventDetailsModal from './EventDetailsModal';
 
 const EventsList = () => {
   const { user } = useAuth();
   const { events, isLoading, error, hasEvents, refetchEvents, deleteEvent, isDeleting } = useEvents();
+  
+  // Estados do modal
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleEventDetails = async () => { 
-    // TODO: exibir modal pop-up com  informações detalhadas do evento. Separados com UI e UX seguindo os padrões de design do eventrix.
-  }
+  const handleEventDetails = useCallback((eventId: string) => {
+    setSelectedEventId(eventId);
+    setIsModalOpen(true);
+  }, []);
 
-  const handleEventDelete = async (eventId: string, eventName: string) => {
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedEventId(null);
+  }, []);
+
+  const handleEventDelete = useCallback(async (eventId: string, eventName: string) => {
     const confirmation = confirm(`Certeza que deseja deletar o evento "${eventName}"?\nO evento será movido para a lixeira e poderá ser recuperado posteriormente.`);
 
     if (confirmation) {
@@ -37,7 +47,7 @@ const EventsList = () => {
         });
       }
     }
-  };
+  }, [deleteEvent]);
 
   // Memoizar a renderização da tabela para otimizar performance
   const eventsTable = useMemo(() => {
@@ -94,7 +104,10 @@ const EventsList = () => {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-center space-x-2">
-                      <button onClick={handleEventDetails} className="p-1.5 rounded-md hover:bg-muted">
+                      <button 
+                        onClick={() => handleEventDetails(event.id)} 
+                        className="p-1.5 rounded-md hover:bg-muted"
+                      >
                         <Info size={16} className="text-primary" />
                       </button>
                       <button className="p-1.5 rounded-md hover:bg-muted">
@@ -116,7 +129,7 @@ const EventsList = () => {
         </div>
       </div>
     );
-  }, [events, hasEvents, isDeleting, handleEventDelete]);
+  }, [events, hasEvents, isDeleting, handleEventDelete, handleEventDetails]);
 
   // Loading state
   if (isLoading) {
@@ -247,6 +260,13 @@ const EventsList = () => {
       </div>
 
       {eventsTable}
+      
+      {/* Modal de Detalhes do Evento */}
+      <EventDetailsModal
+        eventId={selectedEventId}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
       
       {isDeleting && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
