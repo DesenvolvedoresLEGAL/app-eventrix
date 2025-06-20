@@ -81,9 +81,7 @@ const EventsList = () => {
                   <td className="px-4 py-3">
                     {formatEventPeriod(
                       event.start_date, 
-                      event.end_date, 
-                      event.start_time, 
-                      event.end_time
+                      event.end_date
                     )}
                   </td>
                   <td className="px-4 py-3">
