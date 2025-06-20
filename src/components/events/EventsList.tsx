@@ -11,10 +11,22 @@ import {
 } from '@/utils/eventUtils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 const EventsList = () => {
   const { user } = useAuth();
   const { events, isLoading, error, hasEvents, refetchEvents } = useEvents();
+
+  const handleEventDelete = () => {
+    const confirmation = confirm("Certeza que deseja deletar este evento?\nEsta ação é irreversível!");
+
+    if(confirmation) {
+      
+
+      toast.info("Evento excluído!");
+    }
+
+  };
 
   // Loading state
   if (isLoading) {
@@ -200,7 +212,7 @@ const EventsList = () => {
                       <button className="p-1.5 rounded-md hover:bg-muted">
                         <Edit size={16} className="text-muted-foreground" />
                       </button>
-                      <button className="p-1.5 rounded-md hover:bg-muted">
+                      <button onClick={handleEventDelete} className="p-1.5 rounded-md hover:bg-muted">
                         <Trash2 size={16} className="text-destructive" />
                       </button>
                     </div>
