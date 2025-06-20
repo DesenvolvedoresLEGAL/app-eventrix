@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Profile, CreateProfileData } from '@/types/profile';
@@ -6,6 +7,9 @@ import { Profile, CreateProfileData } from '@/types/profile';
 export const useProfile = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  
+  // Cache para evitar múltiplas requisições do mesmo perfil
+  const profileFetchCache = useRef<Map<string, Promise<Profile | null>>>(new Map());
 
   const createProfile = async (profileData: CreateProfileData): Promise<Profile | null> => {
     setLoading(true);
@@ -66,34 +70,49 @@ export const useProfile = () => {
     }
   };
 
-  const getProfileByAuthId = async (authUserId: string): Promise<Profile | null> => {
-    console.log('🔍 Starting profile fetch for auth user:', authUserId);
-    setLoading(true);
+  const getProfileByAuthId = useCallback(async (authUserId: string): Promise<Profile | null> => {
+    console.log('🔍 Starting optimized profile fetch for auth user:', authUserId);
     
-    try {
-      console.log('📡 Making Supabase query...');
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('auth_user_id', authUserId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('❌ Supabase error during profile fetch:', error);
-        throw error;
-      }
-
-      console.log('📋 Profile fetch result:', data ? `Found profile ${data.uuid}` : 'Profile not found');
-      return data;
-    } catch (error: any) {
-      console.error('❌ Profile fetch failed:', error);
-      throw new Error('Erro ao buscar perfil do usuário');
-    } finally {
-      console.log('✅ Profile fetch completed, resetting loading state');
-      setLoading(false);
+    // Verificar cache de requisições em andamento
+    if (profileFetchCache.current.has(authUserId)) {
+      console.log('⏳ Using cached promise for profile fetch:', authUserId);
+      return profileFetchCache.current.get(authUserId)!;
     }
-  };
+    
+    // Criar promise e adicionar ao cache
+    const fetchPromise = (async () => {
+      setLoading(true);
+      
+      try {
+        console.log('📡 Making Supabase query...');
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('auth_user_id', authUserId)
+          .maybeSingle();
+
+        if (error) {
+          console.error('❌ Supabase error during profile fetch:', error);
+          throw error;
+        }
+
+        console.log('📋 Profile fetch result:', data ? `Found profile ${data.uuid}` : 'Profile not found');
+        return data;
+      } catch (error: any) {
+        console.error('❌ Profile fetch failed:', error);
+        throw new Error('Erro ao buscar perfil do usuário');
+      } finally {
+        console.log('✅ Profile fetch completed, resetting loading state');
+        setLoading(false);
+        // Remover do cache após 5 segundos para permitir refresh se necessário
+        setTimeout(() => profileFetchCache.current.delete(authUserId), 5000);
+      }
+    })();
+    
+    profileFetchCache.current.set(authUserId, fetchPromise);
+    return fetchPromise;
+  }, []);
 
   const updateProfile = async (uuid: string, updates: Partial<Profile>): Promise<Profile | null> => {
     setLoading(true);
