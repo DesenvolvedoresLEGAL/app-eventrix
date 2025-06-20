@@ -5,7 +5,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { User } from '@/types/auth';
 
 export const useOptimizedUserProfile = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const { getProfileByAuthId } = useProfile();
   
   // Cache em memória para perfis e controle de loading
@@ -20,7 +20,7 @@ export const useOptimizedUserProfile = () => {
     if (profileCache.current.has(userId)) {
       const cachedUser = profileCache.current.get(userId)!;
       console.log('✅ Using cached profile for user:', userId);
-      setUser(cachedUser);
+      setUserState(cachedUser);
       return;
     }
     
@@ -68,7 +68,7 @@ export const useOptimizedUserProfile = () => {
       
       // Cache do perfil
       profileCache.current.set(userId, userProfile);
-      setUser(userProfile);
+      setUserState(userProfile);
       console.log('✅ Optimized user profile created and cached');
       
     } catch (error) {
@@ -84,7 +84,7 @@ export const useOptimizedUserProfile = () => {
       
       // Cache mesmo o fallback para evitar tentativas repetidas
       profileCache.current.set(userId, fallbackProfile);
-      setUser(fallbackProfile);
+      setUserState(fallbackProfile);
       console.log('⚠️ Using cached minimal fallback profile');
     } finally {
       loadingProfiles.current.delete(userId);
@@ -93,13 +93,13 @@ export const useOptimizedUserProfile = () => {
 
   const clearUser = useCallback(() => {
     console.log('🧹 Clearing user profile and cache...');
-    setUser(null);
+    setUserState(null);
     profileCache.current.clear();
     loadingProfiles.current.clear();
   }, []);
 
   const setUser = useCallback((newUser: User | null) => {
-    setUser(newUser);
+    setUserState(newUser);
   }, []);
 
   return {
