@@ -17,6 +17,10 @@ const EventsList = () => {
   const { user } = useAuth();
   const { events, isLoading, error, hasEvents, refetchEvents, deleteEvent, isDeleting } = useEvents();
 
+  const handleEventDetails = async () => { 
+    // TODO: exibir modal pop-up com  informações detalhadas do evento. Separados com UI e UX seguindo os padrões de design do eventrix.
+  }
+
   const handleEventDelete = async (eventId: string, eventName: string) => {
     const confirmation = confirm(`Certeza que deseja deletar o evento "${eventName}"?\nO evento será movido para a lixeira e poderá ser recuperado posteriormente.`);
 
@@ -90,7 +94,7 @@ const EventsList = () => {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-center space-x-2">
-                      <button className="p-1.5 rounded-md hover:bg-muted">
+                      <button onClick={handleEventDetails} className="p-1.5 rounded-md hover:bg-muted">
                         <Info size={16} className="text-primary" />
                       </button>
                       <button className="p-1.5 rounded-md hover:bg-muted">
