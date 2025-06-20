@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Calendar, Edit, Info, Trash2 } from 'lucide-react';
 import { useEvents } from '@/hooks/useEvents';
 import { useAuth } from '@/context/AuthContext';
@@ -15,18 +15,104 @@ import { toast } from 'sonner';
 
 const EventsList = () => {
   const { user } = useAuth();
-  const { events, isLoading, error, hasEvents, refetchEvents } = useEvents();
+  const { events, isLoading, error, hasEvents, refetchEvents, deleteEvent, isDeleting } = useEvents();
 
-  const handleEventDelete = () => {
-    const confirmation = confirm("Certeza que deseja deletar este evento?\nEsta ação é irreversível!");
+  const handleEventDelete = async (eventId: string, eventName: string) => {
+    const confirmation = confirm(`Certeza que deseja deletar o evento "${eventName}"?\nO evento será movido para a lixeira e poderá ser recuperado posteriormente.`);
 
-    if(confirmation) {
-      
-
-      toast.info("Evento excluído!");
+    if (confirmation) {
+      try {
+        await deleteEvent(eventId);
+        toast.success("Evento movido para a lixeira!", {
+          description: "O evento foi deletado com sucesso e pode ser recuperado se necessário."
+        });
+      } catch (error: any) {
+        console.error('❌ Erro ao deletar evento:', error);
+        toast.error("Erro ao deletar evento", {
+          description: error.message || "Ocorreu um erro inesperado ao tentar deletar o evento."
+        });
+      }
     }
-
   };
+
+  // Memoizar a renderização da tabela para otimizar performance
+  const eventsTable = useMemo(() => {
+    if (!hasEvents) return null;
+
+    return (
+      <div className="bg-card rounded-lg border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-muted border-b">
+                <th className="px-4 py-3 text-left font-medium">Evento</th>
+                <th className="px-4 py-3 text-left font-medium">Data</th>
+                <th className="px-4 py-3 text-left font-medium">Local</th>
+                <th className="px-4 py-3 text-left font-medium">Status</th>
+                <th className="px-4 py-3 text-left font-medium">Expositores</th>
+                <th className="px-4 py-3 text-center font-medium">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((event) => (
+                <tr key={event.id} className="border-b hover:bg-muted/30">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center">
+                      <div className="bg-primary/10 w-8 h-8 rounded flex items-center justify-center mr-3">
+                        <Calendar size={16} className="text-primary" />
+                      </div>
+                      <span className="font-medium">{event.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {formatEventPeriod(
+                      event.start_date, 
+                      event.end_date, 
+                      event.start_time, 
+                      event.end_time
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {formatEventLocation(
+                      event.location,
+                      event.city,
+                      event.state,
+                      event.venue_name
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClasses(event.status)}`}>
+                      {getStatusLabel(event.status)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {event.exhibitors_count || 0}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-center space-x-2">
+                      <button className="p-1.5 rounded-md hover:bg-muted">
+                        <Info size={16} className="text-primary" />
+                      </button>
+                      <button className="p-1.5 rounded-md hover:bg-muted">
+                        <Edit size={16} className="text-muted-foreground" />
+                      </button>
+                      <button 
+                        onClick={() => handleEventDelete(event.id, event.name)} 
+                        disabled={isDeleting}
+                        className="p-1.5 rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Trash2 size={16} className="text-destructive" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }, [events, hasEvents, isDeleting, handleEventDelete]);
 
   // Loading state
   if (isLoading) {
@@ -156,73 +242,16 @@ const EventsList = () => {
         </button>
       </div>
 
-      <div className="bg-card rounded-lg border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-muted border-b">
-                <th className="px-4 py-3 text-left font-medium">Evento</th>
-                <th className="px-4 py-3 text-left font-medium">Data</th>
-                <th className="px-4 py-3 text-left font-medium">Local</th>
-                <th className="px-4 py-3 text-left font-medium">Status</th>
-                <th className="px-4 py-3 text-left font-medium">Expositores</th>
-                <th className="px-4 py-3 text-center font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event) => (
-                <tr key={event.id} className="border-b hover:bg-muted/30">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center">
-                      <div className="bg-primary/10 w-8 h-8 rounded flex items-center justify-center mr-3">
-                        <Calendar size={16} className="text-primary" />
-                      </div>
-                      <span className="font-medium">{event.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {formatEventPeriod(
-                      event.start_date, 
-                      event.end_date, 
-                      event.start_time, 
-                      event.end_time
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {formatEventLocation(
-                      event.location,
-                      event.city,
-                      event.state,
-                      event.venue_name
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClasses(event.status)}`}>
-                      {getStatusLabel(event.status)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {event.exhibitors_count || 0}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-center space-x-2">
-                      <button className="p-1.5 rounded-md hover:bg-muted">
-                        <Info size={16} className="text-primary" />
-                      </button>
-                      <button className="p-1.5 rounded-md hover:bg-muted">
-                        <Edit size={16} className="text-muted-foreground" />
-                      </button>
-                      <button onClick={handleEventDelete} className="p-1.5 rounded-md hover:bg-muted">
-                        <Trash2 size={16} className="text-destructive" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {eventsTable}
+      
+      {isDeleting && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 flex items-center space-x-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <span>Deletando evento...</span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

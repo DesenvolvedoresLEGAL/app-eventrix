@@ -41,10 +41,15 @@ export class EventsService {
           logo_url,
           banner_url,
           tenant_id,
-          created_at
+          created_at,
+          deleted_at
         `)
-        .eq('tenant_id', tenantId)
-        .order('created_at', { ascending: false });
+        .eq('tenant_id', tenantId);
+
+      // Filtrar eventos não deletados por padrão
+      if (!filters?.includeDeleted) {
+        query = query.is('deleted_at', null);
+      }
 
       // Aplicar filtros se fornecidos
       if (filters?.status) {
@@ -60,6 +65,8 @@ export class EventsService {
           .gte('start_date', filters.dateRange.start)
           .lte('end_date', filters.dateRange.end);
       }
+
+      query = query.order('created_at', { ascending: false });
 
       const { data, error } = await query;
 
@@ -90,6 +97,7 @@ export class EventsService {
         .select('*')
         .eq('id', eventId)
         .eq('tenant_id', tenantId)
+        .is('deleted_at', null)
         .maybeSingle();
 
       if (error) {
@@ -152,6 +160,7 @@ export class EventsService {
         .update(updates)
         .eq('id', eventId)
         .eq('tenant_id', tenantId)
+        .is('deleted_at', null)
         .select()
         .single();
 
@@ -169,13 +178,69 @@ export class EventsService {
   }
 
   /**
-   * Deleta um evento
+   * Faz soft delete de um evento
+   * @param eventId - ID do evento
+   * @param tenantId - ID do tenant para validação
+   */
+  static async softDeleteEvent(eventId: string, tenantId: string): Promise<void> {
+    try {
+      console.log('🗑️ Fazendo soft delete do evento:', eventId);
+      
+      const { error } = await supabase
+        .from('events')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', eventId)
+        .eq('tenant_id', tenantId)
+        .is('deleted_at', null);
+
+      if (error) {
+        console.error('❌ Erro ao fazer soft delete do evento:', error);
+        throw new Error(`Erro ao deletar evento: ${error.message}`);
+      }
+
+      console.log('✅ Soft delete do evento realizado com sucesso');
+    } catch (error: any) {
+      console.error('❌ Erro ao fazer soft delete do evento:', error);
+      throw new Error(error.message || 'Erro ao deletar evento');
+    }
+  }
+
+  /**
+   * Restaura um evento deletado
+   * @param eventId - ID do evento
+   * @param tenantId - ID do tenant para validação
+   */
+  static async restoreEvent(eventId: string, tenantId: string): Promise<void> {
+    try {
+      console.log('♻️ Restaurando evento:', eventId);
+      
+      const { error } = await supabase
+        .from('events')
+        .update({ deleted_at: null })
+        .eq('id', eventId)
+        .eq('tenant_id', tenantId)
+        .not('deleted_at', 'is', null);
+
+      if (error) {
+        console.error('❌ Erro ao restaurar evento:', error);
+        throw new Error(`Erro ao restaurar evento: ${error.message}`);
+      }
+
+      console.log('✅ Evento restaurado com sucesso');
+    } catch (error: any) {
+      console.error('❌ Erro ao restaurar evento:', error);
+      throw new Error(error.message || 'Erro ao restaurar evento');
+    }
+  }
+
+  /**
+   * Deleta um evento permanentemente (hard delete)
    * @param eventId - ID do evento
    * @param tenantId - ID do tenant para validação
    */
   static async deleteEvent(eventId: string, tenantId: string): Promise<void> {
     try {
-      console.log('🗑️ Deletando evento:', eventId);
+      console.log('🗑️ Deletando evento permanentemente:', eventId);
       
       const { error } = await supabase
         .from('events')
@@ -188,7 +253,7 @@ export class EventsService {
         throw new Error(`Erro ao deletar evento: ${error.message}`);
       }
 
-      console.log('✅ Evento deletado com sucesso');
+      console.log('✅ Evento deletado permanentemente');
     } catch (error: any) {
       console.error('❌ Erro ao deletar evento:', error);
       throw new Error(error.message || 'Erro ao deletar evento');

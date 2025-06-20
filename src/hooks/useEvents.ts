@@ -1,6 +1,6 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { EventsService } from '@/services/eventsService';
 import type { EventListItem, EventFilters } from '@/types/events';
@@ -35,6 +35,22 @@ export const useEvents = (filters?: EventFilters) => {
     gcTime: 10 * 60 * 1000, // 10 minutos
   });
 
+  // Mutation para soft delete de eventos
+  const deleteEventMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      if (!user?.id) {
+        throw new Error('Usuário não autenticado');
+      }
+      await EventsService.softDeleteEvent(eventId, user.id);
+    },
+    onSuccess: () => {
+      // Invalidar cache para refetch automático
+      queryClient.invalidateQueries({ 
+        queryKey: ['events', user?.id] 
+      });
+    },
+  });
+
   // Atualizar estado de erro quando query falha
   useEffect(() => {
     if (queryError) {
@@ -67,13 +83,22 @@ export const useEvents = (filters?: EventFilters) => {
     });
   }, [queryClient, user?.id]);
 
-  // Stats dos eventos para dashboard
-  const eventsStats = {
+  // Função para deletar evento (soft delete)
+  const deleteEvent = useCallback(async (eventId: string) => {
+    try {
+      await deleteEventMutation.mutateAsync(eventId);
+    } catch (error: any) {
+      throw new Error(error.message || 'Erro ao deletar evento');
+    }
+  }, [deleteEventMutation]);
+
+  // Stats dos eventos para dashboard (memoizado para performance)
+  const eventsStats = useMemo(() => ({
     total: events.length,
     upcoming: events.filter(e => e.status === 'upcoming').length,
     inProgress: events.filter(e => e.status === 'in_progress').length,
     completed: events.filter(e => e.status === 'completed').length,
-  };
+  }), [events]);
 
   return {
     // Dados
@@ -83,10 +108,12 @@ export const useEvents = (filters?: EventFilters) => {
     // Estados
     isLoading,
     error,
+    isDeleting: deleteEventMutation.isPending,
     
     // Funções
     refetchEvents,
     invalidateEvents,
+    deleteEvent,
     
     // Flags úteis
     hasEvents: events.length > 0,

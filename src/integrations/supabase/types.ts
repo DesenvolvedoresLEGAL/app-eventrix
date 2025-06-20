@@ -88,6 +88,7 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string | null
+          deleted_at: string | null
           end_date: string | null
           end_time: string | null
           estimated_capacity: number | null
@@ -126,6 +127,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           end_date?: string | null
           end_time?: string | null
           estimated_capacity?: number | null
@@ -164,6 +166,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           end_date?: string | null
           end_time?: string | null
           estimated_capacity?: number | null

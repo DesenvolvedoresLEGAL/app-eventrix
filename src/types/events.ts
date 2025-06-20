@@ -31,6 +31,7 @@ export interface EventListItem {
   banner_url: string | null;
   tenant_id: string;
   created_at: string | null;
+  deleted_at: string | null;
 }
 
 // Interface para filtros de busca
@@ -41,4 +42,5 @@ export interface EventFilters {
     start: string;
     end: string;
   };
+  includeDeleted?: boolean;
 }
