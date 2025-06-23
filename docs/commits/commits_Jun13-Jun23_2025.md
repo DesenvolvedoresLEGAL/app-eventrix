@@ -1,0 +1,57 @@
+# Histórico de Commits (13 a 23 de junho de 2025)
+
+A seguir estão listados, em ordem cronológica, os commits realizados entre 13 e 23 de junho de 2025. Cada item exibe o hash curto, a data, o autor e uma breve descrição em português.
+
+- 9b80248 (2025-06-13) gpt-engineer-app[bot]: Fix: Add missing event ID to logAuthEvent calls
+- 981f292 (2025-06-13) Gustavo Macedo: feat(router): persist sidebar state with layout route
+- e639a1f (2025-06-13) Gustavo Macedo: Merge pull request #7 from DesenvolvedoresLEGAL/codex/manter-estado-do-sidebaritem-ao-trocar-de-página
+- daa7929 (2025-06-13) Gustavo Macedo: fix: corrigindo renderização de src/pages/Events.tsx
+- 785842e (2025-06-16) gpt-engineer-app[bot]: Remove user creation trigger and function
+- 2b10809 (2025-06-16) gpt-engineer-app[bot]: Apply database schema changes
+- 52073c7 (2025-06-16) gpt-engineer-app[bot]: Run SQL migration for storage buckets and policies.
+- 0551c64 (2025-06-16) gpt-engineer-app[bot]: Fix: AuthContext Supabase query errors
+- 2ccd613 (2025-06-16) gpt-engineer-app[bot]: Fix: Handle 400 error
+- 0cc4972 (2025-06-17) gpt-engineer-app[bot]: Implement full registration integration
+- ac77aa5 (2025-06-17) gpt-engineer-app[bot]: Refactor: Split AuthContext into smaller modules
+- a0f1cef (2025-06-17) gpt-engineer-app[bot]: Fix infinite registration loop
+- ed2fcf4 (2025-06-17) gpt-engineer-app[bot]: Fix infinite login loop
+- b02c68b (2025-06-17) gpt-engineer-app[bot]: Run SQL for storage buckets and policies
+- 2454657 (2025-06-17) gpt-engineer-app[bot]: Fix: Infinite upload loop in event wizard
+- ce2167b (2025-06-17) gpt-engineer-app[bot]: Fix: Use user ID for tenant_id
+- 43741d9 (2025-06-17) gpt-engineer-app[bot]: Run SQL migration for N:1 relationship
+- 2b0d656 (2025-06-17) gpt-engineer-app[bot]: Fix organizer_id error
+- f8de415 (2025-06-17) gpt-engineer-app[bot]: Refactor: Optimize AuthContext
+- b7202cc (2025-06-18) gpt-engineer-app[bot]: feat: Integrate EventsList with Supabase
+- bc7a93b (2025-06-18) gpt-engineer-app[bot]: Fix: AuthContext type error in EventsList
+- 9108faf (2025-06-18) Gustavo Macedo: feat: implementando função de logout src/components/layout/sidebar/SidebarFooter.tsx
+- 7893d64 (2025-06-18) gpt-engineer-app[bot]: Fix: Implement loading state fixes in auth operations
+- b0799cd (2025-06-18) Gustavo Macedo: Merge branch 'main' of https://github.com/DesenvolvedoresLEGAL/app-eventrix
+- 2e09cfd (2025-06-18) gpt-engineer-app[bot]: Reverted to commit 7893d64abbc1ab57a8d6bb19f0b43857289c4581
+- ab818e0 (2025-06-18) gpt-engineer-app[bot]: Reverted to commit b0799cdfa628583e5c82834762f41676ded591b8
+- 87040e6 (2025-06-18) gpt-engineer-app[bot]: Reverted to commit 7893d64abbc1ab57a8d6bb19f0b43857289c4581
+- a88d8bf (2025-06-18) gpt-engineer-app[bot]: Fix: Resolve infinite loading in auth flow
+- bf0e7f1 (2025-06-18) Gustavo Macedo: Adicionando logout à sidebar
+- d70f9db (2025-06-18) Gustavo Macedo: Merge branch 'main' of https://github.com/DesenvolvedoresLEGAL/app-eventrix
+- b5e7760 (2025-06-18) gpt-engineer-app[bot]: Reverted to commit a88d8bf2c0b103074bf1057f21150d0fb077e7de
+- d3848ef (2025-06-18) gpt-engineer-app[bot]: Fix: Propagate user state in AuthContext
+- d834745 (2025-06-18) gpt-engineer-app[bot]: feat: Add logout functionality to sidebar
+- 46d84df (2025-06-18) Gustavo Macedo: refactor: add navigate to SidebarFooter.tsx
+- 81cf483 (2025-06-18) gpt-engineer-app[bot]: feat: Improve handleLogout function
+- 6feac76 (2025-06-18) gpt-engineer-app[bot]: Fix: Implement structured correction plan
+- 240d86a (2025-06-18) gpt-engineer-app[bot]: Reverted to commit bc7a93b53df6ae43ec8b385a321b85649f6c3f4f
+- 81a94d8 (2025-06-18) gpt-engineer-app[bot]: feat: Implement logout function in SidebarFooter
+- a8c8469 (2025-06-18) Gustavo Macedo: fix: adicionando botão para logout em SidebarFooter.tsx
+- 2ef0d74 (2025-06-20) gpt-engineer-app[bot]: feat: Implement AuthContext optimization plan
+- 8a9444c (2025-06-20) gpt-engineer-app[bot]: Fix: Resolve 'setUser' redeclaration error
+- 01829d4 (2025-06-20) Gustavo Macedo: fix: mudando valor de categorias validas em src/components/events/NewEventWizard.tsx
+- f860df5 (2025-06-20) Gustavo Macedo: Merge branch 'main' of https://github.com/DesenvolvedoresLEGAL/app-eventrix
+- f8580b4 (2025-06-20) Gustavo Macedo: fix: corrigindo formatação da categoria do evento em src/components/events/NewEventWizard.tsx:129:133
+- dfbae3c (2025-06-20) Gustavo Macedo: feat: adicionando função handleEventDelete
+- bf1e074 (2025-06-20) gpt-engineer-app[bot]: Run SQL for soft delete
+- 0644ab0 (2025-06-20) Gustavo Macedo: feat: criando função handleEventDetails src/components/events/EventsList.tsx
+- b033058 (2025-06-20) gpt-engineer-app[bot]: Implement: Event details modal
+- d1f4270 (2025-06-20) gpt-engineer-app[bot]: Fix: Display event times in modal
+- 9301549 (2025-06-20) Gustavo Macedo: fix: corrigindo periodo na listagem de eventos em src/components/events/EventsList.tsx
+- a1fe529 (2025-06-23) Gustavo Macedo: fix: atualizando `getEventsByTenant()` para `getEvents()` em src/services/eventsService.ts.
+- 671d9a7 (2025-06-23) Gustavo Macedo: fix: removendo verificação de usuario em static async softDeleteEvent(eventId: string, tenantId: string): Promise<void> em src\services\eventsService.ts
+- ca7445a (2025-06-23) Codex: Applying previous commit.
