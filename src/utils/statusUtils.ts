@@ -63,6 +63,19 @@ export const getCategoryClasses = (category: string): string => {
   return categoryMap[category] || 'bg-gray-100 text-gray-800';
 };
 
+export const getSupplierCategoryClasses = (category: string): string => {
+  const categoryMap: Record<string, string> = {
+    'Audiovisual': 'bg-purple-100 text-purple-800',
+    'Alimentação': 'bg-orange-100 text-orange-800',
+    'Segurança': 'bg-red-100 text-red-800',
+    'Decoração': 'bg-pink-100 text-pink-800',
+    'Limpeza': 'bg-blue-100 text-blue-800',
+    'Transporte': 'bg-green-100 text-green-800'
+  };
+  
+  return categoryMap[category] || 'bg-gray-100 text-gray-800';
+};
+
 /**
  * Hook para memoizar classes de status
  */
@@ -76,4 +89,8 @@ export const useShiftClasses = (shift: string) => {
 
 export const useCategoryClasses = (category: string) => {
   return useMemo(() => getCategoryClasses(category), [category]);
+};
+
+export const useSupplierCategoryClasses = (category: string) => {
+  return useMemo(() => getSupplierCategoryClasses(category), [category]);
 };

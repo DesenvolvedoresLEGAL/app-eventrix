@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
+import { Mail, Phone, Building, MapPin, Calendar, DollarSign, FileText, Star } from 'lucide-react';
+import EntityDetails from '@/components/common/EntityDetails';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Mail, Phone, Building, MapPin, Calendar, DollarSign, FileText, Star } from 'lucide-react';
+import { useStatusClasses, useSupplierCategoryClasses } from '@/utils/statusUtils';
 
 interface Supplier {
   id: string;
@@ -26,16 +27,85 @@ interface SupplierDetailsProps {
   supplier: Supplier;
 }
 
-const SupplierDetails: React.FC<SupplierDetailsProps> = ({ supplier }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Ativo': return 'bg-green-100 text-green-800';
-      case 'Inativo': return 'bg-gray-100 text-gray-800';
-      case 'Pendente': return 'bg-yellow-100 text-yellow-800';
-      case 'Bloqueado': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+const SupplierDetails: React.FC<SupplierDetailsProps> = memo(({ supplier }) => {
+  const statusClasses = useStatusClasses(supplier.status);
+  const categoryClasses = useSupplierCategoryClasses(supplier.category);
+
+  const badges = useMemo(() => [
+    {
+      text: supplier.status,
+      className: statusClasses
+    },
+    {
+      text: supplier.category,
+      className: 'bg-gray-100 text-gray-800'
     }
-  };
+  ], [supplier.status, supplier.category, statusClasses]);
+
+  const headerAction = useMemo(() => ({
+    icon: <FileText className="w-4 h-4 mr-2" />,
+    label: 'Contrato',
+    onClick: () => console.log('Ver contrato')
+  }), []);
+
+  const fields = useMemo(() => [
+    {
+      icon: <Mail className="w-5 h-5 text-gray-400" />,
+      label: 'Email',
+      value: supplier.email
+    },
+    ...(supplier.phone ? [{
+      icon: <Phone className="w-5 h-5 text-gray-400" />,
+      label: 'Telefone',
+      value: supplier.phone
+    }] : []),
+    ...(supplier.address ? [{
+      icon: <MapPin className="w-5 h-5 text-gray-400" />,
+      label: 'Endereço',
+      value: supplier.address
+    }] : []),
+    {
+      icon: <Building className="w-5 h-5 text-gray-400" />,
+      label: 'Responsável',
+      value: supplier.responsiblePerson
+    },
+    {
+      icon: <Calendar className="w-5 h-5 text-gray-400" />,
+      label: 'Data do Contrato',
+      value: supplier.contractDate
+    },
+    {
+      icon: <DollarSign className="w-5 h-5 text-gray-400" />,
+      label: 'Valor do Contrato',
+      value: `R$ ${supplier.contractValue.toLocaleString('pt-BR')}`,
+      subValue: `Pagamento: ${supplier.paymentTerms}`
+    }
+  ], [supplier]);
+
+  const actions = useMemo(() => [
+    {
+      icon: <Mail className="w-4 h-4 mr-2" />,
+      label: 'Enviar Email',
+      onClick: () => console.log('Enviar email'),
+      variant: 'outline' as const
+    },
+    {
+      icon: <FileText className="w-4 h-4 mr-2" />,
+      label: 'Ver Contrato',
+      onClick: () => console.log('Ver contrato'),
+      variant: 'outline' as const
+    },
+    {
+      label: 'Editar Dados',
+      onClick: () => console.log('Editar dados'),
+      variant: 'outline' as const
+    },
+    {
+      label: 'Renovar Contrato',
+      onClick: () => console.log('Renovar contrato'),
+      variant: 'default' as const
+    }
+  ], []);
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -46,94 +116,8 @@ const SupplierDetails: React.FC<SupplierDetailsProps> = ({ supplier }) => {
     ));
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Informações principais */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-xl">{supplier.name}</CardTitle>
-              <p className="text-gray-600">CNPJ: {supplier.cnpj}</p>
-              <div className="flex gap-2 mt-2 items-center">
-                <Badge className={getStatusColor(supplier.status)}>
-                  {supplier.status}
-                </Badge>
-                <Badge variant="outline">{supplier.category}</Badge>
-                <div className="flex items-center gap-1">
-                  {renderStars(supplier.rating)}
-                  <span className="text-sm text-gray-600 ml-1">({supplier.rating})</span>
-                </div>
-              </div>
-            </div>
-            <Button variant="outline" size="sm">
-              <FileText className="w-4 h-4 mr-2" />
-              Contrato
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-gray-400" />
-              <div>
-                <div className="font-medium">Email</div>
-                <div className="text-gray-600">{supplier.email}</div>
-              </div>
-            </div>
-            
-            {supplier.phone && (
-              <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-gray-400" />
-                <div>
-                  <div className="font-medium">Telefone</div>
-                  <div className="text-gray-600">{supplier.phone}</div>
-                </div>
-              </div>
-            )}
-
-            {supplier.address && (
-              <div className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-gray-400" />
-                <div>
-                  <div className="font-medium">Endereço</div>
-                  <div className="text-gray-600">{supplier.address}</div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-3">
-              <Building className="w-5 h-5 text-gray-400" />
-              <div>
-                <div className="font-medium">Responsável</div>
-                <div className="text-gray-600">{supplier.responsiblePerson}</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-gray-400" />
-              <div>
-                <div className="font-medium">Data do Contrato</div>
-                <div className="text-gray-600">{supplier.contractDate}</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <DollarSign className="w-5 h-5 text-gray-400" />
-              <div>
-                <div className="font-medium">Valor do Contrato</div>
-                <div className="text-gray-600">
-                  R$ {supplier.contractValue.toLocaleString('pt-BR')}
-                </div>
-                <div className="text-sm text-gray-500">
-                  Pagamento: {supplier.paymentTerms}
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
+  const additionalSections = useMemo(() => (
+    <>
       {/* Serviços */}
       <Card>
         <CardHeader>
@@ -172,26 +156,22 @@ const SupplierDetails: React.FC<SupplierDetailsProps> = ({ supplier }) => {
           </div>
         </CardContent>
       </Card>
+    </>
+  ), [supplier]);
 
-      {/* Ações */}
-      <div className="flex gap-3 justify-end">
-        <Button variant="outline">
-          <Mail className="w-4 h-4 mr-2" />
-          Enviar Email
-        </Button>
-        <Button variant="outline">
-          <FileText className="w-4 h-4 mr-2" />
-          Ver Contrato
-        </Button>
-        <Button variant="outline">
-          Editar Dados
-        </Button>
-        <Button>
-          Renovar Contrato
-        </Button>
-      </div>
-    </div>
+  return (
+    <EntityDetails
+      title={supplier.name}
+      subtitle={`CNPJ: ${supplier.cnpj}`}
+      badges={badges}
+      headerAction={headerAction}
+      fields={fields}
+      actions={actions}
+      additionalSections={additionalSections}
+    />
   );
-};
+});
+
+SupplierDetails.displayName = 'SupplierDetails';
 
 export default SupplierDetails;

@@ -1,10 +1,10 @@
 
-import React from 'react';
-import { Truck, Plus, Phone, Mail, Filter, Search, Star } from 'lucide-react';
+import React, { memo, useMemo } from 'react';
+import { Truck, Plus, Phone, Mail, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import EntityList from '@/components/common/EntityList';
 
-const SuppliersList = () => {
+const SuppliersList = memo(() => {
   const suppliers = [
     {
       id: 1,
@@ -44,148 +44,112 @@ const SuppliersList = () => {
     }
   ];
 
-  return (
-    <div className="space-y-6 tech-grid min-h-full p-6">
-      {/* Header */}
-      <div className="tech-card p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Fornecedores</h1>
-            <p className="text-muted-foreground">Gerencie parceiros e prestadores de serviço</p>
-          </div>
-          <Button className="tech-button">
-            <Plus size={16} className="mr-2" />
-            Novo Fornecedor
-          </Button>
-        </div>
-      </div>
+  const stats = useMemo(() => [
+    {
+      title: 'Total',
+      value: '24',
+      icon: <Truck size={20} className="text-primary" />
+    },
+    {
+      title: 'Ativos',
+      value: '22',
+      icon: <Truck size={20} className="text-green-600" />,
+      color: 'bg-gradient-to-br from-green-100 to-green-50'
+    },
+    {
+      title: 'Categorias',
+      value: '8',
+      icon: <Truck size={20} className="text-blue-600" />,
+      color: 'bg-gradient-to-br from-blue-100 to-blue-50'
+    },
+    {
+      title: 'Avaliação Média',
+      value: '4.8',
+      icon: <Star size={20} className="text-yellow-600" />,
+      color: 'bg-gradient-to-br from-yellow-100 to-yellow-50'
+    }
+  ], []);
 
-      {/* Filters */}
-      <div className="tech-card p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar por nome, categoria ou serviço..." className="pl-10 tech-input" />
-            </div>
-          </div>
-          <Button variant="outline" className="shrink-0">
-            <Filter size={16} className="mr-2" />
-            Filtros
-          </Button>
-        </div>
-      </div>
+  const handleAddNew = () => {
+    console.log('Adicionar novo fornecedor');
+  };
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total</p>
-              <h3 className="text-2xl font-bold mt-1">24</h3>
+  const renderSuppliers = useMemo(() => (
+    <div className="tech-card p-6">
+      <div className="space-y-4">
+        {suppliers.map((supplier) => (
+          <div key={supplier.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center">
+                  <Truck size={20} className="text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{supplier.name}</h3>
+                  <p className="text-sm text-muted-foreground">{supplier.category} • {supplier.contact}</p>
+                  <div className="flex items-center gap-4 mt-1">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Mail size={12} />
+                      <span>{supplier.email}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Phone size={12} />
+                      <span>{supplier.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-yellow-600">
+                      <Star size={12} fill="currentColor" />
+                      <span>{supplier.rating}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="tech-badge text-green-600 bg-green-50 border-green-200">
+                  {supplier.status}
+                </span>
+                <Button variant="outline" size="sm">
+                  Editar
+                </Button>
+              </div>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center">
-              <Truck size={20} className="text-primary" />
-            </div>
-          </div>
-        </div>
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Ativos</p>
-              <h3 className="text-2xl font-bold mt-1">22</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-100 to-green-50 flex items-center justify-center">
-              <Truck size={20} className="text-green-600" />
-            </div>
-          </div>
-        </div>
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Categorias</p>
-              <h3 className="text-2xl font-bold mt-1">8</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-              <Truck size={20} className="text-blue-600" />
-            </div>
-          </div>
-        </div>
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Avaliação Média</p>
-              <h3 className="text-2xl font-bold mt-1">4.8</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-yellow-100 to-yellow-50 flex items-center justify-center">
-              <Star size={20} className="text-yellow-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Suppliers List */}
-      <div className="tech-card p-6">
-        <div className="space-y-4">
-          {suppliers.map((supplier) => (
-            <div key={supplier.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
+            <div className="mt-3 pt-3 border-t">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center">
-                    <Truck size={20} className="text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">{supplier.name}</h3>
-                    <p className="text-sm text-muted-foreground">{supplier.category} • {supplier.contact}</p>
-                    <div className="flex items-center gap-4 mt-1">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Mail size={12} />
-                        <span>{supplier.email}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Phone size={12} />
-                        <span>{supplier.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-yellow-600">
-                        <Star size={12} fill="currentColor" />
-                        <span>{supplier.rating}</span>
-                      </div>
-                    </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Serviços:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {supplier.services.map((service) => (
+                      <span key={service} className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+                        {service}
+                      </span>
+                    ))}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="tech-badge text-green-600 bg-green-50 border-green-200">
-                    {supplier.status}
-                  </span>
-                  <Button variant="outline" size="sm">
-                    Editar
-                  </Button>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Serviços:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {supplier.services.map((service) => (
-                        <span key={service} className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
-                          {service}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Último evento:</p>
-                    <p className="text-xs font-medium">{new Date(supplier.lastEvent).toLocaleDateString('pt-BR')}</p>
-                  </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Último evento:</p>
+                  <p className="text-xs font-medium">{new Date(supplier.lastEvent).toLocaleDateString('pt-BR')}</p>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
+  ), [suppliers]);
+
+  return (
+    <EntityList
+      title="Fornecedores"
+      subtitle="Gerencie parceiros e prestadores de serviço"
+      searchPlaceholder="Buscar por nome, categoria ou serviço..."
+      stats={stats}
+      onAddNew={handleAddNew}
+      addButtonText="Novo Fornecedor"
+    >
+      {renderSuppliers}
+    </EntityList>
   );
-};
+});
+
+SuppliersList.displayName = 'SuppliersList';
 
 export default SuppliersList;

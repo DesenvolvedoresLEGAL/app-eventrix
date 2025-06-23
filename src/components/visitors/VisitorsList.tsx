@@ -1,10 +1,11 @@
 
-import React from 'react';
-import { Users, UserPlus, Mail, Phone, Filter, Search, QrCode } from 'lucide-react';
+import React, { memo, useMemo } from 'react';
+import { Users, UserPlus, Mail, Phone, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import EntityList from '@/components/common/EntityList';
+import { useStatusClasses, useCategoryClasses } from '@/utils/statusUtils';
 
-const VisitorsList = () => {
+const VisitorsList = memo(() => {
   const visitors = [
     {
       id: 1,
@@ -15,6 +16,7 @@ const VisitorsList = () => {
       position: 'CTO',
       registrationDate: '2024-01-15',
       status: 'Confirmado',
+      category: 'VIP',
       checkIn: true,
       qrCode: 'QR001'
     },
@@ -27,6 +29,7 @@ const VisitorsList = () => {
       position: 'CEO',
       registrationDate: '2024-01-16',
       status: 'Pendente',
+      category: 'Geral',
       checkIn: false,
       qrCode: 'QR002'
     },
@@ -39,150 +42,115 @@ const VisitorsList = () => {
       position: 'Desenvolvedor',
       registrationDate: '2024-01-17',
       status: 'Confirmado',
+      category: 'Estudante',
       checkIn: true,
       qrCode: 'QR003'
     }
   ];
 
-  return (
-    <div className="space-y-6 tech-grid min-h-full p-6">
-      {/* Header */}
-      <div className="tech-card p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Visitantes</h1>
-            <p className="text-muted-foreground">Gerencie participantes do evento</p>
-          </div>
-          <Button className="tech-button">
-            <UserPlus size={16} className="mr-2" />
-            Adicionar Visitante
-          </Button>
-        </div>
-      </div>
+  const stats = useMemo(() => [
+    {
+      title: 'Total Inscritos',
+      value: '1,245',
+      icon: <Users size={20} className="text-primary" />
+    },
+    {
+      title: 'Check-ins',
+      value: '892',
+      icon: <QrCode size={20} className="text-green-600" />,
+      color: 'bg-gradient-to-br from-green-100 to-green-50'
+    },
+    {
+      title: 'Confirmados',
+      value: '1,156',
+      icon: <Users size={20} className="text-blue-600" />,
+      color: 'bg-gradient-to-br from-blue-100 to-blue-50'
+    },
+    {
+      title: 'Pendentes',
+      value: '89',
+      icon: <Users size={20} className="text-orange-600" />,
+      color: 'bg-gradient-to-br from-orange-100 to-orange-50'
+    }
+  ], []);
 
-      {/* Filters */}
-      <div className="tech-card p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar por nome, email ou empresa..." className="pl-10 tech-input" />
-            </div>
-          </div>
-          <Button variant="outline" className="shrink-0">
-            <Filter size={16} className="mr-2" />
-            Filtros
-          </Button>
-        </div>
-      </div>
+  const handleAddNew = () => {
+    console.log('Adicionar novo visitante');
+  };
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Inscritos</p>
-              <h3 className="text-2xl font-bold mt-1">1,245</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center">
-              <Users size={20} className="text-primary" />
-            </div>
-          </div>
-        </div>
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Check-ins</p>
-              <h3 className="text-2xl font-bold mt-1">892</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-100 to-green-50 flex items-center justify-center">
-              <QrCode size={20} className="text-green-600" />
-            </div>
-          </div>
-        </div>
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Confirmados</p>
-              <h3 className="text-2xl font-bold mt-1">1,156</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-              <Users size={20} className="text-blue-600" />
-            </div>
-          </div>
-        </div>
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Pendentes</p>
-              <h3 className="text-2xl font-bold mt-1">89</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center">
-              <Users size={20} className="text-orange-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Visitors List */}
-      <div className="tech-card p-6">
-        <div className="space-y-4">
-          {visitors.map((visitor) => (
-            <div key={visitor.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center">
-                    <span className="font-semibold text-primary">{visitor.name.split(' ').map(n => n[0]).join('')}</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">{visitor.name}</h3>
-                    <p className="text-sm text-muted-foreground">{visitor.position} • {visitor.company}</p>
-                    <div className="flex items-center gap-4 mt-1">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Mail size={12} />
-                        <span>{visitor.email}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Phone size={12} />
-                        <span>{visitor.phone}</span>
-                      </div>
+  const renderVisitors = useMemo(() => (
+    <div className="tech-card p-6">
+      <div className="space-y-4">
+        {visitors.map((visitor) => (
+          <div key={visitor.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center">
+                  <span className="font-semibold text-primary">{visitor.name.split(' ').map(n => n[0]).join('')}</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold">{visitor.name}</h3>
+                  <p className="text-sm text-muted-foreground">{visitor.position} • {visitor.company}</p>
+                  <div className="flex items-center gap-4 mt-1">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Mail size={12} />
+                      <span>{visitor.email}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Phone size={12} />
+                      <span>{visitor.phone}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`tech-badge ${
-                    visitor.status === 'Confirmado' 
-                      ? 'text-green-600 bg-green-50 border-green-200' 
-                      : 'text-orange-600 bg-orange-50 border-orange-200'
-                  }`}>
-                    {visitor.status}
-                  </span>
-                  {visitor.checkIn && (
-                    <span className="tech-badge text-blue-600 bg-blue-50 border-blue-200">
-                      Check-in ✓
-                    </span>
-                  )}
-                  <Button variant="outline" size="sm">
-                    <QrCode size={14} className="mr-1" />
-                    QR
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Editar
-                  </Button>
-                </div>
               </div>
-              <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Inscrito em: {new Date(visitor.registrationDate).toLocaleDateString('pt-BR')}</span>
-                  <span>QR Code: {visitor.qrCode}</span>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className={`tech-badge ${
+                  visitor.status === 'Confirmado' 
+                    ? 'text-green-600 bg-green-50 border-green-200' 
+                    : 'text-orange-600 bg-orange-50 border-orange-200'
+                }`}>
+                  {visitor.status}
+                </span>
+                {visitor.checkIn && (
+                  <span className="tech-badge text-blue-600 bg-blue-50 border-blue-200">
+                    Check-in ✓
+                  </span>
+                )}
+                <Button variant="outline" size="sm">
+                  <QrCode size={14} className="mr-1" />
+                  QR
+                </Button>
+                <Button variant="outline" size="sm">
+                  Editar
+                </Button>
               </div>
             </div>
-          ))}
-        </div>
+            <div className="mt-3 pt-3 border-t">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Inscrito em: {new Date(visitor.registrationDate).toLocaleDateString('pt-BR')}</span>
+                <span>QR Code: {visitor.qrCode}</span>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
+  ), [visitors]);
+
+  return (
+    <EntityList
+      title="Visitantes"
+      subtitle="Gerencie participantes do evento"
+      searchPlaceholder="Buscar por nome, email ou empresa..."
+      stats={stats}
+      onAddNew={handleAddNew}
+      addButtonText="Adicionar Visitante"
+    >
+      {renderVisitors}
+    </EntityList>
   );
-};
+});
+
+VisitorsList.displayName = 'VisitorsList';
 
 export default VisitorsList;
