@@ -119,7 +119,7 @@ const SupplierForm: React.FC<SupplierFormProps> = memo(({ onClose }) => {
 
   const onSubmit = (data: SupplierFormData) => {
     console.log('Dados do fornecedor:', data);
-    // Aqui seria feita a integração com a API
+    // TODO: integrar com API
     onClose();
   };
 

@@ -102,7 +102,7 @@ const StaffForm: React.FC<StaffFormProps> = ({ onClose }) => {
 
   const handleSubmit = (data: StaffFormData) => {
     console.log('Dados do staff:', data);
-    // Aqui seria feita a integração com a API
+    // TODO: integrar com API
     onClose();
   };
 

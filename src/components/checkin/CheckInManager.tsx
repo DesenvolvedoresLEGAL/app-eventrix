@@ -106,7 +106,7 @@ const CheckInManager = () => {
 
   const handleStartScanner = () => {
     setScannerActive(true);
-    // Simular escaneamento
+    // TODO: substituir lógica de simulação por integração com leitor de QR
     setTimeout(() => {
       setScannerActive(false);
     }, 3000);
