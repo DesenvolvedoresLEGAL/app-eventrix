@@ -5,6 +5,7 @@ import { Database } from '@/integrations/supabase/types';
 type StaffMember = Database['public']['Tables']['event_team']['Row'];
 type StaffInsert = Database['public']['Tables']['event_team']['Insert'];
 type StaffUpdate = Database['public']['Tables']['event_team']['Update'];
+type StaffStatus = Database['public']['Enums']['staff_status_enum'];
 
 export class StaffService {
   /**
@@ -117,7 +118,7 @@ export class StaffService {
   /**
    * Busca staffs por status
    */
-  static async getStaffByStatus(eventId: string, status: string): Promise<StaffMember[]> {
+  static async getStaffByStatus(eventId: string, status: StaffStatus): Promise<StaffMember[]> {
     const { data, error } = await supabase
       .from('event_team')
       .select('*')

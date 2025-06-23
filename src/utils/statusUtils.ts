@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 
 /**
@@ -6,7 +5,7 @@ import { useMemo } from 'react';
  */
 
 export type StatusType = 
-  | 'Ativo' | 'Inativo' | 'Pendente' | 'Bloqueado'
+  | 'Ativo' | 'Inativo' | 'Pendente' | 'Bloqueado' | 'Suspenso'
   | 'Confirmado' | 'Check-in' | 'Check-out'
   | 'Disponível' | 'Ocupado' | 'Manutenção'
   | 'Em Progresso' | 'Concluído' | 'Férias' | 'Licença';
@@ -18,6 +17,7 @@ export const getStatusClasses = (status: StatusType): string => {
     'Inativo': 'bg-gray-100 text-gray-800',
     'Pendente': 'bg-yellow-100 text-yellow-800',
     'Bloqueado': 'bg-red-100 text-red-800',
+    'Suspenso': 'bg-red-100 text-red-800',
     
     // Visitor statuses
     'Confirmado': 'bg-blue-100 text-blue-800',
