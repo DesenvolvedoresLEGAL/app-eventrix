@@ -42,29 +42,41 @@ export type Database = {
       event_team: {
         Row: {
           created_at: string | null
+          department: string | null
           email: string
           event_id: string
           id: string
           name: string
+          permissions: string[] | null
+          phone: string | null
           role: string
+          status: Database["public"]["Enums"]["staff_status_enum"] | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          department?: string | null
           email: string
           event_id: string
           id?: string
           name: string
+          permissions?: string[] | null
+          phone?: string | null
           role: string
+          status?: Database["public"]["Enums"]["staff_status_enum"] | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          department?: string | null
           email?: string
           event_id?: string
           id?: string
           name?: string
+          permissions?: string[] | null
+          phone?: string | null
           role?: string
+          status?: Database["public"]["Enums"]["staff_status_enum"] | null
           updated_at?: string | null
         }
         Relationships: [
@@ -282,6 +294,7 @@ export type Database = {
         | "serif"
         | "script"
         | "monospace"
+      staff_status_enum: "Ativo" | "Inativo" | "Suspenso"
       user_role: "admin" | "organizer" | "exhinitors" | "staff"
     }
     CompositeTypes: {
@@ -423,6 +436,7 @@ export const Constants = {
         "script",
         "monospace",
       ],
+      staff_status_enum: ["Ativo", "Inativo", "Suspenso"],
       user_role: ["admin", "organizer", "exhinitors", "staff"],
     },
   },

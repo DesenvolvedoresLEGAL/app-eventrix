@@ -12,10 +12,9 @@ interface StaffFormData {
   phone: string;
   department: string;
   role: string;
-  shift: string;
-  supervisor: string;
-  emergencyContact: string;
+  status: 'Ativo' | 'Inativo' | 'Suspenso';
   permissions: string[];
+  event_id?: string;
 }
 
 const StaffForm: React.FC<StaffFormProps> = ({ onClose }) => {
@@ -41,12 +40,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ onClose }) => {
       placeholder: '(11) 99999-9999'
     },
     {
-      name: 'emergencyContact',
-      label: 'Contato de Emergência',
-      type: 'tel',
-      placeholder: '(11) 88888-8888'
-    },
-    {
       name: 'department',
       label: 'Departamento',
       type: 'select',
@@ -58,7 +51,8 @@ const StaffForm: React.FC<StaffFormProps> = ({ onClose }) => {
         { value: 'Atendimento', label: 'Atendimento' },
         { value: 'Técnico', label: 'Técnico' },
         { value: 'Limpeza', label: 'Limpeza' },
-        { value: 'Administrativo', label: 'Administrativo' }
+        { value: 'Administrativo', label: 'Administrativo' },
+        { value: 'Marketing', label: 'Marketing' }
       ]
     },
     {
@@ -69,23 +63,16 @@ const StaffForm: React.FC<StaffFormProps> = ({ onClose }) => {
       required: true
     },
     {
-      name: 'shift',
-      label: 'Turno',
+      name: 'status',
+      label: 'Status',
       type: 'select',
-      placeholder: 'Selecione o turno',
+      placeholder: 'Selecione o status',
       required: true,
       options: [
-        { value: 'Manhã', label: 'Manhã (06:00 - 14:00)' },
-        { value: 'Tarde', label: 'Tarde (14:00 - 22:00)' },
-        { value: 'Noite', label: 'Noite (22:00 - 06:00)' },
-        { value: 'Integral', label: 'Integral (08:00 - 18:00)' }
+        { value: 'Ativo', label: 'Ativo' },
+        { value: 'Inativo', label: 'Inativo' },
+        { value: 'Suspenso', label: 'Suspenso' }
       ]
-    },
-    {
-      name: 'supervisor',
-      label: 'Supervisor',
-      type: 'text',
-      placeholder: 'Nome do supervisor'
     }
   ], []);
 
@@ -102,7 +89,7 @@ const StaffForm: React.FC<StaffFormProps> = ({ onClose }) => {
 
   const handleSubmit = (data: StaffFormData) => {
     console.log('Dados do staff:', data);
-    // Aqui seria feita a integração com a API
+    // Aqui seria feita a integração com a API event_team
     onClose();
   };
 
