@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Staff, StaffInsert, StaffUpdate, StaffListItem, StaffFilters } from '@/types/staff';
 
@@ -125,15 +124,28 @@ export class StaffService {
   static async updateStaff(staffId: string, updates: StaffUpdate, tenantId: string): Promise<Staff> {
     console.log('✏️ Atualizando staff:', staffId, updates);
 
+    // Primeiro verificar se o staff existe e o usuário tem acesso
+    const { data: existingStaff, error: checkError } = await supabase
+      .from('event_team')
+      .select(`
+        id,
+        events!inner(tenant_id)
+      `)
+      .eq('id', staffId)
+      .eq('events.tenant_id', tenantId)
+      .single();
+
+    if (checkError || !existingStaff) {
+      console.error('❌ Staff não encontrado ou sem acesso:', checkError);
+      throw new Error('Staff não encontrado ou acesso negado');
+    }
+
+    // Agora fazer o update
     const { data, error } = await supabase
       .from('event_team')
       .update(updates)
       .eq('id', staffId)
-      .select(`
-        *,
-        events!inner(tenant_id)
-      `)
-      .eq('events.tenant_id', tenantId)
+      .select()
       .single();
 
     if (error) {
