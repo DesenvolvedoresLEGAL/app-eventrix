@@ -84,7 +84,7 @@ const VisitorForm: React.FC<VisitorFormProps> = memo(({ onClose }) => {
 
   const onSubmit = (data: VisitorFormData) => {
     console.log('Dados do visitante:', data);
-    // TODO: integrar com API
+    // Aqui seria feita a integração com a API
     onClose();
   };
 
