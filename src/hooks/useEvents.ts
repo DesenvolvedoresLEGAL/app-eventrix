@@ -28,7 +28,7 @@ export const useEvents = (filters?: EventFilters) => {
       }
       
       console.log('🔄 Carregando eventos para usuário:', user.email);
-      return await EventsService.getEventsByTenant(user.id, filters);
+      return await EventsService.getEvents(user.id, filters);
     },
     enabled: !!user?.id, // Só executa se usuário estiver autenticado
     staleTime: 5 * 60 * 1000, // 5 minutos

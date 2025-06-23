@@ -14,7 +14,7 @@ export class EventsService {
    * @param filters - Filtros opcionais para busca
    * @returns Lista de eventos do tenant
    */
-  static async getEventsByTenant(
+  static async getEvents(
     tenantId: string, 
     filters?: EventFilters
   ): Promise<EventListItem[]> {
@@ -43,8 +43,7 @@ export class EventsService {
           tenant_id,
           created_at,
           deleted_at
-        `)
-        .eq('tenant_id', tenantId);
+        `);
 
       // Filtrar eventos não deletados por padrão
       if (!filters?.includeDeleted) {
