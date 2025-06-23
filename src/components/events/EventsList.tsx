@@ -12,24 +12,43 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import EventDetailsModal from './EventDetailsModal';
+import EditEventWizard from './EditEventWizard';
 
 const EventsList = () => {
   const { user } = useAuth();
   const { events, isLoading, error, hasEvents, refetchEvents, deleteEvent, isDeleting } = useEvents();
   
-  // Estados do modal
+  // Estados do modal de detalhes
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Estados do modal de edição
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleEventDetails = useCallback((eventId: string) => {
     setSelectedEventId(eventId);
     setIsModalOpen(true);
   }, []);
 
-  const handleCloseModal = useCallback(() => {
+  const handleCloseDetailsModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedEventId(null);
   }, []);
+
+  const handleEventEdit = useCallback((eventId: string) => {
+    setEditingEventId(eventId);
+    setIsEditModalOpen(true);
+  }, []);
+
+  const handleCloseEditModal = useCallback(() => {
+    setIsEditModalOpen(false);
+    setEditingEventId(null);
+  }, []);
+
+  const handleEditSuccess = useCallback(() => {
+    refetchEvents();
+  }, [refetchEvents]);
 
   const handleEventDelete = useCallback(async (eventId: string, eventName: string) => {
     const confirmation = confirm(`Certeza que deseja deletar o evento "${eventName}"?\nO evento será movido para a lixeira e poderá ser recuperado posteriormente.`);
@@ -105,16 +124,22 @@ const EventsList = () => {
                       <button 
                         onClick={() => handleEventDetails(event.id)} 
                         className="p-1.5 rounded-md hover:bg-muted"
+                        title="Ver detalhes"
                       >
                         <Info size={16} className="text-primary" />
                       </button>
-                      <button className="p-1.5 rounded-md hover:bg-muted">
+                      <button 
+                        onClick={() => handleEventEdit(event.id)}
+                        className="p-1.5 rounded-md hover:bg-muted"
+                        title="Editar evento"
+                      >
                         <Edit size={16} className="text-muted-foreground" />
                       </button>
                       <button 
                         onClick={() => handleEventDelete(event.id, event.name)} 
                         disabled={isDeleting}
                         className="p-1.5 rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Deletar evento"
                       >
                         <Trash2 size={16} className="text-destructive" />
                       </button>
@@ -127,7 +152,7 @@ const EventsList = () => {
         </div>
       </div>
     );
-  }, [events, hasEvents, isDeleting, handleEventDelete, handleEventDetails]);
+  }, [events, hasEvents, isDeleting, handleEventDelete, handleEventDetails, handleEventEdit]);
 
   // Loading state
   if (isLoading) {
@@ -263,8 +288,18 @@ const EventsList = () => {
       <EventDetailsModal
         eventId={selectedEventId}
         isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        onClose={handleCloseDetailsModal}
       />
+
+      {/* Modal de Edição do Evento */}
+      {editingEventId && (
+        <EditEventWizard
+          eventId={editingEventId}
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          onSuccess={handleEditSuccess}
+        />
+      )}
       
       {isDeleting && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

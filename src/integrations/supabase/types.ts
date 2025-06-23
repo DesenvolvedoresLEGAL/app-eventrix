@@ -17,6 +17,7 @@ export type Database = {
           id: string
           main_email: string
           phone_whatsapp: string | null
+          tenant_id: string
           updated_at: string | null
         }
         Insert: {
@@ -26,6 +27,7 @@ export type Database = {
           id?: string
           main_email: string
           phone_whatsapp?: string | null
+          tenant_id?: string
           updated_at?: string | null
         }
         Update: {
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           main_email?: string
           phone_whatsapp?: string | null
+          tenant_id?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -51,6 +54,7 @@ export type Database = {
           phone: string | null
           role: string
           status: Database["public"]["Enums"]["staff_status_enum"] | null
+          tenant_id: string
           updated_at: string | null
         }
         Insert: {
@@ -64,6 +68,7 @@ export type Database = {
           phone?: string | null
           role: string
           status?: Database["public"]["Enums"]["staff_status_enum"] | null
+          tenant_id?: string
           updated_at?: string | null
         }
         Update: {
@@ -77,6 +82,7 @@ export type Database = {
           phone?: string | null
           role?: string
           status?: Database["public"]["Enums"]["staff_status_enum"] | null
+          tenant_id?: string
           updated_at?: string | null
         }
         Relationships: [
