@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { AuthContextType, User } from '@/types/auth';
 import { useAuthOperations } from '@/hooks/useAuthOperations';
-import { useOptimizedUserProfile } from '@/hooks/useOptimizedUserProfile';
+import { useUnifiedUserProfile } from '@/hooks/useUnifiedUserProfile';
 import { logAuthEvent } from '@/utils/authUtils';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,7 +18,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const currentUserId = useRef<string | null>(null);
   const authEventQueue = useRef<Set<string>>(new Set());
   
-  const { user, createUserProfileOptimized, clearUser, profileCache } = useOptimizedUserProfile();
+  // Configurar useUnifiedUserProfile com opções otimizadas
+  const { user, createUserProfile, clearUser, profileCache } = useUnifiedUserProfile({
+    enableCache: true,
+    cacheTimeout: 5000,
+    enableOptimization: true
+  });
+  
   const authOperations = useAuthOperations();
 
   // Memoização do handler de auth state change - SEM dependências circulares
@@ -34,7 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     authEventQueue.current.add(eventKey.slice(0, -13));
     setTimeout(() => authEventQueue.current.delete(eventKey.slice(0, -13)), 1000);
 
-    console.log('🔄 Auth state changed (optimized):', event, session?.user?.email || 'no user');
+    console.log('🔄 Auth state changed (unified):', event, session?.user?.email || 'no user');
     
     setSession(session);
     
@@ -51,11 +57,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       currentUserId.current = userId;
       
       // Apenas buscar/criar perfil em eventos específicos e se não estiver em cache
-      if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && !profileCache.current.has(userId)) {
+      if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && !profileCache?.current.has(userId)) {
         console.log('👤 Loading user profile for event:', event);
         
         try {
-          await createUserProfileOptimized(session.user);
+          await createUserProfile(session.user);
           
           // Log apenas para login explícito
           if (event === 'SIGNED_IN') {
@@ -64,7 +70,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } catch (error) {
           console.error('❌ Error in profile creation:', error);
         }
-      } else if (profileCache.current.has(userId)) {
+      } else if (profileCache?.current.has(userId)) {
         console.log('✅ Using cached profile for user:', userId);
       }
     } else {
@@ -84,7 +90,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     if (isInitialized.current) return;
     
-    console.log('🚀 Initializing optimized auth context...');
+    console.log('🚀 Initializing unified auth context...');
     isInitialized.current = true;
     
     // Setup do listener de auth state change
@@ -108,7 +114,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => {
-      console.log('🧹 Cleaning up optimized auth subscription...');
+      console.log('🧹 Cleaning up unified auth subscription...');
       subscription.unsubscribe();
     };
   }, [handleAuthStateChange]);
