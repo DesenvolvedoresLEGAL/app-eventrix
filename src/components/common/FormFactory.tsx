@@ -1,6 +1,6 @@
 
 import React, { memo, ReactNode } from 'react';
-import { useForm, FieldValues, UseFormReturn } from 'react-hook-form';
+import { useForm, FieldValues, UseFormReturn, Path, PathValue } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,7 +50,7 @@ function FormFactory<T extends FieldValues>({
   className = ""
 }: FormFactoryProps<T>) {
   const form = useForm<T>({
-    defaultValues
+    defaultValues: defaultValues as any
   });
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = form;
@@ -66,7 +66,7 @@ function FormFactory<T extends FieldValues>({
         </Label>
         
         {field.type === 'select' ? (
-          <Select onValueChange={(value) => setValue(field.name as any, value)}>
+          <Select onValueChange={(value) => setValue(field.name as Path<T>, value as PathValue<T, Path<T>>)}>
             <SelectTrigger>
               <SelectValue placeholder={field.placeholder} />
             </SelectTrigger>
@@ -82,7 +82,7 @@ function FormFactory<T extends FieldValues>({
           <div className="flex items-center space-x-2">
             <Checkbox
               id={field.name}
-              {...register(field.name as any)}
+              {...register(field.name as Path<T>)}
             />
             <Label htmlFor={field.name} className="text-sm">
               {field.label}
@@ -92,7 +92,7 @@ function FormFactory<T extends FieldValues>({
           <Input
             id={field.name}
             type={field.type}
-            {...register(field.name as any, {
+            {...register(field.name as Path<T>, {
               required: field.required ? `${field.label} é obrigatório` : false,
               ...field.validation
             })}
@@ -121,11 +121,11 @@ function FormFactory<T extends FieldValues>({
               <Checkbox
                 id={option}
                 onCheckedChange={(checked) => {
-                  const currentValues = watch(section.name as any) || [];
+                  const currentValues = watch(section.name as Path<T>) as string[] || [];
                   if (checked) {
-                    setValue(section.name as any, [...currentValues, option]);
+                    setValue(section.name as Path<T>, [...currentValues, option] as PathValue<T, Path<T>>);
                   } else {
-                    setValue(section.name as any, currentValues.filter((v: string) => v !== option));
+                    setValue(section.name as Path<T>, currentValues.filter((v: string) => v !== option) as PathValue<T, Path<T>>);
                   }
                 }}
               />
