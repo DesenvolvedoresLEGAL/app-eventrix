@@ -1,8 +1,7 @@
-
-import React from 'react';
-import { Users, UserPlus, Shield, Mail, Phone, Filter, Search } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Users, UserPlus, Shield, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import EntityList, { StatCard } from '@/components/common/EntityList';
 
 const StaffList = () => {
   const staffMembers = [
@@ -38,86 +37,46 @@ const StaffList = () => {
     }
   ];
 
+  const stats: StatCard[] = useMemo(() => [
+    {
+      title: "Total de Staff",
+      value: 24,
+      icon: <Users size={20} className="text-primary" />,
+      color: "bg-gradient-to-br from-primary/20 to-secondary/10"
+    },
+    {
+      title: "Ativos",
+      value: 22,
+      icon: <Shield size={20} className="text-green-600" />,
+      color: "bg-gradient-to-br from-green-100 to-green-50"
+    },
+    {
+      title: "Departamentos",
+      value: 8,
+      icon: <Users size={20} className="text-blue-600" />,
+      color: "bg-gradient-to-br from-blue-100 to-blue-50"
+    },
+    {
+      title: "Novos (30d)",
+      value: 3,
+      icon: <UserPlus size={20} className="text-purple-600" />,
+      color: "bg-gradient-to-br from-purple-100 to-purple-50"
+    }
+  ], []);
+
+  const handleAddNew = () => {
+    console.log('Adicionar novo staff');
+  };
+
   return (
-    <div className="space-y-6 tech-grid min-h-full p-6">
-      {/* Header */}
-      <div className="tech-card p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Equipe</h1>
-            <p className="text-muted-foreground">Gerencie sua equipe e permissões</p>
-          </div>
-          <Button className="tech-button">
-            <UserPlus size={16} className="mr-2" />
-            Adicionar Membro
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="tech-card p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar por nome, email ou função..." className="pl-10 tech-input" />
-            </div>
-          </div>
-          <Button variant="outline" className="shrink-0">
-            <Filter size={16} className="mr-2" />
-            Filtros
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total de Staff</p>
-              <h3 className="text-2xl font-bold mt-1">24</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center">
-              <Users size={20} className="text-primary" />
-            </div>
-          </div>
-        </div>
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Ativos</p>
-              <h3 className="text-2xl font-bold mt-1">22</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-100 to-green-50 flex items-center justify-center">
-              <Shield size={20} className="text-green-600" />
-            </div>
-          </div>
-        </div>
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Departamentos</p>
-              <h3 className="text-2xl font-bold mt-1">8</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-              <Users size={20} className="text-blue-600" />
-            </div>
-          </div>
-        </div>
-        <div className="tech-kpi-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Novos (30d)</p>
-              <h3 className="text-2xl font-bold mt-1">3</h3>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center">
-              <UserPlus size={20} className="text-purple-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <EntityList
+      title="Equipe"
+      subtitle="Gerencie sua equipe e permissões"
+      searchPlaceholder="Buscar por nome, email ou função..."
+      stats={stats}
+      onAddNew={handleAddNew}
+      addButtonText="Adicionar Membro"
+    >
       {/* Staff List */}
       <div className="tech-card p-6">
         <div className="space-y-4">
@@ -166,7 +125,7 @@ const StaffList = () => {
           ))}
         </div>
       </div>
-    </div>
+    </EntityList>
   );
 };
 

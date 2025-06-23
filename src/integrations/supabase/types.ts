@@ -215,6 +215,7 @@ export type Database = {
           phone: string | null
           position: string | null
           updated_at: string
+          user_role: Database["public"]["Enums"]["user_role"] | null
           uuid: string
         }
         Insert: {
@@ -226,6 +227,7 @@ export type Database = {
           phone?: string | null
           position?: string | null
           updated_at?: string
+          user_role?: Database["public"]["Enums"]["user_role"] | null
           uuid?: string
         }
         Update: {
@@ -237,6 +239,7 @@ export type Database = {
           phone?: string | null
           position?: string | null
           updated_at?: string
+          user_role?: Database["public"]["Enums"]["user_role"] | null
           uuid?: string
         }
         Relationships: []
@@ -246,7 +249,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_organizer: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       event_category_enum:
@@ -272,6 +282,7 @@ export type Database = {
         | "serif"
         | "script"
         | "monospace"
+      user_role: "admin" | "organizer" | "exhinitors" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -412,6 +423,7 @@ export const Constants = {
         "script",
         "monospace",
       ],
+      user_role: ["admin", "organizer", "exhinitors", "staff"],
     },
   },
 } as const
