@@ -189,7 +189,6 @@ export class EventsService {
         .from('events')
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', eventId)
-        .eq('tenant_id', tenantId)
         .is('deleted_at', null);
 
       if (error) {
