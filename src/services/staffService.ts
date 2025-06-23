@@ -153,11 +153,26 @@ export class StaffService {
   static async deleteStaff(staffId: string, tenantId: string): Promise<void> {
     console.log('🗑️ Removendo staff:', staffId);
 
+    // Primeiro buscar o staff para validar acesso via evento
+    const { data: staffMember, error: staffError } = await supabase
+      .from('event_team')
+      .select(`
+        id,
+        events!inner(tenant_id)
+      `)
+      .eq('id', staffId)
+      .eq('events.tenant_id', tenantId)
+      .single();
+
+    if (staffError || !staffMember) {
+      console.error('❌ Staff não encontrado ou sem acesso:', staffError);
+      throw new Error('Staff não encontrado ou acesso negado');
+    }
+
     const { error } = await supabase
       .from('event_team')
       .delete()
-      .eq('id', staffId)
-      .eq('events.tenant_id', tenantId);
+      .eq('id', staffId);
 
     if (error) {
       console.error('❌ Erro ao remover staff:', error);
