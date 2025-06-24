@@ -3,7 +3,7 @@ import { fn } from 'storybook/test';
 import ReviewStep from './ReviewStep';
 
 const meta = {
-  title: 'Events/Wizard/ReviewStep',
+  title: 'Events/WizardSteps/ReviewStep',
   component: ReviewStep,
   tags: ['autodocs'],
 } satisfies Meta<typeof ReviewStep>;

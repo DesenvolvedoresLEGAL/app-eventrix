@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import VisualIdentityStep from './VisualIdentityStep';
 
 const meta = {
-  title: 'Events/Wizard/VisualIdentityStep',
+  title: 'Events/WizardSteps/VisualIdentityStep',
   component: VisualIdentityStep,
   tags: ['autodocs'],
 } satisfies Meta<typeof VisualIdentityStep>;
