@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { User, Building, Zap } from 'lucide-react';
 
 const meta = {
-  title: 'Pages/Register',
+  title: 'User/Register',
   component: Register,
   parameters: {
     layout: 'fullscreen',
