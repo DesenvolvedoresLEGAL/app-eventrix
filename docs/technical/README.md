@@ -57,6 +57,7 @@ npm run preview
 ```
 
 O arquivo [`tailwind.config.ts`](../../tailwind.config.ts) define os caminhos de fontes do Tailwind.
+Mais detalhes sobre as cores e variáveis utilizadas estão em [`tailwind-theme.md`](./tailwind-theme.md).
 
 ## Notas da versão (Changelog)
 
