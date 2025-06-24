@@ -13,8 +13,10 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import EventDetailsModal from './EventDetailsModal';
 import EditEventWizard from './EditEventWizard';
+import { useNavigate } from 'react-router-dom';
 
 const EventsList = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { events, isLoading, error, hasEvents, refetchEvents, deleteEvent, isDeleting } = useEvents();
   
@@ -277,7 +279,10 @@ const EventsList = () => {
             Gerencie todos os seus eventos ({events.length} evento{events.length !== 1 ? 's' : ''})
           </p>
         </div>
-        <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary-dark transition-colors">
+        <button 
+        className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary-dark transition-colors"
+        onClick={() => navigate('/events/new')}
+        >
           + Novo Evento
         </button>
       </div>

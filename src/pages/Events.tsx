@@ -11,14 +11,6 @@ const Events = () => {
       {view === 'list' ? (
         <div>
           <EventsList />
-          <div className="fixed bottom-6 right-6">
-            <button 
-              onClick={() => setView('create')}
-              className="bg-primary text-primary-foreground w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-primary-dark transition-colors"
-            >
-              <span className="text-2xl font-bold">+</span>
-            </button>
-          </div>
         </div>
       ) : (
         <div>
