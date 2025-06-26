@@ -36,6 +36,12 @@ npm i
 npm run dev
 ```
 
+## Environment setup
+
+Fill in the Supabase credentials in `.env.development` or `.env.production` depending on your target environment.
+
+Use `.env.development` with your local Supabase instance and `.env.production` with the remote one.
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).
