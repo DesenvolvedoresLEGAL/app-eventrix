@@ -24,7 +24,11 @@ export interface RegisterData {
   lastName: string;
   email: string;
   password: string;
-  companyName?: string;
-  position?: string;
   phone?: string;
+
+  orgName: string;
+  documentId: string;
+  contactEmail: string;
+  contactPhone?: string;
+  planId: string;
 }

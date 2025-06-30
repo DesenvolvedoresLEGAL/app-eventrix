@@ -21,22 +21,20 @@ export interface CreateProfileData {
 }
 
 export interface WizardFormData {
-  // Step 1 - Personal data
+  /** Step 1 - Conta */
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   password: string;
   confirmPassword: string;
-  
-  // Step 2 - Company data
-  companyName: string;
-  companySize: string;
-  position: string;
-  website: string;
-  
-  // Step 3 - Events data
-  eventTypes: string;
-  eventsPerYear: string;
-  avgVisitors: string;
+
+  /** Step 2 - Organização */
+  orgName: string;
+  documentId: string;
+  contactEmail: string;
+  contactPhone: string;
+
+  /** Step 3 - Plano */
+  planId: string;
 }
