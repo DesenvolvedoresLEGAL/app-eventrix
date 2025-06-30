@@ -8,12 +8,19 @@ import { RegisterData } from '@/types/auth';
 import { CreateProfileData } from '@/types/profile';
 import { logAuthEvent } from '@/utils/authUtils';
 
+/**
+ * Collection of common authentication related operations used across the app.
+ */
 export const useAuthOperations = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createProfile } = useProfile();
 
+  /**
+   * Authenticate the user with email and password.
+   * Redirects to the dashboard on success.
+   */
   const login = async (email: string, password: string) => {
     setLoading(true);
     
@@ -57,13 +64,18 @@ export const useAuthOperations = () => {
     }
   };
 
+  /**
+   * Register a new user and create a matching profile.
+   */
   const register = async (userData: RegisterData) => {
     setLoading(true);
     
     try {
       const redirectUrl = `${window.location.origin}/dashboard`;
       
-      console.log('🚀 Starting registration process for:', userData.email);
+      if (import.meta.env.DEV) {
+        console.log('🚀 Starting registration process for:', userData.email);
+      }
       
       // Step 1: Create user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -99,7 +111,9 @@ export const useAuthOperations = () => {
         throw new Error('Falha ao criar usuário no sistema de autenticação');
       }
 
-      console.log('✅ Auth user created successfully:', authData.user.id);
+      if (import.meta.env.DEV) {
+        console.log('✅ Auth user created successfully:', authData.user.id);
+      }
 
       // Step 2: Create profile in public.profiles
       try {
@@ -112,11 +126,15 @@ export const useAuthOperations = () => {
           position: userData.position || null
         };
 
-        console.log('📝 Creating profile with data:', profileData);
+        if (import.meta.env.DEV) {
+          console.log('📝 Creating profile with data:', profileData);
+        }
         const profile = await createProfile(profileData);
         
         if (profile) {
-          console.log('✅ Profile created successfully:', profile.uuid);
+          if (import.meta.env.DEV) {
+            console.log('✅ Profile created successfully:', profile.uuid);
+          }
         } else {
           console.warn('⚠️ Profile creation returned null but no error was thrown');
         }
@@ -165,6 +183,9 @@ export const useAuthOperations = () => {
     }
   };
 
+  /**
+   * Send a reset password email.
+   */
   const resetPassword = async (email: string) => {
     try {
       const redirectUrl = `${window.location.origin}/login`;
@@ -195,6 +216,9 @@ export const useAuthOperations = () => {
     }
   };
 
+  /**
+   * Update the current user's password.
+   */
   const updatePassword = async (password: string) => {
     try {
       const { error } = await supabase.auth.updateUser({
@@ -222,6 +246,9 @@ export const useAuthOperations = () => {
     }
   };
 
+  /**
+   * Sign the user out and redirect to the login screen.
+   */
   const logout = async () => {
     try {
       await logAuthEvent('logout');
@@ -251,6 +278,6 @@ export const useAuthOperations = () => {
     resetPassword,
     updatePassword,
     logout,
-    loading
+    loading,
   };
 };
