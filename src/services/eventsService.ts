@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { Event, EventListItem, EventInsert, EventUpdate, EventFilters } from '@/types/events';
+import { PostgrestError } from '@supabase/supabase-js';
 
 /**
  * Service centralizado para operações relacionadas a eventos
@@ -127,6 +128,8 @@ export class EventsService {
   static async checkIsAdminUser(): Promise<boolean | null> {
     try {
       const {data, error} = await supabase.rpc('is_admin');
+
+      if (error) throw new PostgrestError(error);
 
       return data;
     } catch(error) {
