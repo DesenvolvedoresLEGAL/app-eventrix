@@ -119,6 +119,11 @@ export class EventsService {
       throw new Error(error.message || 'Erro ao carregar evento');
     }
   }
+
+  /**
+   * Verifica se o usuário atual é administrador.
+   * @returns True para usuario admin e false para não admin
+   */
   static async checkIsAdminUser(): Promise<boolean | null> {
     try {
       const {data, error} = await supabase.rpc('is_admin');
