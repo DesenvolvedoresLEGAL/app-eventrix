@@ -62,6 +62,7 @@ Gradientes de marca estão declarados em `backgroundImage` como `bg-brand` e `bg
 Alguns componentes legados usam classes com prefixo `legal-` (por exemplo, `legal-card` ou `legal-input`).
 Essas classes são aliases definidos em `index.css` que aplicam os estilos `tech-*` correspondentes, garantindo compatibilidade e reuso dos utilitários existentes.
 Mais detalhes sobre as cores e variáveis utilizadas estão em [`tailwind-theme.md`](./tailwind-theme.md).
+O uso desses tokens dentro do Storybook é descrito em [`storybook-theme.md`](./storybook-theme.md).
 
 ## Notas da versão (Changelog)
 
