@@ -13,13 +13,11 @@ const baseData: WizardFormData = {
   phone: '',
   password: '',
   confirmPassword: '',
-  companyName: '',
-  companySize: '',
-  position: '',
-  website: '',
-  eventTypes: '',
-  eventsPerYear: '',
-  avgVisitors: '',
+  orgName: '',
+  documentId: '',
+  contactEmail: '',
+  contactPhone: '',
+  planId: ''
 };
 
 const filledData: WizardFormData = {
@@ -29,13 +27,11 @@ const filledData: WizardFormData = {
   phone: '(11) 99999-9999',
   password: '123456',
   confirmPassword: '123456',
-  companyName: 'Acme LTDA',
-  companySize: '11-50',
-  position: 'Gerente de Eventos',
-  website: 'https://acme.com',
-  eventTypes: 'corporativo',
-  eventsPerYear: '6-10',
-  avgVisitors: '101-500',
+  orgName: 'Acme LTDA',
+  documentId: '12.345.678/0001-00',
+  contactEmail: 'contato@acme.com',
+  contactPhone: '(11) 11111-1111',
+  planId: 'Start'
 };
 
 interface RegisterStepProps {
@@ -54,9 +50,9 @@ const RegisterStep: React.FC<RegisterStepProps> = ({ step, data = {} }) => {
           <div className="text-center mb-6">
             <div className="flex items-center justify-center gap-2 mb-2">
               <User className="text-primary" size={20} />
-              <h3 className="text-xl font-semibold">Dados Pessoais</h3>
+              <h3 className="text-xl font-semibold">Conta</h3>
             </div>
-            <p className="text-muted-foreground">Vamos começar com suas informações básicas</p>
+            <p className="text-muted-foreground">Dados do responsável</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -92,36 +88,25 @@ const RegisterStep: React.FC<RegisterStepProps> = ({ step, data = {} }) => {
           <div className="text-center mb-6">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Building className="text-primary" size={20} />
-              <h3 className="text-xl font-semibold">Dados da Empresa</h3>
+              <h3 className="text-xl font-semibold">Organização</h3>
             </div>
-            <p className="text-muted-foreground">Conte-nos sobre sua organização</p>
+            <p className="text-muted-foreground">Dados da empresa</p>
           </div>
           <div>
-            <Label>Nome da Empresa *</Label>
-            <Input value={formData.companyName} readOnly placeholder="Nome da sua empresa" disabled={loading} />
+            <Label>Nome da Organização *</Label>
+            <Input value={formData.orgName} readOnly placeholder="Nome" disabled={loading} />
           </div>
           <div>
-            <Label>Tamanho da Empresa *</Label>
-            <Select defaultValue={formData.companySize} disabled={loading}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tamanho" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1-10">1-10 funcionários</SelectItem>
-                <SelectItem value="11-50">11-50 funcionários</SelectItem>
-                <SelectItem value="51-200">51-200 funcionários</SelectItem>
-                <SelectItem value="201-500">201-500 funcionários</SelectItem>
-                <SelectItem value="500+">500+ funcionários</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>CNPJ/CPF *</Label>
+            <Input value={formData.documentId} readOnly placeholder="00.000.000/0000-00" disabled={loading} />
           </div>
           <div>
-            <Label>Seu Cargo *</Label>
-            <Input value={formData.position} readOnly placeholder="Ex: Gerente de Eventos" disabled={loading} />
+            <Label>Email de Contato *</Label>
+            <Input value={formData.contactEmail} readOnly placeholder="contato@empresa.com" disabled={loading} />
           </div>
           <div>
-            <Label>Website</Label>
-            <Input value={formData.website} readOnly placeholder="https://suaempresa.com" disabled={loading} />
+            <Label>Telefone de Contato</Label>
+            <Input value={formData.contactPhone} readOnly placeholder="(11) 99999-9999" disabled={loading} />
           </div>
         </div>
       );
@@ -131,53 +116,20 @@ const RegisterStep: React.FC<RegisterStepProps> = ({ step, data = {} }) => {
           <div className="text-center mb-6">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Zap className="text-primary" size={20} />
-              <h3 className="text-xl font-semibold">Sobre seus Eventos</h3>
+              <h3 className="text-xl font-semibold">Plano</h3>
             </div>
-            <p className="text-muted-foreground">Ajude-nos a personalizar sua experiência</p>
+            <p className="text-muted-foreground">Escolha o plano</p>
           </div>
           <div>
-            <Label>Tipos de Eventos *</Label>
-            <Select defaultValue={formData.eventTypes} disabled={loading}>
+            <Label>Plano *</Label>
+            <Select defaultValue={formData.planId} disabled={loading}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o tipo principal" />
+                <SelectValue placeholder="Selecione o plano" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="corporativo">Eventos Corporativos</SelectItem>
-                <SelectItem value="feiras">Feiras e Exposições</SelectItem>
-                <SelectItem value="congressos">Congressos e Conferências</SelectItem>
-                <SelectItem value="workshops">Workshops e Treinamentos</SelectItem>
-                <SelectItem value="sociais">Eventos Sociais</SelectItem>
-                <SelectItem value="esportivos">Eventos Esportivos</SelectItem>
-                <SelectItem value="outros">Outros</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Eventos por Ano *</Label>
-            <Select defaultValue={formData.eventsPerYear} disabled={loading}>
-              <SelectTrigger>
-                <SelectValue placeholder="Quantos eventos você organiza?" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1-5">1-5 eventos</SelectItem>
-                <SelectItem value="6-10">6-10 eventos</SelectItem>
-                <SelectItem value="11-20">11-20 eventos</SelectItem>
-                <SelectItem value="20+">Mais de 20 eventos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Média de Visitantes *</Label>
-            <Select defaultValue={formData.avgVisitors} disabled={loading}>
-              <SelectTrigger>
-                <SelectValue placeholder="Média de participantes por evento" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0-100">Até 100 pessoas</SelectItem>
-                <SelectItem value="101-500">101-500 pessoas</SelectItem>
-                <SelectItem value="501-1000">501-1.000 pessoas</SelectItem>
-                <SelectItem value="1001-5000">1.001-5.000 pessoas</SelectItem>
-                <SelectItem value="5000+">Mais de 5.000 pessoas</SelectItem>
+                {['Start', 'Scale', 'Boom', 'Enterprise'].map((p) => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
