@@ -375,7 +375,7 @@ const Register = () => {
           <div className="tech-card p-8">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-2">
-                Criar <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Conta</span>
+                Criar <span className="bg-brand bg-clip-text text-transparent">Conta</span>
               </h2>
               <p className="text-muted-foreground">Passo {currentStep} de 3</p>
               <div className="tech-badge tech-glow mt-4">

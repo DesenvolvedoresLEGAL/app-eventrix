@@ -96,7 +96,7 @@ const Login = () => {
           <div className="tech-card p-8 mb-8">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-2">
-                Bem-vindo de <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">volta</span>
+                Bem-vindo de <span className="bg-brand bg-clip-text text-transparent">volta</span>
               </h2>
               <p className="text-muted-foreground">Entre na sua conta para acessar a plataforma</p>
               <div className="tech-badge tech-glow mt-4">
