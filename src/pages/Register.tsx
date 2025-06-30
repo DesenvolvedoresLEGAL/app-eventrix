@@ -8,12 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/context/AuthContext';
 import { WizardFormData } from '@/types/profile';
-import { mainPlans } from "@/data/plansData";
+import { usePlans } from "@/data/plansData";
 
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const { register, loading } = useAuth();
   const navigate = useNavigate();
+  const { data: mainPlans = [] } = usePlans();
 
   const [formData, setFormData] = useState<WizardFormData>({
     // Step 1 - Account
@@ -257,7 +258,7 @@ const Register = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {mainPlans.map((p) => (
-                    <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

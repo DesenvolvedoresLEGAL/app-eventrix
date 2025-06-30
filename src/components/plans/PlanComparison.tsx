@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { comparisonFeatures, mainPlans } from '@/data/plansData';
+import { comparisonFeatures, usePlans } from '@/data/plansData';
 
 interface PlanComparisonProps {
   billingCycle: 'annual' | 'monthly';
@@ -13,6 +13,7 @@ interface PlanComparisonProps {
 }
 
 const PlanComparison: React.FC<PlanComparisonProps> = ({ billingCycle, formatPrice }) => {
+  const { data: mainPlans = [] } = usePlans();
   const renderFeatureValue = (value: any) => {
     if (typeof value === 'boolean') {
       return value ? (
