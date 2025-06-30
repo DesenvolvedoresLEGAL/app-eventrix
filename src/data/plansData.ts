@@ -1,84 +1,91 @@
 
 import { MessageCircle, Users, Shield, Building, Sparkles, Zap } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-export const mainPlans = [
-  {
-    name: 'Start',
-    description: 'Para organizadores iniciantes',
-    price: { annual: 19900, monthly: 1990 },
-    popular: false,
-    features: {
-      events: 'até 5',
-      visitors: 'até 5.000',
-      exhibitors: 'até 200',
-      admins: '1',
-      support: 'E-mail básico'
-    },
-    highlights: [
-      'Dashboard completo',
-      'Gestão de visitantes',
-      'Check-in básico',
-      'Relatórios essenciais'
-    ]
-  },
-  {
-    name: 'Scale',
-    description: 'Para empresas em crescimento',
-    price: { annual: 39900, monthly: 3990 },
-    popular: true,
-    features: {
-      events: '5 a 10',
-      visitors: '5.001 a 25.000',
-      exhibitors: 'até 500',
-      admins: 'até 3',
-      support: 'E-mail + chat prior.'
-    },
-    highlights: [
-      'Tudo do Start +',
-      'Analytics avançados',
-      'Integrações básicas',
-      'Suporte prioritário'
-    ]
-  },
-  {
-    name: 'Boom',
-    description: 'Para grandes eventos',
-    price: { annual: 79900, monthly: 7990 },
-    popular: false,
-    features: {
-      events: '10 a 15',
-      visitors: '25.001 a 50.000',
-      exhibitors: 'até 2.000',
-      admins: 'até 10',
-      support: '24/7 com SLA'
-    },
-    highlights: [
-      'Tudo do Scale +',
-      'IA avançada',
-      'White label básico',
-      'APIs completas'
-    ]
-  },
-  {
-    name: 'Enterprise',
-    description: 'Solução personalizada',
-    price: { annual: 0, monthly: 0 },
-    popular: false,
-    features: {
-      events: 'Ilimitado',
-      visitors: 'Ilimitado',
-      exhibitors: 'Custom',
-      admins: 'Ilimitado',
-      support: 'Dedicado + SLA VIP'
-    },
-    highlights: [
-      'Tudo customizado',
-      'Gerente dedicado',
-      'Onboarding completo',
-      'SLA premium'
-    ]
-  }
-];
+export interface Plan {
+  id: string;
+  name: string;
+  description: string;
+  price: { annual: number; monthly: number };
+  popular: boolean;
+  features: {
+    events: string;
+    visitors: string;
+    exhibitors: string;
+    admins: string;
+    support: string;
+  };
+  highlights: string[];
+}
+
+interface PlanRecord {
+  uuid: string;
+  name: string;
+  price: number | null;
+  price_per_month: number | null;
+  type: 'anual' | 'mensal';
+  is_custom: boolean;
+  features: any;
+}
+
+const PLAN_DETAILS: Record<string, { description: string; popular: boolean }> = {
+  Start: { description: 'Para organizadores iniciantes', popular: false },
+  Scale: { description: 'Para empresas em crescimento', popular: true },
+  Boom: { description: 'Para grandes eventos', popular: false },
+  Enterprise: { description: 'Solução personalizada', popular: false }
+};
+
+const transformPlans = (records: PlanRecord[]): Plan[] => {
+  const grouped: Record<string, { anual?: PlanRecord; mensal?: PlanRecord }> = {};
+  records.forEach(r => {
+    if (!grouped[r.name]) grouped[r.name] = {};
+    grouped[r.name][r.type] = r;
+  });
+
+  return Object.entries(grouped).map(([name, types]) => {
+    const annual = types.anual;
+    const monthly = types.mensal;
+    const base = annual || monthly!;
+    const f = (monthly?.features || annual?.features || {}) as any;
+
+    const features = {
+      events: f.events_max === null || f.events_max === undefined ? 'Ilimitado' : `até ${f.events_max}`,
+      visitors: f.visitors_max === null || f.visitors_max === undefined ? 'Ilimitado' : `até ${Number(f.visitors_max).toLocaleString('pt-BR')}`,
+      exhibitors: f.exhibitors_max === null || f.exhibitors_max === undefined ? 'Ilimitado' : f.exhibitors_max === 'custom' ? 'Custom' : `até ${f.exhibitors_max}`,
+      admins: f.admins_max === null || f.admins_max === undefined ? 'Ilimitado' : `${f.admins_max}`,
+      support: f.support || ''
+    };
+
+    const highlights: string[] = f.features || [];
+
+    const detail = PLAN_DETAILS[name] || { description: '', popular: false };
+
+    return {
+      id: base.uuid,
+      name,
+      description: detail.description,
+      popular: detail.popular,
+      price: {
+        annual: annual?.price || 0,
+        monthly: monthly?.price || 0
+      },
+      features,
+      highlights
+    } as Plan;
+  });
+};
+
+export const usePlans = () => {
+  return useQuery({
+    queryKey: ['plans'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('plans').select('*');
+      if (error) throw new Error(error.message);
+      return transformPlans(data as PlanRecord[]);
+    }
+  });
+};
 
 export const addOnModules = [
   {
