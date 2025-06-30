@@ -9,7 +9,7 @@ import { CreateProfileData } from '@/types/profile';
 import { logAuthEvent } from '@/utils/authUtils';
 
 /**
- * Collection of common authentication related operations used across the app.
+ * Coleção de operações de autenticação utilizadas em toda a aplicação.
  */
 export const useAuthOperations = () => {
   const [loading, setLoading] = useState(false);
@@ -18,8 +18,8 @@ export const useAuthOperations = () => {
   const { createProfile } = useProfile();
 
   /**
-   * Authenticate the user with email and password.
-   * Redirects to the dashboard on success.
+   * Autentica o usuário com e-mail e senha.
+   * Redireciona para o dashboard em caso de sucesso.
    */
   const login = async (email: string, password: string) => {
     setLoading(true);
@@ -65,7 +65,7 @@ export const useAuthOperations = () => {
   };
 
   /**
-   * Register a new user and create a matching profile.
+   * Registra um novo usuário e cria o perfil correspondente.
    */
   const register = async (userData: RegisterData) => {
     setLoading(true);
@@ -77,7 +77,7 @@ export const useAuthOperations = () => {
         console.log('🚀 Starting registration process for:', userData.email);
       }
       
-      // Step 1: Create user in Supabase Auth
+      // Etapa 1: criar o usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email.trim().toLowerCase(),
         password: userData.password,
@@ -115,7 +115,7 @@ export const useAuthOperations = () => {
         console.log('✅ Auth user created successfully:', authData.user.id);
       }
 
-      // Step 2: Create profile in public.profiles
+      // Etapa 2: criar o perfil em public.profiles
       try {
         const profileData: CreateProfileData = {
           auth_user_id: authData.user.id,
@@ -139,7 +139,7 @@ export const useAuthOperations = () => {
           console.warn('⚠️ Profile creation returned null but no error was thrown');
         }
 
-        // Log successful registration
+        // Registrar o sucesso do cadastro
         await logAuthEvent('register', authData.user.id);
         
         toast({
@@ -147,7 +147,7 @@ export const useAuthOperations = () => {
           description: "Verifique seu email para confirmar a conta",
         });
         
-        // If email confirmation is disabled, redirect immediately
+        // Caso a confirmação de email esteja desativada, redirecione imediatamente
         if (authData.session) {
           navigate('/dashboard');
         }
@@ -155,7 +155,7 @@ export const useAuthOperations = () => {
       } catch (profileError: any) {
         console.error('❌ Profile creation failed:', profileError);
         
-        // Log the error for manual cleanup if needed
+        // Registrar o erro para limpeza manual se necessário
         console.error('🚨 MANUAL CLEANUP NEEDED:', {
           authUserId: authData.user.id,
           email: userData.email,
@@ -165,7 +165,7 @@ export const useAuthOperations = () => {
         
         await logAuthEvent('register_profile_failed');
         
-        // Don't attempt client-side rollback, just show the error
+        // Não tente reverter no cliente, apenas exiba o erro
         throw new Error(`Erro ao criar perfil: ${profileError.message}`);
       }
 
@@ -178,13 +178,13 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // Always reset loading state
+      // Sempre redefina o estado de carregamento
       setLoading(false);
     }
   };
 
   /**
-   * Send a reset password email.
+   * Envia um e-mail para redefinir a senha.
    */
   const resetPassword = async (email: string) => {
     try {
@@ -217,7 +217,7 @@ export const useAuthOperations = () => {
   };
 
   /**
-   * Update the current user's password.
+   * Atualiza a senha do usuário atual.
    */
   const updatePassword = async (password: string) => {
     try {
@@ -247,7 +247,7 @@ export const useAuthOperations = () => {
   };
 
   /**
-   * Sign the user out and redirect to the login screen.
+   * Encerra a sessão e redireciona para a tela de login.
    */
   const logout = async () => {
     try {
@@ -267,7 +267,7 @@ export const useAuthOperations = () => {
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      // Force logout even if there's an error
+      // Força o logout mesmo que ocorra um erro
       navigate('/login');
     }
   };
