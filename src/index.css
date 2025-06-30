@@ -179,6 +179,35 @@
     @apply bg-white/15 text-white shadow-sm border border-white/10;
   }
 
+  /* LEGAL aliases for existing TECH utilities */
+  .legal-card {
+    @apply tech-card;
+  }
+
+  .legal-input {
+    @apply tech-input;
+  }
+
+  .legal-gradient-button {
+    @apply tech-button;
+  }
+
+  .legal-tech-grid {
+    @apply tech-grid;
+  }
+
+  .legal-animate-float {
+    @apply tech-float;
+  }
+
+  .legal-animate-pulse {
+    @apply animate-pulse-light;
+  }
+
+  .legal-powered-badge {
+    @apply tech-badge;
+  }
+
   .tech-kpi-card {
     @apply tech-card p-6 relative overflow-hidden;
   }

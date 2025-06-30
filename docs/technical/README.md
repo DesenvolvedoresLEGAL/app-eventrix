@@ -58,7 +58,9 @@ npm run preview
 
 O arquivo [`tailwind.config.ts`](../../tailwind.config.ts) define os caminhos de fontes do Tailwind e a família padrão utilizada pela aplicação.
 Atualmente, a fonte **Inter** é configurada em `fontFamily.sans`, permitindo o uso das classes `font-sans` em todo o projeto.
-Gradientes de marca também estão declarados em `backgroundImage` como `bg-brand` e `bg-brand-alt`, permitindo reaproveitar combinações recorrentes de cores.
+Gradientes de marca estão declarados em `backgroundImage` como `bg-brand` e `bg-brand-alt`, permitindo reaproveitar combinações recorrentes de cores.
+Alguns componentes legados usam classes com prefixo `legal-` (por exemplo, `legal-card` ou `legal-input`).
+Essas classes são aliases definidos em `index.css` que aplicam os estilos `tech-*` correspondentes, garantindo compatibilidade e reuso dos utilitários existentes.
 Mais detalhes sobre as cores e variáveis utilizadas estão em [`tailwind-theme.md`](./tailwind-theme.md).
 
 ## Notas da versão (Changelog)
