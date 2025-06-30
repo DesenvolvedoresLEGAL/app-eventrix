@@ -8,12 +8,19 @@ import { RegisterData } from '@/types/auth';
 import { CreateProfileData } from '@/types/profile';
 import { logAuthEvent } from '@/utils/authUtils';
 
+/**
+ * Coleção de operações de autenticação utilizadas em toda a aplicação.
+ */
 export const useAuthOperations = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createProfile } = useProfile();
 
+  /**
+   * Autentica o usuário com e-mail e senha.
+   * Redireciona para o dashboard em caso de sucesso.
+   */
   const login = async (email: string, password: string) => {
     setLoading(true);
     
@@ -57,15 +64,20 @@ export const useAuthOperations = () => {
     }
   };
 
+  /**
+   * Registra um novo usuário e cria o perfil correspondente.
+   */
   const register = async (userData: RegisterData) => {
     setLoading(true);
     
     try {
       const redirectUrl = `${window.location.origin}/dashboard`;
       
-      console.log('🚀 Starting registration process for:', userData.email);
+      if (import.meta.env.DEV) {
+        console.log('🚀 Starting registration process for:', userData.email);
+      }
       
-      // Step 1: Create user in Supabase Auth
+      // Etapa 1: criar o usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email.trim().toLowerCase(),
         password: userData.password,
@@ -99,9 +111,11 @@ export const useAuthOperations = () => {
         throw new Error('Falha ao criar usuário no sistema de autenticação');
       }
 
-      console.log('✅ Auth user created successfully:', authData.user.id);
+      if (import.meta.env.DEV) {
+        console.log('✅ Auth user created successfully:', authData.user.id);
+      }
 
-      // Step 2: Create profile in public.profiles
+      // Etapa 2: criar o perfil em public.profiles
       try {
         const profileData: CreateProfileData = {
           auth_user_id: authData.user.id,
@@ -112,16 +126,20 @@ export const useAuthOperations = () => {
           position: userData.position || null
         };
 
-        console.log('📝 Creating profile with data:', profileData);
+        if (import.meta.env.DEV) {
+          console.log('📝 Creating profile with data:', profileData);
+        }
         const profile = await createProfile(profileData);
         
         if (profile) {
-          console.log('✅ Profile created successfully:', profile.uuid);
+          if (import.meta.env.DEV) {
+            console.log('✅ Profile created successfully:', profile.uuid);
+          }
         } else {
           console.warn('⚠️ Profile creation returned null but no error was thrown');
         }
 
-        // Log successful registration
+        // Registrar o sucesso do cadastro
         await logAuthEvent('register', authData.user.id);
         
         toast({
@@ -129,7 +147,7 @@ export const useAuthOperations = () => {
           description: "Verifique seu email para confirmar a conta",
         });
         
-        // If email confirmation is disabled, redirect immediately
+        // Caso a confirmação de email esteja desativada, redirecione imediatamente
         if (authData.session) {
           navigate('/dashboard');
         }
@@ -137,7 +155,7 @@ export const useAuthOperations = () => {
       } catch (profileError: any) {
         console.error('❌ Profile creation failed:', profileError);
         
-        // Log the error for manual cleanup if needed
+        // Registrar o erro para limpeza manual se necessário
         console.error('🚨 MANUAL CLEANUP NEEDED:', {
           authUserId: authData.user.id,
           email: userData.email,
@@ -147,7 +165,7 @@ export const useAuthOperations = () => {
         
         await logAuthEvent('register_profile_failed');
         
-        // Don't attempt client-side rollback, just show the error
+        // Não tente reverter no cliente, apenas exiba o erro
         throw new Error(`Erro ao criar perfil: ${profileError.message}`);
       }
 
@@ -160,11 +178,14 @@ export const useAuthOperations = () => {
       });
       throw error;
     } finally {
-      // Always reset loading state
+      // Sempre redefina o estado de carregamento
       setLoading(false);
     }
   };
 
+  /**
+   * Envia um e-mail para redefinir a senha.
+   */
   const resetPassword = async (email: string) => {
     try {
       const redirectUrl = `${window.location.origin}/login`;
@@ -195,6 +216,9 @@ export const useAuthOperations = () => {
     }
   };
 
+  /**
+   * Atualiza a senha do usuário atual.
+   */
   const updatePassword = async (password: string) => {
     try {
       const { error } = await supabase.auth.updateUser({
@@ -222,6 +246,9 @@ export const useAuthOperations = () => {
     }
   };
 
+  /**
+   * Encerra a sessão e redireciona para a tela de login.
+   */
   const logout = async () => {
     try {
       await logAuthEvent('logout');
@@ -240,7 +267,7 @@ export const useAuthOperations = () => {
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      // Force logout even if there's an error
+      // Força o logout mesmo que ocorra um erro
       navigate('/login');
     }
   };
@@ -251,6 +278,6 @@ export const useAuthOperations = () => {
     resetPassword,
     updatePassword,
     logout,
-    loading
+    loading,
   };
 };
