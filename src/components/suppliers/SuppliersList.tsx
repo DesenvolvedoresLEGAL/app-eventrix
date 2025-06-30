@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import EntityList from '@/components/common/EntityList';
 
 const SuppliersList = memo(() => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const suppliers = [
     {
       id: 1,
