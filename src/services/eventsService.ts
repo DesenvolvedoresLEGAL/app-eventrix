@@ -91,23 +91,41 @@ export class EventsService {
    */
   static async getEventById(eventId: string, tenantId: string): Promise<Event | null> {
     try {
-      const { data, error } = await supabase
+
+      if (import.meta.env.DEV) console.log('[DEBUG] iniciando busca por evento.');
+
+      const isAdmin = await this.checkIsAdminUser();
+
+      const query = supabase
         .from('events')
         .select('*')
         .eq('id', eventId)
-        .eq('tenant_id', tenantId)
-        .is('deleted_at', null)
-        .maybeSingle();
+        .is('deleted_at', null);
+
+      if (!isAdmin) {
+        query.eq('tenant_id', tenantId);
+      }
+
+      const {data, error } = await query.maybeSingle();
 
       if (error) {
-        console.error('❌ Erro ao buscar evento:', error);
+        if (import.meta.env.DEV) console.error('❌ Erro ao buscar evento:', error);
         throw new Error(`Erro ao carregar evento: ${error.message}`);
       }
 
       return data;
     } catch (error: any) {
-      console.error('❌ Erro ao buscar evento por ID:', error);
+      if (import.meta.env.DEV) console.error('❌ Erro ao buscar evento por ID:', error);
       throw new Error(error.message || 'Erro ao carregar evento');
+    }
+  }
+  static async checkIsAdminUser(): Promise<boolean | null> {
+    try {
+      const {data, error} = await supabase.rpc('is_admin');
+
+      return data;
+    } catch(error) {
+      if (import.meta.env.DEV) console.log('[DEBUG] erro ao executar função is_admin() do banco de dados.', error);
     }
   }
 
