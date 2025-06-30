@@ -107,16 +107,20 @@ export default {
 					'50%': { opacity: '0.7' },
 				}
 			},
-			animation: {
-				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-light': 'pulse-light 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-			},
-			boxShadow: {
-				'card': '0px 4px 20px rgba(0, 0, 0, 0.08)',
-				'card-hover': '0px 8px 30px rgba(0, 0, 0, 0.12)'
-			}
-		}
+                        animation: {
+                                'accordion-down': 'accordion-down 0.2s ease-out',
+                                'accordion-up': 'accordion-up 0.2s ease-out',
+                                'pulse-light': 'pulse-light 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        },
+                        backgroundImage: {
+                                'brand': 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)))',
+                                'brand-alt': 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--tertiary)))',
+                        },
+                        boxShadow: {
+                                'card': '0px 4px 20px rgba(0, 0, 0, 0.08)',
+                                'card-hover': '0px 8px 30px rgba(0, 0, 0, 0.12)'
+                        }
+                }
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;

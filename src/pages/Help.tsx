@@ -75,7 +75,7 @@ const Help = () => {
           <div className="absolute top-0 right-0 w-32 h-32 legal-gradient-bg opacity-10 rounded-full -mr-16 -mt-16 legal-animate-float"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-4xl font-black bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent">
+              <h1 className="text-4xl font-black bg-brand-alt bg-clip-text text-transparent">
                 Ajuda & Suporte
               </h1>
               <div className="legal-powered-badge legal-animate-pulse">

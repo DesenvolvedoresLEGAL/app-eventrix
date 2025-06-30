@@ -36,7 +36,7 @@ const DashboardOverview = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between relative z-10">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Bem-vindo, <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{userName}</span>
+              Bem-vindo, <span className="bg-brand bg-clip-text text-transparent">{userName}</span>
             </h1>
             <p className="text-muted-foreground text-lg mb-4">Gerencie seus eventos com tecnologia EVENTRIX</p>
             <div className="tech-badge tech-glow">

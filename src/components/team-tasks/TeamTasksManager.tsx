@@ -82,8 +82,8 @@ const TeamTasksManager = () => {
                 <span className="font-medium">{team.completed}/{team.tasks}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full" 
+                <div
+                  className="bg-brand h-2 rounded-full"
                   style={{ width: `${(team.completed / team.tasks) * 100}%` }}
                 />
               </div>
