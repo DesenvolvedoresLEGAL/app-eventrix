@@ -30,6 +30,7 @@ const Register = () => {
     documentId: '',
     contactEmail: '',
     contactPhone: '',
+    position: '',
 
     // Step 3 - Plan
     planId: ''
@@ -63,7 +64,8 @@ const Register = () => {
         return !!(
           formData.orgName.trim() &&
           formData.documentId.trim() &&
-          formData.contactEmail.trim()
+          formData.contactEmail.trim() &&
+          formData.position.trim()
         );
       case 3:
         return !!formData.planId;
@@ -95,7 +97,8 @@ const Register = () => {
         documentId: formData.documentId,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone || undefined,
-        planId: formData.planId
+        planId: formData.planId,
+        position: formData.position
       });
 
     } catch (error) {
@@ -212,6 +215,16 @@ const Register = () => {
                 value={formData.documentId}
                 onChange={(e) => updateFormData('documentId', e.target.value)}
                 placeholder="00.000.000/0000-00"
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label>Seu cargo na empresa</Label>
+              <Input
+                value={formData.position}
+                onChange={(e) => updateFormData('position', e.target.value)}
+                placeholder="Diretor de Marketing"
                 disabled={loading}
               />
             </div>

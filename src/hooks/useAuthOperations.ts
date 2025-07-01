@@ -90,7 +90,8 @@ export const useAuthOperations = () => {
             lastName: userData.lastName,
             name: `${userData.firstName} ${userData.lastName}`,
             orgName: userData.orgName,
-            phone: userData.phone
+            phone: userData.phone,
+            position: userData.position,
           }
         }
       });
@@ -123,7 +124,8 @@ export const useAuthOperations = () => {
           first_name: userData.firstName,
           last_name: userData.lastName,
           email: userData.email.trim().toLowerCase(),
-          phone: userData.phone || null
+          phone: userData.phone || null,
+          position: userData.position
         };
 
         if (import.meta.env.DEV) {

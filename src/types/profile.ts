@@ -15,9 +15,9 @@ export interface CreateProfileData {
   auth_user_id: string;
   first_name: string;
   last_name: string;
-  email: string;
+  position: string;
   phone?: string;
-  position?: string;
+  email: string;
 }
 
 export interface WizardFormData {
@@ -28,12 +28,13 @@ export interface WizardFormData {
   phone: string;
   password: string;
   confirmPassword: string;
-
+  
   /** Step 2 - Organização */
   orgName: string;
   documentId: string;
   contactEmail: string;
   contactPhone: string;
+  position: string;
 
   /** Step 3 - Plano */
   planId: string;

@@ -11,6 +11,7 @@ export interface CreateTenantData {
   plan_id?: string | null;
   logo_url?: string | null;
   owner_user_id: string;
+  position?: string | null;
 }
 
 export interface Tenant extends CreateTenantData {

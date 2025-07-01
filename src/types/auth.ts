@@ -25,6 +25,7 @@ export interface RegisterData {
   email: string;
   password: string;
   phone?: string;
+  position: string;
 
   orgName: string;
   documentId: string;
