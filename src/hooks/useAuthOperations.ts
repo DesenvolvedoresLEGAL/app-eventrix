@@ -142,7 +142,8 @@ export const useAuthOperations = () => {
             document_id: userData.documentId || null,
             contact_email: userData.contactEmail.trim().toLowerCase(),
             contact_phone: userData.contactPhone || null,
-            plan_id: userData.planId.trim()
+            plan_id: userData.planId.trim(),
+            owner_user_id: profile.auth_user_id
           });
 
           if (tenant) {

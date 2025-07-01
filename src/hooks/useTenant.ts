@@ -10,6 +10,7 @@ export interface CreateTenantData {
   contact_phone?: string | null;
   plan_id?: string | null;
   logo_url?: string | null;
+  owner_user_id: string;
 }
 
 export interface Tenant extends CreateTenantData {
