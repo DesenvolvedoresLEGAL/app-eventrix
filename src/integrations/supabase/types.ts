@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       event_organizers: {
@@ -223,6 +248,42 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          created_at: string
+          features: Json | null
+          is_custom: boolean
+          name: string
+          price: number | null
+          price_per_month: number | null
+          type: Database["public"]["Enums"]["plan_type_enum"]
+          updated_at: string
+          uuid: string
+        }
+        Insert: {
+          created_at?: string
+          features?: Json | null
+          is_custom?: boolean
+          name: string
+          price?: number | null
+          price_per_month?: number | null
+          type?: Database["public"]["Enums"]["plan_type_enum"]
+          updated_at?: string
+          uuid?: string
+        }
+        Update: {
+          created_at?: string
+          features?: Json | null
+          is_custom?: boolean
+          name?: string
+          price?: number | null
+          price_per_month?: number | null
+          type?: Database["public"]["Enums"]["plan_type_enum"]
+          updated_at?: string
+          uuid?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           auth_user_id: string
@@ -262,6 +323,63 @@ export type Database = {
         }
         Relationships: []
       }
+      tenants: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          document_id: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          owner_user_id: string | null
+          plan_id: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          owner_user_id?: string | null
+          plan_id?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          owner_user_id?: string | null
+          plan_id?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenants_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "tenants_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["uuid"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -300,8 +418,9 @@ export type Database = {
         | "serif"
         | "script"
         | "monospace"
+      plan_type_enum: "anual" | "mensal"
       staff_status_enum: "Ativo" | "Inativo" | "Suspenso"
-      user_role: "admin" | "organizer" | "exhinitors" | "staff"
+      user_role: "admin" | "organizer" | "exhibitors" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -415,6 +534,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       event_category_enum: [
@@ -442,8 +564,9 @@ export const Constants = {
         "script",
         "monospace",
       ],
+      plan_type_enum: ["anual", "mensal"],
       staff_status_enum: ["Ativo", "Inativo", "Suspenso"],
-      user_role: ["admin", "organizer", "exhinitors", "staff"],
+      user_role: ["admin", "organizer", "exhibitors", "staff"],
     },
   },
 } as const

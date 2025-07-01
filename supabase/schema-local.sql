@@ -320,8 +320,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "position" "text",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "user_role" "public"."user_role",
-    "tenant_id" "uuid" DEFAULT '00000000-0000-0000-0000-000000000000'::"uuid" NOT NULL
+    "user_role" "public"."user_role"
 );
 
 
@@ -342,8 +341,7 @@ CREATE TABLE IF NOT EXISTS "public"."tenants" (
     "plan_id" "uuid",
     "logo_url" "text",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "owner_user_id" "uuid"
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
 );
 
 
@@ -483,11 +481,6 @@ ALTER TABLE ONLY "public"."events"
 
 
 ALTER TABLE ONLY "public"."tenants"
-    ADD CONSTRAINT "tenants_owner_user_id_fkey" FOREIGN KEY ("owner_user_id") REFERENCES "public"."profiles"("uuid");
-
-
-
-ALTER TABLE ONLY "public"."tenants"
     ADD CONSTRAINT "tenants_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("uuid");
 
 
@@ -501,10 +494,6 @@ CREATE POLICY "Enable all access for admin users" ON "public"."event_team" USING
 
 
 CREATE POLICY "Enable all access for admin users" ON "public"."events" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
-
-
-
-CREATE POLICY "Enable all access for admin users" ON "public"."plans" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
 
 
 
@@ -532,15 +521,7 @@ CREATE POLICY "Enable read access for all authenticated users" ON "public"."even
 
 
 
-CREATE POLICY "Enable read access for all authenticated users" ON "public"."plans" FOR SELECT TO "authenticated" USING (true);
-
-
-
 CREATE POLICY "Enable users to update their own data only" ON "public"."events" FOR UPDATE TO "authenticated" USING (("public"."is_admin"() OR (( SELECT "auth"."uid"() AS "uid") = "tenant_id")));
-
-
-
-CREATE POLICY "Enable users to update their own tenant only" ON "public"."tenants" FOR UPDATE TO "authenticated" USING (("public"."is_admin"() OR ("owner_user_id" = "auth"."uid"())));
 
 
 
@@ -558,8 +539,16 @@ CREATE POLICY "Enable users to view their own data only" ON "public"."profiles" 
 
 
 
-CREATE POLICY "Enable users to view their own tenant only" ON "public"."tenants" FOR SELECT TO "authenticated" USING (("public"."is_admin"() OR ("owner_user_id" = "auth"."uid"())));
+ALTER TABLE "public"."event_organizers" ENABLE ROW LEVEL SECURITY;
 
+
+ALTER TABLE "public"."event_team" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."events" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 
 
 

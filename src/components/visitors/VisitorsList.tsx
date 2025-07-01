@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import React, { memo, useMemo } from 'react';
 import { Users, UserPlus, Mail, Phone, QrCode } from 'lucide-react';

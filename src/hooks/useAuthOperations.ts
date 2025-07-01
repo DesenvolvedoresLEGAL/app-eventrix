@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useProfile } from '@/hooks/useProfile';
 import { RegisterData } from '@/types/auth';
 import { CreateProfileData } from '@/types/profile';
+import { useTenant } from '@/hooks/useTenant';
 import { logAuthEvent } from '@/utils/authUtils';
 
 /**
@@ -16,6 +17,7 @@ export const useAuthOperations = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createProfile } = useProfile();
+  const { createTenant, assignUserToTenant } = useTenant();
 
   /**
    * Autentica o usuário com e-mail e senha.
@@ -87,8 +89,7 @@ export const useAuthOperations = () => {
             firstName: userData.firstName,
             lastName: userData.lastName,
             name: `${userData.firstName} ${userData.lastName}`,
-            companyName: userData.companyName,
-            position: userData.position,
+            orgName: userData.orgName,
             phone: userData.phone
           }
         }
@@ -122,18 +123,30 @@ export const useAuthOperations = () => {
           first_name: userData.firstName,
           last_name: userData.lastName,
           email: userData.email.trim().toLowerCase(),
-          phone: userData.phone || null,
-          position: userData.position || null
+          phone: userData.phone || null
         };
 
         if (import.meta.env.DEV) {
           console.log('📝 Creating profile with data:', profileData);
         }
         const profile = await createProfile(profileData);
-        
+
         if (profile) {
           if (import.meta.env.DEV) {
             console.log('✅ Profile created successfully:', profile.uuid);
+          }
+
+          // criar tenant padr\u00e3o
+          const tenant = await createTenant({
+            name: userData.orgName,
+            document_id: userData.documentId || null,
+            contact_email: userData.contactEmail.trim().toLowerCase(),
+            contact_phone: userData.contactPhone || null,
+            plan_id: userData.planId.trim()
+          });
+
+          if (tenant) {
+            await assignUserToTenant(authData.user.id, tenant.id, true);
           }
         } else {
           console.warn('⚠️ Profile creation returned null but no error was thrown');
@@ -153,20 +166,18 @@ export const useAuthOperations = () => {
         }
 
       } catch (profileError: any) {
-        console.error('❌ Profile creation failed:', profileError);
-        
-        // Registrar o erro para limpeza manual se necessário
+        console.error('❌ Registro de perfil/tenant falhou:', profileError);
+
         console.error('🚨 MANUAL CLEANUP NEEDED:', {
           authUserId: authData.user.id,
           email: userData.email,
-          profileError: profileError.message,
+          error: profileError.message,
           timestamp: new Date().toISOString()
         });
-        
+
         await logAuthEvent('register_profile_failed');
-        
-        // Não tente reverter no cliente, apenas exiba o erro
-        throw new Error(`Erro ao criar perfil: ${profileError.message}`);
+
+        throw new Error(`Erro ao finalizar cadastro: ${profileError.message}`);
       }
 
     } catch (error: any) {

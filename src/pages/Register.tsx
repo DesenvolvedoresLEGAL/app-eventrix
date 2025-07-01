@@ -8,31 +8,31 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/context/AuthContext';
 import { WizardFormData } from '@/types/profile';
+import { usePlans } from "@/data/plansData";
 
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const { register, loading } = useAuth();
   const navigate = useNavigate();
+  const { data: mainPlans = [] } = usePlans();
 
   const [formData, setFormData] = useState<WizardFormData>({
-    // Step 1 - Personal data
+    // Step 1 - Account
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: '',
-    
-    // Step 2 - Company data
-    companyName: '',
-    companySize: '',
-    position: '',
-    website: '',
-    
-    // Step 3 - Events data
-    eventTypes: '',
-    eventsPerYear: '',
-    avgVisitors: ''
+
+    // Step 2 - Organization
+    orgName: '',
+    documentId: '',
+    contactEmail: '',
+    contactPhone: '',
+
+    // Step 3 - Plan
+    planId: ''
   });
 
   const updateFormData = (field: keyof WizardFormData, value: string) => {
@@ -61,16 +61,12 @@ const Register = () => {
         );
       case 2:
         return !!(
-          formData.companyName.trim() &&
-          formData.companySize &&
-          formData.position.trim()
+          formData.orgName.trim() &&
+          formData.documentId.trim() &&
+          formData.contactEmail.trim()
         );
       case 3:
-        return !!(
-          formData.eventTypes &&
-          formData.eventsPerYear &&
-          formData.avgVisitors
-        );
+        return !!formData.planId;
       default:
         return false;
     }
@@ -94,19 +90,12 @@ const Register = () => {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        companyName: formData.companyName,
-        position: formData.position,
-        phone: formData.phone || undefined
-      });
-      
-      // Note: Company size, website, and event data are stored in metadata for now
-      // These could be moved to separate tables in future iterations
-      console.log('Additional wizard data (stored in metadata):', {
-        companySize: formData.companySize,
-        website: formData.website,
-        eventTypes: formData.eventTypes,
-        eventsPerYear: formData.eventsPerYear,
-        avgVisitors: formData.avgVisitors
+        phone: formData.phone || undefined,
+        orgName: formData.orgName,
+        documentId: formData.documentId,
+        contactEmail: formData.contactEmail,
+        contactPhone: formData.contactPhone || undefined,
+        planId: formData.planId
       });
 
     } catch (error) {
@@ -202,53 +191,48 @@ const Register = () => {
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Building className="text-primary" size={20} />
-                <h3 className="text-xl font-semibold">Dados da Empresa</h3>
+                <h3 className="text-xl font-semibold">Organização</h3>
               </div>
-              <p className="text-muted-foreground">Conte-nos sobre sua organização</p>
+              <p className="text-muted-foreground">Dados da sua empresa</p>
             </div>
 
             <div>
-              <Label>Nome da Empresa *</Label>
+              <Label>Nome da Organização *</Label>
               <Input
-                value={formData.companyName}
-                onChange={(e) => updateFormData('companyName', e.target.value)}
-                placeholder="Nome da sua empresa"
+                value={formData.orgName}
+                onChange={(e) => updateFormData('orgName', e.target.value)}
+                placeholder="Nome da organização"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <Label>Tamanho da Empresa *</Label>
-              <Select onValueChange={(value) => updateFormData('companySize', value)} disabled={loading}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tamanho" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1-10">1-10 funcionários</SelectItem>
-                  <SelectItem value="11-50">11-50 funcionários</SelectItem>
-                  <SelectItem value="51-200">51-200 funcionários</SelectItem>
-                  <SelectItem value="201-500">201-500 funcionários</SelectItem>
-                  <SelectItem value="500+">500+ funcionários</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Seu Cargo *</Label>
+              <Label>CNPJ/CPF *</Label>
               <Input
-                value={formData.position}
-                onChange={(e) => updateFormData('position', e.target.value)}
-                placeholder="Ex: Gerente de Eventos"
+                value={formData.documentId}
+                onChange={(e) => updateFormData('documentId', e.target.value)}
+                placeholder="00.000.000/0000-00"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <Label>Website</Label>
+              <Label>Email de Contato *</Label>
               <Input
-                value={formData.website}
-                onChange={(e) => updateFormData('website', e.target.value)}
-                placeholder="https://suaempresa.com"
+                type="email"
+                value={formData.contactEmail}
+                onChange={(e) => updateFormData('contactEmail', e.target.value)}
+                placeholder="contato@empresa.com"
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label>Telefone de Contato</Label>
+              <Input
+                value={formData.contactPhone}
+                onChange={(e) => updateFormData('contactPhone', e.target.value)}
+                placeholder="(11) 99999-9999"
                 disabled={loading}
               />
             </div>
@@ -261,56 +245,21 @@ const Register = () => {
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Zap className="text-primary" size={20} />
-                <h3 className="text-xl font-semibold">Sobre seus Eventos</h3>
+                <h3 className="text-xl font-semibold">Selecione um Plano</h3>
               </div>
-              <p className="text-muted-foreground">Ajude-nos a personalizar sua experiência</p>
+              <p className="text-muted-foreground">Escolha o plano para sua organização</p>
             </div>
 
             <div>
-              <Label>Tipos de Eventos *</Label>
-              <Select onValueChange={(value) => updateFormData('eventTypes', value)} disabled={loading}>
+              <Label>Plano *</Label>
+              <Select onValueChange={(value) => updateFormData('planId', value)} disabled={loading}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo principal" />
+                  <SelectValue placeholder="Selecione o plano" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="corporativo">Eventos Corporativos</SelectItem>
-                  <SelectItem value="feiras">Feiras e Exposições</SelectItem>
-                  <SelectItem value="congressos">Congressos e Conferências</SelectItem>
-                  <SelectItem value="workshops">Workshops e Treinamentos</SelectItem>
-                  <SelectItem value="sociais">Eventos Sociais</SelectItem>
-                  <SelectItem value="esportivos">Eventos Esportivos</SelectItem>
-                  <SelectItem value="outros">Outros</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Eventos por Ano *</Label>
-              <Select onValueChange={(value) => updateFormData('eventsPerYear', value)} disabled={loading}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Quantos eventos você organiza?" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1-5">1-5 eventos</SelectItem>
-                  <SelectItem value="6-10">6-10 eventos</SelectItem>
-                  <SelectItem value="11-20">11-20 eventos</SelectItem>
-                  <SelectItem value="20+">Mais de 20 eventos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Média de Visitantes *</Label>
-              <Select onValueChange={(value) => updateFormData('avgVisitors', value)} disabled={loading}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Média de participantes por evento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0-100">Até 100 pessoas</SelectItem>
-                  <SelectItem value="101-500">101-500 pessoas</SelectItem>
-                  <SelectItem value="501-1000">501-1.000 pessoas</SelectItem>
-                  <SelectItem value="1001-5000">1.001-5.000 pessoas</SelectItem>
-                  <SelectItem value="5000+">Mais de 5.000 pessoas</SelectItem>
+                  {mainPlans.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -341,9 +290,9 @@ const Register = () => {
           {/* Progress Steps */}
           <div className="space-y-4 mb-8">
             {[
-              { step: 1, title: "Dados Pessoais", desc: "Informações básicas" },
-              { step: 2, title: "Empresa", desc: "Sobre sua organização" },
-              { step: 3, title: "Eventos", desc: "Tipo de eventos que organiza" }
+              { step: 1, title: "Conta", desc: "Seus dados" },
+              { step: 2, title: "Organização", desc: "Dados da empresa" },
+              { step: 3, title: "Plano", desc: "Escolha do plano" }
             ].map((item) => (
               <div key={item.step} className="flex items-center gap-3">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${

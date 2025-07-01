@@ -42,6 +42,29 @@ Fill in the Supabase credentials in `.env.development` or `.env.production` depe
 
 Use `.env.development` with your local Supabase instance and `.env.production` with the remote one.
 
+## Running locally
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Start Supabase and apply migrations (requires the [Supabase CLI](https://supabase.com/docs/guides/cli)):
+
+```bash
+supabase start
+supabase db reset
+```
+
+3. Run the development server:
+
+```bash
+npm run dev
+```
+
+After running these commands the application will be available on <http://localhost:5173>.
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).
