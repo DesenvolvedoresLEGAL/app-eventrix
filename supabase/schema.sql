@@ -12,6 +12,13 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 
+CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
+
+
+
+
+
+
 COMMENT ON SCHEMA "public" IS 'standard public schema';
 
 
@@ -93,6 +100,15 @@ CREATE TYPE "public"."font_style_enum" AS ENUM (
 
 
 ALTER TYPE "public"."font_style_enum" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."plan_type_enum" AS ENUM (
+    'anual',
+    'mensal'
+);
+
+
+ALTER TYPE "public"."plan_type_enum" OWNER TO "postgres";
 
 
 CREATE TYPE "public"."staff_status_enum" AS ENUM (
@@ -278,6 +294,22 @@ COMMENT ON COLUMN "public"."events"."category" IS 'Categoria do evento';
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."plans" (
+    "uuid" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "price" numeric(10,2),
+    "price_per_month" numeric(10,2),
+    "type" "public"."plan_type_enum" DEFAULT 'anual'::"public"."plan_type_enum" NOT NULL,
+    "is_custom" boolean DEFAULT false NOT NULL,
+    "features" "jsonb",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."plans" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "uuid" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "auth_user_id" "uuid" NOT NULL,
@@ -288,7 +320,8 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "position" "text",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "user_role" "public"."user_role"
+    "user_role" "public"."user_role",
+    "tenant_id" "uuid" DEFAULT '00000000-0000-0000-0000-000000000000'::"uuid" NOT NULL
 );
 
 
@@ -297,6 +330,24 @@ ALTER TABLE "public"."profiles" OWNER TO "postgres";
 
 COMMENT ON COLUMN "public"."profiles"."user_role" IS 'Cargo do usuário';
 
+
+
+CREATE TABLE IF NOT EXISTS "public"."tenants" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "website_url" "text",
+    "document_id" "text",
+    "contact_email" "text",
+    "contact_phone" "text",
+    "plan_id" "uuid",
+    "logo_url" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "owner_user_id" "uuid"
+);
+
+
+ALTER TABLE "public"."tenants" OWNER TO "postgres";
 
 
 ALTER TABLE ONLY "public"."event_organizers"
@@ -314,6 +365,11 @@ ALTER TABLE ONLY "public"."events"
 
 
 
+ALTER TABLE ONLY "public"."plans"
+    ADD CONSTRAINT "plans_pkey" PRIMARY KEY ("uuid");
+
+
+
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_auth_user_id_key" UNIQUE ("auth_user_id");
 
@@ -326,6 +382,21 @@ ALTER TABLE ONLY "public"."profiles"
 
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_pkey" PRIMARY KEY ("uuid");
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_document_id_key" UNIQUE ("document_id");
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_website_url_key" UNIQUE ("website_url");
 
 
 
@@ -393,6 +464,14 @@ CREATE OR REPLACE TRIGGER "update_events_updated_at" BEFORE UPDATE ON "public"."
 
 
 
+CREATE OR REPLACE TRIGGER "update_plans_updated_at" BEFORE UPDATE ON "public"."plans" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_tenants_updated_at" BEFORE UPDATE ON "public"."tenants" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
 ALTER TABLE ONLY "public"."event_team"
     ADD CONSTRAINT "event_team_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE CASCADE;
 
@@ -400,6 +479,16 @@ ALTER TABLE ONLY "public"."event_team"
 
 ALTER TABLE ONLY "public"."events"
     ADD CONSTRAINT "fk_events_organizer_id" FOREIGN KEY ("organizer_id") REFERENCES "public"."event_organizers"("id") ON DELETE RESTRICT;
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_owner_user_id_fkey" FOREIGN KEY ("owner_user_id") REFERENCES "public"."profiles"("uuid");
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("uuid");
 
 
 
@@ -412,6 +501,10 @@ CREATE POLICY "Enable all access for admin users" ON "public"."event_team" USING
 
 
 CREATE POLICY "Enable all access for admin users" ON "public"."events" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+
+CREATE POLICY "Enable all access for admin users" ON "public"."plans" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
 
 
 
@@ -439,7 +532,15 @@ CREATE POLICY "Enable read access for all authenticated users" ON "public"."even
 
 
 
+CREATE POLICY "Enable read access for all authenticated users" ON "public"."plans" FOR SELECT TO "authenticated" USING (true);
+
+
+
 CREATE POLICY "Enable users to update their own data only" ON "public"."events" FOR UPDATE TO "authenticated" USING (("public"."is_admin"() OR (( SELECT "auth"."uid"() AS "uid") = "tenant_id")));
+
+
+
+CREATE POLICY "Enable users to update their own tenant only" ON "public"."tenants" FOR UPDATE TO "authenticated" USING (("public"."is_admin"() OR ("owner_user_id" = "auth"."uid"())));
 
 
 
@@ -457,16 +558,8 @@ CREATE POLICY "Enable users to view their own data only" ON "public"."profiles" 
 
 
 
-ALTER TABLE "public"."event_organizers" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Enable users to view their own tenant only" ON "public"."tenants" FOR SELECT TO "authenticated" USING (("public"."is_admin"() OR ("owner_user_id" = "auth"."uid"())));
 
-
-ALTER TABLE "public"."event_team" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."events" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 
 
 
@@ -474,10 +567,19 @@ ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
 
 
+
+
+
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
+
+
+
+
+
+
 
 
 
@@ -682,9 +784,21 @@ GRANT ALL ON TABLE "public"."events" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."plans" TO "anon";
+GRANT ALL ON TABLE "public"."plans" TO "authenticated";
+GRANT ALL ON TABLE "public"."plans" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."profiles" TO "anon";
 GRANT ALL ON TABLE "public"."profiles" TO "authenticated";
 GRANT ALL ON TABLE "public"."profiles" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tenants" TO "anon";
+GRANT ALL ON TABLE "public"."tenants" TO "authenticated";
+GRANT ALL ON TABLE "public"."tenants" TO "service_role";
 
 
 

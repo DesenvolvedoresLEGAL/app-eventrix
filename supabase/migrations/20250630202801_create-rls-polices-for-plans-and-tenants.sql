@@ -25,7 +25,7 @@ CREATE POLICY "Enable read access for all authenticated users" ON public.plans F
 SELECT
     TO authenticated USING (true);
 
-ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY;
 
 -- 3. POLÍTICAS PARA TABELA tenants (Acesso só ao seu próprio tenant)
 -- Adiciona owner_user_id ao tenant
@@ -48,4 +48,4 @@ SELECT
         OR owner_user_id = auth.uid ()
     );
 
-ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;

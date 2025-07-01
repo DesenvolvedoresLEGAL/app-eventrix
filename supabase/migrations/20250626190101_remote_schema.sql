@@ -457,16 +457,16 @@ CREATE POLICY "Enable users to view their own data only" ON "public"."profiles" 
 
 
 
-ALTER TABLE "public"."event_organizers" ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE "public"."event_organizers" ENABLE ROW LEVEL SECURITY;
 
 
-ALTER TABLE "public"."event_team" ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE "public"."event_team" ENABLE ROW LEVEL SECURITY;
 
 
-ALTER TABLE "public"."events" ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE "public"."events" ENABLE ROW LEVEL SECURITY;
 
 
-ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 
 
 
