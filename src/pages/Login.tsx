@@ -2,47 +2,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Zap } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const { login, resetPassword, loading } = useAuth();
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
-    if (!email.trim() || !password.trim()) {
-      return;
-    }
-    
-    try {
-      await login(email, password);
-    } catch (error) {
-      // Error handling is done in the AuthContext
-      console.error('Login error:', error);
-    }
-  };
-
-  const handleForgotPassword = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    if (!email.trim()) {
-      alert('Por favor, digite seu email primeiro');
-      return;
-    }
-    
-    setIsResettingPassword(true);
-    
-    try {
-      await resetPassword(email);
-    } catch (error) {
-      console.error('Password reset error:', error);
-    } finally {
-      setIsResettingPassword(false);
-    }
+    // Simulate authentication
+    setTimeout(() => {
+      setLoading(false);
+      navigate('/dashboard');
+    }, 1500);
   };
   
   return (
@@ -96,7 +71,7 @@ const Login = () => {
           <div className="tech-card p-8 mb-8">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-2">
-                Bem-vindo de <span className="bg-brand bg-clip-text text-transparent">volta</span>
+                Bem-vindo de <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">volta</span>
               </h2>
               <p className="text-muted-foreground">Entre na sua conta para acessar a plataforma</p>
               <div className="tech-badge tech-glow mt-4">
@@ -116,21 +91,13 @@ const Login = () => {
                   className="tech-input w-full"
                   placeholder="seu@email.com"
                   required
-                  disabled={loading}
                 />
               </div>
               
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label htmlFor="password" className="block text-sm font-semibold">Senha</label>
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    disabled={isResettingPassword || !email.trim()}
-                    className="text-sm text-primary hover:text-primary/80 font-medium transition-colors disabled:opacity-50"
-                  >
-                    {isResettingPassword ? 'Enviando...' : 'Esqueceu?'}
-                  </button>
+                  <a href="#" className="text-sm text-primary hover:text-primary/80 font-medium transition-colors">Esqueceu?</a>
                 </div>
                 <input
                   id="password"
@@ -140,7 +107,6 @@ const Login = () => {
                   className="tech-input w-full"
                   placeholder="********"
                   required
-                  disabled={loading}
                 />
               </div>
               

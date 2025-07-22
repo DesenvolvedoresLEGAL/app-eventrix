@@ -1,13 +1,13 @@
 
 import React from 'react';
-import PageWrapper from '@/components/common/PageWrapper';
+import DashboardLayout from '@/components/layout/Dashboard';
 import ActivitiesList from '@/components/activities/ActivitiesList';
 
 const Activities = () => {
   return (
-    <PageWrapper>
+    <DashboardLayout title="Atividades">
       <ActivitiesList />
-    </PageWrapper>
+    </DashboardLayout>
   );
 };
 

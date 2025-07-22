@@ -1,9 +1,9 @@
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Phone, Building, Calendar, Shield, User } from 'lucide-react';
-import EntityDetails, { FieldInfo, BadgeInfo, ActionButton } from '@/components/common/EntityDetails';
-import { getStatusClasses, getShiftClasses } from '@/utils/statusUtils';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Mail, Phone, Building, Calendar, Clock, Shield, User } from 'lucide-react';
 
 interface StaffMember {
   id: string;
@@ -25,106 +25,139 @@ interface StaffDetailsProps {
 }
 
 const StaffDetails: React.FC<StaffDetailsProps> = ({ staff }) => {
-  const badges: BadgeInfo[] = useMemo(() => [
-    {
-      text: staff.status,
-      className: getStatusClasses(staff.status)
-    },
-    {
-      text: staff.shift,
-      className: getShiftClasses(staff.shift)
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Ativo': return 'bg-green-100 text-green-800';
+      case 'Inativo': return 'bg-gray-100 text-gray-800';
+      case 'Férias': return 'bg-blue-100 text-blue-800';
+      case 'Licença': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
-  ], [staff.status, staff.shift]);
+  };
 
-  const fields: FieldInfo[] = useMemo(() => [
-    {
-      icon: <Mail className="w-5 h-5 text-gray-400" />,
-      label: "Email",
-      value: staff.email
-    },
-    {
-      icon: <Phone className="w-5 h-5 text-gray-400" />,
-      label: "Telefone",
-      value: staff.phone
-    },
-    {
-      icon: <Building className="w-5 h-5 text-gray-400" />,
-      label: "Departamento",
-      value: staff.department
-    },
-    {
-      icon: <User className="w-5 h-5 text-gray-400" />,
-      label: "Supervisor",
-      value: staff.supervisor
-    },
-    {
-      icon: <Calendar className="w-5 h-5 text-gray-400" />,
-      label: "Data de Início",
-      value: staff.startDate
-    },
-    {
-      icon: <Phone className="w-5 h-5 text-gray-400" />,
-      label: "Emergência",
-      value: staff.emergencyContact
+  const getShiftColor = (shift: string) => {
+    switch (shift) {
+      case 'Manhã': return 'bg-yellow-100 text-yellow-800';
+      case 'Tarde': return 'bg-orange-100 text-orange-800';
+      case 'Noite': return 'bg-purple-100 text-purple-800';
+      case 'Integral': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
-  ], [staff]);
-
-  const actions: ActionButton[] = useMemo(() => [
-    {
-      icon: <Mail className="w-4 h-4 mr-2" />,
-      label: "Enviar Email",
-      onClick: () => console.log('Enviar email'),
-      variant: 'outline'
-    },
-    {
-      icon: <Calendar className="w-4 h-4 mr-2" />,
-      label: "Ver Escala",
-      onClick: () => console.log('Ver escala'),
-      variant: 'outline'
-    },
-    {
-      label: "Editar Dados",
-      onClick: () => console.log('Editar dados'),
-      variant: 'outline'
-    },
-    {
-      label: "Gerenciar Permissões",
-      onClick: () => console.log('Gerenciar permissões'),
-      variant: 'default'
-    }
-  ], []);
-
-  const permissionsSection = useMemo(() => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Permissões de Acesso</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2">
-          {staff.permissions.map((permission, index) => (
-            <span key={index} className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
-              {permission}
-            </span>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  ), [staff.permissions]);
+  };
 
   return (
-    <EntityDetails
-      title={staff.name}
-      subtitle={`${staff.role} - ${staff.department}`}
-      badges={badges}
-      headerAction={{
-        icon: <Shield className="w-4 h-4 mr-2" />,
-        label: "Permissões",
-        onClick: () => console.log('Gerenciar permissões')
-      }}
-      fields={fields}
-      actions={actions}
-      additionalSections={permissionsSection}
-    />
+    <div className="space-y-6">
+      {/* Informações principais */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-xl">{staff.name}</CardTitle>
+              <p className="text-gray-600">{staff.role} - {staff.department}</p>
+              <div className="flex gap-2 mt-2">
+                <Badge className={getStatusColor(staff.status)}>
+                  {staff.status}
+                </Badge>
+                <Badge className={getShiftColor(staff.shift)}>
+                  {staff.shift}
+                </Badge>
+              </div>
+            </div>
+            <Button variant="outline" size="sm">
+              <Shield className="w-4 h-4 mr-2" />
+              Permissões
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <Mail className="w-5 h-5 text-gray-400" />
+              <div>
+                <div className="font-medium">Email</div>
+                <div className="text-gray-600">{staff.email}</div>
+              </div>
+            </div>
+            
+            {staff.phone && (
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-gray-400" />
+                <div>
+                  <div className="font-medium">Telefone</div>
+                  <div className="text-gray-600">{staff.phone}</div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <Building className="w-5 h-5 text-gray-400" />
+              <div>
+                <div className="font-medium">Departamento</div>
+                <div className="text-gray-600">{staff.department}</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <User className="w-5 h-5 text-gray-400" />
+              <div>
+                <div className="font-medium">Supervisor</div>
+                <div className="text-gray-600">{staff.supervisor}</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Calendar className="w-5 h-5 text-gray-400" />
+              <div>
+                <div className="font-medium">Data de Início</div>
+                <div className="text-gray-600">{staff.startDate}</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Phone className="w-5 h-5 text-gray-400" />
+              <div>
+                <div className="font-medium">Emergência</div>
+                <div className="text-gray-600">{staff.emergencyContact}</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Permissões */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Permissões de Acesso</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {staff.permissions.map((permission, index) => (
+              <Badge key={index} variant="outline">
+                {permission}
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Ações */}
+      <div className="flex gap-3 justify-end">
+        <Button variant="outline">
+          <Mail className="w-4 h-4 mr-2" />
+          Enviar Email
+        </Button>
+        <Button variant="outline">
+          <Calendar className="w-4 h-4 mr-2" />
+          Ver Escala
+        </Button>
+        <Button variant="outline">
+          Editar Dados
+        </Button>
+        <Button>
+          Gerenciar Permissões
+        </Button>
+      </div>
+    </div>
   );
 };
 

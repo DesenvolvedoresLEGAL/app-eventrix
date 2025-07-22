@@ -18,28 +18,30 @@ const PlansHero: React.FC<PlansHeroProps> = ({ billingCycle, setBillingCycle }) 
   };
 
   return (
-    <div className="bg-background py-6 md:py-12 px-4 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
-
+    <div className="bg-background py-6 md:py-12 px-4">
       {/* Back to Login Button - Mobile: top left, Desktop: top right */}
-      <div className="w-fit mb-4 ml-0 md:ml-6 lg:ml-6 xl:ml-6 md:mb-6">
+      <div className="container mx-auto mb-4 md:mb-6">
+        <div className="flex justify-start md:justify-end">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleBackToLogin}
-            className="flex flex-row items-center gap-2 text-muted-foreground hover:text-foreground transition-colors min-h-[44px] px-3 py-2"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors min-h-[44px] px-3 py-2"
             aria-label="Voltar para a página de login"
           >
             <ArrowLeft size={16} />
             <span className="text-sm font-medium">Voltar ao login</span>
           </Button>
+        </div>
       </div>
+
       {/* Billing Toggle Section - Centered */}
-      <div className="text-center w-full mr-0 md:mr-6 lg:mr12 xl:mr-12 mb-6 md:mb-8 col-span-4">
+      <div className="text-center mb-6 md:mb-8">
         <div className="inline-flex flex-col items-center gap-3 md:gap-4">
           <h3 className="text-xl md:text-2xl font-bold text-foreground px-4 text-center">Escolha seu plano ideal</h3>
           
           {/* Billing Toggle */}
-          <div className="flex flex-col sm:flex-row items-center flex-1 justify-center gap-2 sm:gap-6 bg-muted rounded-xl sm:rounded-2xl p-1 sm:p-2 w-full max-w-sm sm:max-w-none">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 bg-muted rounded-xl sm:rounded-2xl p-1 sm:p-2 w-full max-w-sm sm:max-w-none">
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`w-full sm:w-auto px-4 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-300 ${
@@ -59,11 +61,9 @@ const PlansHero: React.FC<PlansHeroProps> = ({ billingCycle, setBillingCycle }) 
               }`}
             >
               Cobrança Anual
-              {billingCycle !== 'annual' ?
               <Badge className="bg-secondary text-white border-0 text-xs">
                 Economize 25%
-              </Badge> : ''
-            }
+              </Badge>
             </button>
           </div>
           

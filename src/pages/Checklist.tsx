@@ -1,13 +1,13 @@
 
 import React from 'react';
-import PageWrapper from '@/components/common/PageWrapper';
+import DashboardLayout from '@/components/layout/Dashboard';
 import ChecklistManager from '@/components/checklist/ChecklistManager';
 
 const Checklist = () => {
   return (
-    <PageWrapper>
+    <DashboardLayout title="Checklist Geral">
       <ChecklistManager />
-    </PageWrapper>
+    </DashboardLayout>
   );
 };
 

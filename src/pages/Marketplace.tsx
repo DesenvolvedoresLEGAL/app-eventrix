@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import DashboardLayout from '@/components/layout/Dashboard';
 
 const Marketplace = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -106,7 +107,7 @@ const Marketplace = () => {
   });
 
   return (
-    
+    <DashboardLayout title="Marketplace de Integrações">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -284,7 +285,7 @@ const Marketplace = () => {
           </CardContent>
         </Card>
       </div>
-    
+    </DashboardLayout>
   );
 };
 

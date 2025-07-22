@@ -6,11 +6,10 @@ import PlanCard from '@/components/plans/PlanCard';
 import PlanComparison from '@/components/plans/PlanComparison';
 import AddOnCard from '@/components/plans/AddOnCard';
 import PlansCTA from '@/components/plans/PlansCTA';
-import { usePlans, addOnModules } from '@/data/plansData';
+import { mainPlans, addOnModules } from '@/data/plansData';
 
 const Plans = () => {
   const [billingCycle, setBillingCycle] = useState<'annual' | 'monthly'>('annual');
-  const { data: mainPlans = [] } = usePlans();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pt-BR', {

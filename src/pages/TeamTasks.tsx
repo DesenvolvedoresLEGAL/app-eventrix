@@ -1,13 +1,13 @@
 
 import React from 'react';
-import PageWrapper from '@/components/common/PageWrapper';
+import DashboardLayout from '@/components/layout/Dashboard';
 import TeamTasksManager from '@/components/team-tasks/TeamTasksManager';
 
 const TeamTasks = () => {
   return (
-    <PageWrapper>
+    <DashboardLayout title="Tarefas por Equipe">
       <TeamTasksManager />
-    </PageWrapper>
+    </DashboardLayout>
   );
 };
 

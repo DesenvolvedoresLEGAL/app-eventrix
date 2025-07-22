@@ -1,135 +1,73 @@
-/* eslint-disable react-refresh/only-export-components */
-/* eslint-disable react-hooks/exhaustive-deps */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
-import { AuthContextType, User } from '@/types/auth';
-import { useAuthOperations } from '@/hooks/useAuthOperations';
-import { useUnifiedUserProfile } from '@/hooks/useUnifiedUserProfile';
-import { logAuthEvent } from '@/utils/authUtils';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
   
-  // Refs para controle de estado interno
-  const isInitialized = useRef(false);
-  const currentUserId = useRef<string | null>(null);
-  const authEventQueue = useRef<Set<string>>(new Set());
-  
-  // Configurar useUnifiedUserProfile com opções otimizadas
-  const { user, createUserProfile, clearUser, profileCache } = useUnifiedUserProfile({
-    enableCache: true,
-    cacheTimeout: 5000,
-    enableOptimization: true
-  });
-  
-  const authOperations = useAuthOperations();
-
-  // Memoização do handler de auth state change - SEM dependências circulares
-  const handleAuthStateChange = useCallback(async (event: string, session: Session | null) => {
-    const eventKey = `${event}-${session?.user?.id || 'null'}-${Date.now()}`;
-    
-    // Prevenir processamento de eventos duplicados em sequência rápida
-    if (authEventQueue.current.has(eventKey.slice(0, -13))) { // Remove timestamp para check
-      console.log('🚫 Skipping duplicate auth event:', event);
-      return;
-    }
-    
-    authEventQueue.current.add(eventKey.slice(0, -13));
-    setTimeout(() => authEventQueue.current.delete(eventKey.slice(0, -13)), 1000);
-
-    console.log('🔄 Auth state changed (unified):', event, session?.user?.email || 'no user');
-    
-    setSession(session);
-    
-    if (session?.user) {
-      const userId = session.user.id;
-      
-      // Verificar se é o mesmo usuário para evitar reprocessamento
-      if (currentUserId.current === userId && event === 'TOKEN_REFRESHED') {
-        console.log('🔄 Token refreshed for same user, skipping profile reload');
-        setLoading(false);
-        return;
-      }
-      
-      currentUserId.current = userId;
-      
-      // Apenas buscar/criar perfil em eventos específicos e se não estiver em cache
-      if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && !profileCache?.current.has(userId)) {
-        console.log('👤 Loading user profile for event:', event);
-        
-        try {
-          await createUserProfile(session.user);
-          
-          // Log apenas para login explícito
-          if (event === 'SIGNED_IN') {
-            await logAuthEvent('login', session.user.id);
-          }
-        } catch (error) {
-          console.error('❌ Error in profile creation:', error);
-        }
-      } else if (profileCache?.current.has(userId)) {
-        console.log('✅ Using cached profile for user:', userId);
-      }
-    } else {
-      console.log('👤 No user in session, clearing profile...');;
-      currentUserId.current = null;
-      clearUser();
-      
-      if (event === 'SIGNED_OUT') {
-        await logAuthEvent('logout');
-      }
-    }
-    
-    setLoading(false);
-  }, []); // SEM dependências para evitar recreação
-
-  // Inicialização otimizada com getSession apenas uma vez
   useEffect(() => {
-    if (isInitialized.current) return;
-    
-    console.log('🚀 Initializing unified auth context...');
-    isInitialized.current = true;
-    
-    // Setup do listener de auth state change
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    // Buscar sessão inicial apenas uma vez
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('❌ Error getting initial session:', error);
-        setLoading(false);
-        return;
+    // Check if user is already logged in
+    const checkAuth = () => {
+      const storedUser = localStorage.getItem('hubx_user');
+      
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
       }
       
-      if (session) {
-        console.log('✅ Initial session found, processing...');
-        handleAuthStateChange('INITIAL_SESSION', session);
-      } else {
-        console.log('ℹ️ No initial session found');
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      console.log('🧹 Cleaning up unified auth subscription...');
-      subscription.unsubscribe();
+      setLoading(false);
     };
-  }, [handleAuthStateChange]);
-
-  // Memoização do valor do contexto
-  const contextValue = useMemo(() => ({
-    user,
-    loading: loading || authOperations.loading,
-    ...authOperations
-  }), [user, loading, authOperations]);
-
+    
+    checkAuth();
+  }, []);
+  
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    
+    // Simulate API call for authentication
+    return new Promise<void>((resolve, reject) => {
+      setTimeout(() => {
+        // For demo, we'll accept any email/password
+        const user = {
+          id: '1',
+          name: 'Admin',
+          email: email,
+          role: 'admin',
+        };
+        
+        setUser(user);
+        localStorage.setItem('hubx_user', JSON.stringify(user));
+        setLoading(false);
+        resolve();
+      }, 1500);
+    });
+  };
+  
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('hubx_user');
+    navigate('/login');
+  };
+  
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

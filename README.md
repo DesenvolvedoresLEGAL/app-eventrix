@@ -36,35 +36,6 @@ npm i
 npm run dev
 ```
 
-## Environment setup
-
-Fill in the Supabase credentials in `.env.development` or `.env.production` depending on your target environment.
-
-Use `.env.development` with your local Supabase instance and `.env.production` with the remote one.
-
-## Running locally
-
-1. Install dependencies:
-
-```bash
-npm install
-```
-
-2. Start Supabase and apply migrations (requires the [Supabase CLI](https://supabase.com/docs/guides/cli)):
-
-```bash
-supabase start
-supabase db reset
-```
-
-3. Run the development server:
-
-```bash
-npm run dev
-```
-
-After running these commands the application will be available on <http://localhost:5173>.
-
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).
@@ -100,11 +71,3 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
-
-
-## Documentation
-- [Commit History May 9 - Jun 9, 2025](docs/commits/commits_May9-Jun9_2025.md)
-- [Commit History Jun 10 - Jun 12, 2025](docs/commits/commits_Jun10-Jun12_2025.md)
-- [Commit History Jun 13 - Jun 23, 2025](docs/commits/commits_Jun13-Jun23_2025.md)
-- [Technical Documentation](docs/technical/README.md)
-- [Storybook Theme Docs](docs/technical/storybook-theme.md)

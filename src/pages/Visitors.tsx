@@ -1,13 +1,13 @@
 
 import React from 'react';
-import PageWrapper from '@/components/common/PageWrapper';
+import DashboardLayout from '@/components/layout/Dashboard';
 import VisitorsList from '@/components/visitors/VisitorsList';
 
 const Visitors = () => {
   return (
-    <PageWrapper>
+    <DashboardLayout title="Visitantes">
       <VisitorsList />
-    </PageWrapper>
+    </DashboardLayout>
   );
 };
 

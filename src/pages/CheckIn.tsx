@@ -1,13 +1,13 @@
 
 import React from 'react';
-import PageWrapper from '@/components/common/PageWrapper';
+import DashboardLayout from '@/components/layout/Dashboard';
 import CheckInManager from '@/components/checkin/CheckInManager';
 
 const CheckIn = () => {
   return (
-    <PageWrapper>
+    <DashboardLayout title="Check-in/Check-out">
       <CheckInManager />
-    </PageWrapper>
+    </DashboardLayout>
   );
 };
 

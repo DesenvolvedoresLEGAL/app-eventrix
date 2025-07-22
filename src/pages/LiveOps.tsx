@@ -1,5 +1,6 @@
 
 import React from 'react';
+import DashboardLayout from '@/components/layout/Dashboard';
 import { Activity, AlertCircle, CheckCircle, FileText, Mail, MapPin } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -71,7 +72,7 @@ const LiveOps = () => {
   };
   
   return (
-    
+    <DashboardLayout title="Operação ao Vivo">
       <div className="space-y-6">
         <div>
           <h2>Operação ao Vivo</h2>
@@ -260,7 +261,7 @@ const LiveOps = () => {
           </div>
         </div>
       </div>
-    
+    </DashboardLayout>
   );
 };
 

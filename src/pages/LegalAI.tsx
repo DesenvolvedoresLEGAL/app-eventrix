@@ -1,5 +1,6 @@
 
 import React from 'react';
+import DashboardLayout from '@/components/layout/Dashboard';
 import LegalGPT from '@/components/ai-tools/LegalGPT';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,7 +45,7 @@ const LegalAI = () => {
   };
 
   return (
-    
+    <DashboardLayout title="Legal AI">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -220,7 +221,7 @@ const LegalAI = () => {
           </CardContent>
         </Card>
       </div>
-    
+    </DashboardLayout>
   );
 };
 

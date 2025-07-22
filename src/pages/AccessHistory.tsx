@@ -1,13 +1,13 @@
 
 import React from 'react';
-import PageWrapper from '@/components/common/PageWrapper';
+import DashboardLayout from '@/components/layout/Dashboard';
 import AccessHistoryManager from '@/components/access-history/AccessHistoryManager';
 
 const AccessHistory = () => {
   return (
-    <PageWrapper>
+    <DashboardLayout title="Histórico de Acessos">
       <AccessHistoryManager />
-    </PageWrapper>
+    </DashboardLayout>
   );
 };
 

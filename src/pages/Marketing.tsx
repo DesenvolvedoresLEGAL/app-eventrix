@@ -1,11 +1,12 @@
 
 import React from 'react';
+import DashboardLayout from '@/components/layout/Dashboard';
 import LegalGPT from '@/components/ai-tools/LegalGPT';
 import { Mail, ExternalLink, Globe, Send, ChevronRight } from 'lucide-react';
 
 const Marketing = () => {
   return (
-    
+    <DashboardLayout title="Marketing e Comunicação">
       <div className="space-y-6">
         <div>
           <h2>Marketing e Comunicação</h2>
@@ -162,7 +163,7 @@ const Marketing = () => {
           </div>
         </div>
       </div>
-    
+    </DashboardLayout>
   );
 };
 

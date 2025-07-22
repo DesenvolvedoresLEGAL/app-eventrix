@@ -45,7 +45,7 @@ export const dashboardItem = {
 
 export const eventsItems = [
   { icon: <Calendar size={16} />, label: 'Lista de Eventos', to: '/events' },
-  { icon: <Plus size={16} />, label: 'Novo Evento', to: '/events/new' },
+  { icon: <Plus size={16} />, label: 'Novo Evento', to: '/events/new', highlighted: true, badge: 'Novo' },
 ];
 
 export const menuGroups = [

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import KpiCard from '@/components/ui-custom/KpiCard';
+import DashboardLayout from '@/components/layout/Dashboard';
 
 const HeatmapAI = () => {
   const [isRecording, setIsRecording] = useState(true);
@@ -56,7 +57,7 @@ const HeatmapAI = () => {
   ];
 
   return (
-    
+    <DashboardLayout title="HeatmapAI™">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -303,7 +304,7 @@ const HeatmapAI = () => {
           </TabsContent>
         </Tabs>
       </div>
-    
+    </DashboardLayout>
   );
 };
 

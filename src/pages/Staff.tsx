@@ -1,13 +1,13 @@
 
 import React from 'react';
-import PageWrapper from '@/components/common/PageWrapper';
+import DashboardLayout from '@/components/layout/Dashboard';
 import StaffList from '@/components/staff/StaffList';
 
 const Staff = () => {
   return (
-    <PageWrapper>
+    <DashboardLayout title="Staff">
       <StaffList />
-    </PageWrapper>
+    </DashboardLayout>
   );
 };
 

@@ -6,37 +6,34 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAuth } from '@/context/AuthContext';
-import { WizardFormData } from '@/types/profile';
-import { usePlans } from "@/data/plansData";
 
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const { register, loading } = useAuth();
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { data: mainPlans = [] } = usePlans();
 
-  const [formData, setFormData] = useState<WizardFormData>({
-    // Step 1 - Account
+  const [formData, setFormData] = useState({
+    // Passo 1 - Dados pessoais
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: '',
-
-    // Step 2 - Organization
-    orgName: '',
-    documentId: '',
-    contactEmail: '',
-    contactPhone: '',
+    
+    // Passo 2 - Dados da empresa
+    companyName: '',
+    companySize: '',
     position: '',
-
-    // Step 3 - Plan
-    planId: ''
+    website: '',
+    
+    // Passo 3 - Sobre os eventos
+    eventTypes: '',
+    eventsPerYear: '',
+    avgVisitors: ''
   });
 
-  const updateFormData = (field: keyof WizardFormData, value: string) => {
+  const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -48,62 +45,13 @@ const Register = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const validateStep = (step: number): boolean => {
-    switch (step) {
-      case 1:
-        return !!(
-          formData.firstName.trim() &&
-          formData.lastName.trim() &&
-          formData.email.trim() &&
-          formData.password.trim() &&
-          formData.confirmPassword.trim() &&
-          formData.password === formData.confirmPassword &&
-          formData.password.length >= 6
-        );
-      case 2:
-        return !!(
-          formData.orgName.trim() &&
-          formData.documentId.trim() &&
-          formData.contactEmail.trim() &&
-          formData.position.trim()
-        );
-      case 3:
-        return !!formData.planId;
-      default:
-        return false;
-    }
-  };
-
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      nextStep();
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!validateStep(3)) {
-      return;
-    }
-
-    try {
-      // Map wizard data to register function expected format
-      await register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone || undefined,
-        orgName: formData.orgName,
-        documentId: formData.documentId,
-        contactEmail: formData.contactEmail,
-        contactPhone: formData.contactPhone || undefined,
-        planId: formData.planId,
-        position: formData.position
-      });
-
-    } catch (error) {
-      console.error('Registration error:', error);
-    }
+  const handleSubmit = () => {
+    setLoading(true);
+    // Simular criação de conta
+    setTimeout(() => {
+      setLoading(false);
+      navigate('/dashboard');
+    }, 2000);
   };
 
   const renderStep = () => {
@@ -126,7 +74,6 @@ const Register = () => {
                   value={formData.firstName}
                   onChange={(e) => updateFormData('firstName', e.target.value)}
                   placeholder="Seu nome"
-                  disabled={loading}
                 />
               </div>
               <div>
@@ -135,7 +82,6 @@ const Register = () => {
                   value={formData.lastName}
                   onChange={(e) => updateFormData('lastName', e.target.value)}
                   placeholder="Seu sobrenome"
-                  disabled={loading}
                 />
               </div>
             </div>
@@ -147,7 +93,6 @@ const Register = () => {
                 value={formData.email}
                 onChange={(e) => updateFormData('email', e.target.value)}
                 placeholder="seu@email.com"
-                disabled={loading}
               />
             </div>
 
@@ -157,7 +102,6 @@ const Register = () => {
                 value={formData.phone}
                 onChange={(e) => updateFormData('phone', e.target.value)}
                 placeholder="(11) 99999-9999"
-                disabled={loading}
               />
             </div>
 
@@ -167,8 +111,7 @@ const Register = () => {
                 type="password"
                 value={formData.password}
                 onChange={(e) => updateFormData('password', e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-                disabled={loading}
+                placeholder="Mínimo 8 caracteres"
               />
             </div>
 
@@ -179,11 +122,7 @@ const Register = () => {
                 value={formData.confirmPassword}
                 onChange={(e) => updateFormData('confirmPassword', e.target.value)}
                 placeholder="Digite a senha novamente"
-                disabled={loading}
               />
-              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                <p className="text-sm text-red-500 mt-1">As senhas não coincidem</p>
-              )}
             </div>
           </div>
         );
@@ -194,59 +133,51 @@ const Register = () => {
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Building className="text-primary" size={20} />
-                <h3 className="text-xl font-semibold">Organização</h3>
+                <h3 className="text-xl font-semibold">Dados da Empresa</h3>
               </div>
-              <p className="text-muted-foreground">Dados da sua empresa</p>
+              <p className="text-muted-foreground">Conte-nos sobre sua organização</p>
             </div>
 
             <div>
-              <Label>Nome da Organização *</Label>
+              <Label>Nome da Empresa *</Label>
               <Input
-                value={formData.orgName}
-                onChange={(e) => updateFormData('orgName', e.target.value)}
-                placeholder="Nome da organização"
-                disabled={loading}
+                value={formData.companyName}
+                onChange={(e) => updateFormData('companyName', e.target.value)}
+                placeholder="Nome da sua empresa"
               />
             </div>
 
             <div>
-              <Label>CNPJ/CPF *</Label>
-              <Input
-                value={formData.documentId}
-                onChange={(e) => updateFormData('documentId', e.target.value)}
-                placeholder="00.000.000/0000-00"
-                disabled={loading}
-              />
+              <Label>Tamanho da Empresa *</Label>
+              <Select onValueChange={(value) => updateFormData('companySize', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tamanho" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-10">1-10 funcionários</SelectItem>
+                  <SelectItem value="11-50">11-50 funcionários</SelectItem>
+                  <SelectItem value="51-200">51-200 funcionários</SelectItem>
+                  <SelectItem value="201-500">201-500 funcionários</SelectItem>
+                  <SelectItem value="500+">500+ funcionários</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <Label>Seu cargo na empresa</Label>
+              <Label>Seu Cargo *</Label>
               <Input
                 value={formData.position}
                 onChange={(e) => updateFormData('position', e.target.value)}
-                placeholder="Diretor de Marketing"
-                disabled={loading}
+                placeholder="Ex: Gerente de Eventos"
               />
             </div>
 
             <div>
-              <Label>Email de Contato *</Label>
+              <Label>Website</Label>
               <Input
-                type="email"
-                value={formData.contactEmail}
-                onChange={(e) => updateFormData('contactEmail', e.target.value)}
-                placeholder="contato@empresa.com"
-                disabled={loading}
-              />
-            </div>
-
-            <div>
-              <Label>Telefone de Contato</Label>
-              <Input
-                value={formData.contactPhone}
-                onChange={(e) => updateFormData('contactPhone', e.target.value)}
-                placeholder="(11) 99999-9999"
-                disabled={loading}
+                value={formData.website}
+                onChange={(e) => updateFormData('website', e.target.value)}
+                placeholder="https://suaempresa.com"
               />
             </div>
           </div>
@@ -258,21 +189,56 @@ const Register = () => {
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Zap className="text-primary" size={20} />
-                <h3 className="text-xl font-semibold">Selecione um Plano</h3>
+                <h3 className="text-xl font-semibold">Sobre seus Eventos</h3>
               </div>
-              <p className="text-muted-foreground">Escolha o plano para sua organização</p>
+              <p className="text-muted-foreground">Ajude-nos a personalizar sua experiência</p>
             </div>
 
             <div>
-              <Label>Plano *</Label>
-              <Select onValueChange={(value) => updateFormData('planId', value)} disabled={loading}>
+              <Label>Tipos de Eventos *</Label>
+              <Select onValueChange={(value) => updateFormData('eventTypes', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o plano" />
+                  <SelectValue placeholder="Selecione o tipo principal" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mainPlans.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
+                  <SelectItem value="corporativo">Eventos Corporativos</SelectItem>
+                  <SelectItem value="feiras">Feiras e Exposições</SelectItem>
+                  <SelectItem value="congressos">Congressos e Conferências</SelectItem>
+                  <SelectItem value="workshops">Workshops e Treinamentos</SelectItem>
+                  <SelectItem value="sociais">Eventos Sociais</SelectItem>
+                  <SelectItem value="esportivos">Eventos Esportivos</SelectItem>
+                  <SelectItem value="outros">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Eventos por Ano *</Label>
+              <Select onValueChange={(value) => updateFormData('eventsPerYear', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Quantos eventos você organiza?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-5">1-5 eventos</SelectItem>
+                  <SelectItem value="6-10">6-10 eventos</SelectItem>
+                  <SelectItem value="11-20">11-20 eventos</SelectItem>
+                  <SelectItem value="20+">Mais de 20 eventos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Média de Visitantes *</Label>
+              <Select onValueChange={(value) => updateFormData('avgVisitors', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Média de participantes por evento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0-100">Até 100 pessoas</SelectItem>
+                  <SelectItem value="101-500">101-500 pessoas</SelectItem>
+                  <SelectItem value="501-1000">501-1.000 pessoas</SelectItem>
+                  <SelectItem value="1001-5000">1.001-5.000 pessoas</SelectItem>
+                  <SelectItem value="5000+">Mais de 5.000 pessoas</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -303,9 +269,9 @@ const Register = () => {
           {/* Progress Steps */}
           <div className="space-y-4 mb-8">
             {[
-              { step: 1, title: "Conta", desc: "Seus dados" },
-              { step: 2, title: "Organização", desc: "Dados da empresa" },
-              { step: 3, title: "Plano", desc: "Escolha do plano" }
+              { step: 1, title: "Dados Pessoais", desc: "Informações básicas" },
+              { step: 2, title: "Empresa", desc: "Sobre sua organização" },
+              { step: 3, title: "Eventos", desc: "Tipo de eventos que organiza" }
             ].map((item) => (
               <div key={item.step} className="flex items-center gap-3">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
@@ -337,7 +303,7 @@ const Register = () => {
           <div className="tech-card p-8">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-2">
-                Criar <span className="bg-brand bg-clip-text text-transparent">Conta</span>
+                Criar <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Conta</span>
               </h2>
               <p className="text-muted-foreground">Passo {currentStep} de 3</p>
               <div className="tech-badge tech-glow mt-4">
@@ -349,12 +315,7 @@ const Register = () => {
 
             <div className="flex justify-between mt-8 gap-4">
               {currentStep > 1 && (
-                <Button 
-                  variant="outline" 
-                  onClick={prevStep} 
-                  className="flex items-center gap-2"
-                  disabled={loading}
-                >
+                <Button variant="outline" onClick={prevStep} className="flex items-center gap-2">
                   <ArrowLeft size={16} />
                   Voltar
                 </Button>
@@ -363,18 +324,14 @@ const Register = () => {
               <div className="flex-1" />
 
               {currentStep < 3 ? (
-                <Button 
-                  onClick={handleNext} 
-                  className="tech-button flex items-center gap-2"
-                  disabled={!validateStep(currentStep) || loading}
-                >
+                <Button onClick={nextStep} className="tech-button flex items-center gap-2">
                   Próximo
                   <ArrowRight size={16} />
                 </Button>
               ) : (
                 <Button 
                   onClick={handleSubmit} 
-                  disabled={!validateStep(3) || loading}
+                  disabled={loading}
                   className="tech-button flex items-center gap-2"
                 >
                   {loading ? 'Criando conta...' : 'Criar Conta'}

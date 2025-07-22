@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import DashboardLayout from '@/components/layout/Dashboard';
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Legend } from 'recharts';
 import { DollarSign, ArrowRight, Download, CheckSquare, FileText, ChevronDown } from 'lucide-react';
 
@@ -47,7 +48,7 @@ const Finance = () => {
   };
   
   return (
-    
+    <DashboardLayout title="Financeiro">
       <div className="space-y-6">
         <div>
           <h2>Gestão Financeira</h2>
@@ -287,7 +288,7 @@ const Finance = () => {
           </div>
         </div>
       </div>
-    
+    </DashboardLayout>
   );
 };
 

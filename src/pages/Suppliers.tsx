@@ -1,13 +1,13 @@
 
 import React from 'react';
-import PageWrapper from '@/components/common/PageWrapper';
+import DashboardLayout from '@/components/layout/Dashboard';
 import SuppliersList from '@/components/suppliers/SuppliersList';
 
 const Suppliers = () => {
   return (
-    <PageWrapper>
+    <DashboardLayout title="Fornecedores">
       <SuppliersList />
-    </PageWrapper>
+    </DashboardLayout>
   );
 };
 

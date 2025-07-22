@@ -1,5 +1,6 @@
 
 import React from 'react';
+import DashboardLayout from '@/components/layout/Dashboard';
 import { Users, Search, Filter, Check, X, Building, ArrowUpDown, MapPin } from 'lucide-react';
 
 const Exhibitors = () => {
@@ -77,7 +78,7 @@ const Exhibitors = () => {
   };
 
   return (
-    
+    <DashboardLayout title="Expositores">
       <div className="space-y-6">
         <div className="flex justify-between">
           <div>
@@ -205,7 +206,7 @@ const Exhibitors = () => {
           </div>
         </div>
       </div>
-    
+    </DashboardLayout>
   );
 };
 
