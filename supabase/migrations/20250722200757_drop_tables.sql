@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS event_team;
+DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS event_organizers;
+DROP TABLE IF EXISTS profiles;
