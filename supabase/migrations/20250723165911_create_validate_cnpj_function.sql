@@ -67,5 +67,7 @@ END;
 $$ LANGUAGE plpgsql;
 COMMIT;
 
--- Rollback
--- DROP FUNCTION IF EXISTS update_updated_at_column();
+-- Rollback: Remove a função validate_cnpj criada na migration 20250723165911_create_validate_cnpj_function.sql
+-- BEGIN;
+-- DROP FUNCTION IF EXISTS validate_cnpj(TEXT);
+-- COMMIT;
