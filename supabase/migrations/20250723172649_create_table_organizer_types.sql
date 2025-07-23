@@ -23,5 +23,5 @@ COMMIT;
 
 --ROLLBACK;
 -- BEGIN;
--- DROP TABLE IF EXISTS organizer_types;
+-- DROP TABLE IF EXISTS organizer_types CASCADE;
 -- COMMIT;
