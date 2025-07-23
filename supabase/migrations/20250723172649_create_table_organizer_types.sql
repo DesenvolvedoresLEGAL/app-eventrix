@@ -1,5 +1,6 @@
 -- Migration: 20250723172649_create_table_organizer_types.sql
--- Descrição: Cria a função para descriptografar dados sensíveis
+-- Descrição: Cria a tabela de tipos de organizadores
+-- Tabela: organizer_types
 -- Autor: Gustavo Mota
 -- Data: 23/07/2025
 
