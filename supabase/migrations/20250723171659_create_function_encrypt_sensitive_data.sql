@@ -1,4 +1,4 @@
--- Migration: 20250723171659_create_encrypt_sensitive_data.sql
+-- Migration: 20250723171659_create_function_encrypt_sensitive_data.sql
 -- Descrição: Cria a função para criptografar dados sensíveis
 -- Autor: Gustavo Mota
 -- Data: 23/07/2025

@@ -1,4 +1,4 @@
--- Migration: 20250723171000_create_format_cnpj.sql
+-- Migration: 20250723171000_create_function_format_cnpj.sql
 -- Descrição: Cria a função para formatar CNPJ com a máscara correta
 -- Autor: Gustavo Mota
 -- Data: 23/07/2025

@@ -1,4 +1,4 @@
--- Migration: 20250723170317_create_validate_cep.sql
+-- Migration: 20250723170317_create_function_validate_hex_color.sql
 -- Descrição: Cria a função para validação de cores hexadecimais
 -- Autor: Gustavo Mota
 -- Data: 23/07/2025

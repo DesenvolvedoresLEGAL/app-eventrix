@@ -1,4 +1,4 @@
--- Migration: 20250723171958_create_decrypt_sensitive_data.sql
+-- Migration: 20250723171958_create_function_decrypt_sensitive_data.sql
 -- Descrição: Cria a função para descriptografar dados sensíveis
 -- Autor: Gustavo Mota
 -- Data: 23/07/2025

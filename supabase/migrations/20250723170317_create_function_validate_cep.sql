@@ -1,4 +1,4 @@
--- Migration: 20250723170317_create_validate_cep.sql
+-- Migration: 20250723170317_create_function_validate_cep.sql
 -- Descrição: Cria a função para validar o formato e os dígitos de verificação do CEP
 -- Autor: Gustavo Mota
 -- Data: 23/07/2025

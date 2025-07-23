@@ -1,4 +1,4 @@
--- Migration: 20250723165911_create_validate_cnpj_function.sql
+-- Migration: 20250723165911_create_function_validate_cnpj_function.sql
 -- Descrição: Cria a função para validar o formato e os dígitos de verificação do CNPJ
 -- Autor: Gustavo Mota
 -- Data: 23/07/2025

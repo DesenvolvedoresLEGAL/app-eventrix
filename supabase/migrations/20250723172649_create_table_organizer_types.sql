@@ -1,4 +1,4 @@
--- Migration: 20250723172649_create_table_organizer_types.sql
+-- Migration: 20250723172649_create_function_table_organizer_types.sql
 -- Descrição: Cria a tabela de tipos de organizadores
 -- Tabela: organizer_types
 -- Autor: Gustavo Mota
