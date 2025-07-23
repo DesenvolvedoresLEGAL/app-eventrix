@@ -14,5 +14,5 @@ COMMIT;
 
 --ROLLBACK;
 -- BEGIN;
--- DROP FUNCTION IF EXISTS validate_cep;
+-- DROP FUNCTION IF EXISTS validate_cep(cep_input TEXT);
 --COMMIT;
