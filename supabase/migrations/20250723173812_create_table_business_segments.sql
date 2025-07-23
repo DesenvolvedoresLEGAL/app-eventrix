@@ -20,6 +20,9 @@ CREATE TABLE business_segments (
     CONSTRAINT business_segments_code_check CHECK (code ~ '^[a-z_]+$'),
     CONSTRAINT business_segments_sort_order_check CHECK (sort_order >= 0)
 );
+
+COMMENT ON TABLE business_segments IS 'Segmentos de negócio brasileiros';
+
 COMMIT;
 
 --ROLLBACK;
