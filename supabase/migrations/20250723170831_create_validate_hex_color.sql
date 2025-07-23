@@ -12,7 +12,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 COMMIT;
-COMMIT;
 
 --ROLLBACK;
 -- BEGIN;
