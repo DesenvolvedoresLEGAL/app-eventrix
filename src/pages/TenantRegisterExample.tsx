@@ -152,30 +152,30 @@ export default function TenantRegisterExample({ onSuccess }) {
                 <div className="mb-4">
                     <label className="block mb-1 font-medium">CNPJ</label>
                     <input name="cnpj" required maxLength={18} value={form.cnpj}
-                        onChange={handleChange} className="input border-b-2 border-b-gray-500" placeholder="00.000.000/0000-00" />
+                        onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" placeholder="00.000.000/0000-00" />
                 </div>
 
                 <div className="mb-4">
                     <label className="block mb-1 font-medium">Razão Social</label>
                     <input name="razao_social" required maxLength={200} value={form.razao_social}
-                        onChange={handleChange} className="input border-b-2 border-b-gray-500" />
+                        onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" />
                 </div>
 
                 <div className="mb-4">
                     <label className="block mb-1 font-medium">Nome Fantasia</label>
                     <input name="nome_fantasia" required maxLength={100} value={form.nome_fantasia}
-                        onChange={handleChange} className="input border-b-2 border-b-gray-500" />
+                        onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" />
                 </div>
 
                 <div className="mb-4">
                     <label className="block mb-1 font-medium">E-mail de contato</label>
                     <input type="email" name="contact_email" required maxLength={255} value={form.contact_email}
-                        onChange={handleChange} className="input border-b-2 border-b-gray-500" />
+                        onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" />
                 </div>
 
                 <div className="mb-4">
                     <label className="block mb-1 font-medium">Tipo de Organizador</label>
-                    <select name="organizer_type_code" required value={form.organizer_type_code} onChange={handleChange} className="input border-b-2 border-b-gray-500">
+                    <select name="organizer_type_code" required value={form.organizer_type_code} onChange={handleChange} className="input w-full border-b-2 border-b-gray-500">
                         <option value="">Selecione</option>
                         {organizerTypes.map((t) => (
                             <option key={t.code} value={t.code}>{t.name}</option>
@@ -185,7 +185,7 @@ export default function TenantRegisterExample({ onSuccess }) {
 
                 <div className="mb-4">
                     <label className="block mb-1 font-medium">Segmento de Atuação</label>
-                    <select name="segment_code" required value={form.segment_code} onChange={handleChange} className="input border-b-2 border-b-gray-500">
+                    <select name="segment_code" required value={form.segment_code} onChange={handleChange} className="input w-full border-b-2 border-b-gray-500">
                         <option value="">Selecione</option>
                         {segments.map((s) => (
                             <option key={s.code} value={s.code}>{s.name}</option>
@@ -195,7 +195,7 @@ export default function TenantRegisterExample({ onSuccess }) {
 
                 <div className="mb-4">
                     <label className="block mb-1 font-medium">Estado</label>
-                    <select name="state_code" required value={form.state_code} onChange={handleChange} className="input border-b-2 border-b-gray-500">
+                    <select name="state_code" required value={form.state_code} onChange={handleChange} className="input w-full border-b-2 border-b-gray-500">
                         <option value="">Selecione</option>
                         {states.map((st) => (
                             <option key={st.code} value={st.code}>{st.name}</option>
