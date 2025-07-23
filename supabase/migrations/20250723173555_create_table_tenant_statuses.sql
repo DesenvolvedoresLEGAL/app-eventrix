@@ -25,5 +25,5 @@ COMMIT;
 
 --ROLLBACK;
 -- BEGIN;
--- DROP TABLE IF EXISTS tenant_statuses;
+-- DROP TABLE IF EXISTS tenant_statuses CASCADE;
 -- COMMIT;
