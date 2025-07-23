@@ -19,6 +19,9 @@ CREATE TABLE organizer_types (
     CONSTRAINT organizer_types_code_check CHECK (code ~ '^[a-z_]+$'),
     CONSTRAINT organizer_types_sort_order_check CHECK (sort_order >= 0)
 );
+
+COMMENT ON TABLE organizer_types IS 'Tipos de organizadores de eventos no Brasil';
+
 COMMIT;
 
 --ROLLBACK;
