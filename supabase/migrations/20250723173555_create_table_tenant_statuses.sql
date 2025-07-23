@@ -21,6 +21,9 @@ CREATE TABLE tenant_statuses (
     CONSTRAINT tenant_statuses_color_check CHECK (validate_hex_color(color_hex)),
     CONSTRAINT tenant_statuses_sort_order_check CHECK (sort_order >= 0)
 );
+
+COMMENT ON TABLE tenant_statuses IS 'Status possíveis para tenants';
+
 COMMIT;
 
 --ROLLBACK;
