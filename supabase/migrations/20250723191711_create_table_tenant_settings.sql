@@ -28,6 +28,15 @@ CREATE TABLE tenant_settings (
     CONSTRAINT tenant_settings_key_format_check CHECK (key ~ '^[a-z_][a-z0-9_]*$'),
     CONSTRAINT tenant_settings_unique_key UNIQUE (tenant_id, category, key)
 );
+
+CREATE INDEX idx_tenant_settings_tenant ON tenant_settings(tenant_id);
+CREATE INDEX idx_tenant_settings_category ON tenant_settings(tenant_id, category);
+CREATE INDEX idx_tenant_settings_sensitive ON tenant_settings(tenant_id) WHERE is_sensitive = true;
+
+COMMENT ON TABLE tenant_settings IS 'Configurações customizáveis por tenant';
+
+COMMENT ON COLUMN tenant_settings.is_sensitive IS 'Indica se o valor deve ser criptografado';
+
 COMMIT;
 
 -- ROLLBACK;
