@@ -48,6 +48,7 @@ import AIValidator from "./pages/AIValidator";
 import HeatmapAI from "./pages/HeatmapAI";
 import DynamicPricing from "./pages/DynamicPricing";
 import LegalAI from "./pages/LegalAI";
+import TenantRegisterExample from './pages/TenantRegisterExample';
 
 const queryClient = new QueryClient();
 
@@ -99,6 +100,7 @@ const App = () => (
           <Route path="/dynamic-pricing" element={<DynamicPricing />} />
           <Route path="/legal-ai" element={<LegalAI />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/test" element={<TenantRegisterExample />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
