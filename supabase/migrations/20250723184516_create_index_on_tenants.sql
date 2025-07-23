@@ -26,6 +26,11 @@ CREATE INDEX idx_tenants_onboarding ON tenants(onboarding_completed, onboarding_
 CREATE INDEX idx_tenants_search_razao_social ON tenants USING gin(to_tsvector('portuguese', razao_social)); -- O gin faz o índice de texto completo, no lugar de buscar o que está escrito, ele busca por termos indexados.
 CREATE INDEX idx_tenants_search_nome_fantasia ON tenants USING gin(to_tsvector('portuguese', coalesce(nome_fantasia, '')));
 
+-- Composite indexes for common queries
+CREATE INDEX idx_tenants_status_plan ON tenants(status_id, plan_id);
+CREATE INDEX idx_tenants_state_segment ON tenants(state_id, primary_segment_id);
+CREATE INDEX idx_tenants_created_status ON tenants(created_at, status_id) WHERE deleted_at IS NULL;
+
 COMMIT;
 
 --ROLLBACK;
