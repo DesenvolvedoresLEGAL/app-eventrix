@@ -29,6 +29,14 @@ CREATE TABLE tenant_plan_history (
         from_plan_id IS NULL OR from_plan_id != to_plan_id
     )
 );
+
+CREATE INDEX idx_tenant_plan_history_tenant ON tenant_plan_history(tenant_id);
+CREATE INDEX idx_tenant_plan_history_from_plan ON tenant_plan_history(from_plan_id);
+CREATE INDEX idx_tenant_plan_history_to_plan ON tenant_plan_history(to_plan_id);
+CREATE INDEX idx_tenant_plan_history_effective ON tenant_plan_history(effective_date);
+
+COMMENT ON TABLE tenant_plan_history IS 'Histórico de mudanças de planos';
+
 COMMIT;
 
 --ROLLBACK;
