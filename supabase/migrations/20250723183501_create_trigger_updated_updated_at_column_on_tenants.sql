@@ -13,5 +13,5 @@ COMMIT;
 
 --ROLLBACK;
 -- BEGIN;
--- DROP INDEX IF EXISTS trigger_tenants_updated_at;
+-- DROP TRIGGER IF EXISTS trigger_tenants_updated_at;
 -- COMMIT;
