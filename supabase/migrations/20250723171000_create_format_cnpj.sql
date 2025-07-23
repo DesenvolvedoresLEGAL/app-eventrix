@@ -1,5 +1,5 @@
 -- Migration: 20250723171000_create_format_cnpj.sql
--- Descrição: Cria a função para validar o formato e os dígitos de verificação do CEP
+-- Descrição: Cria a função para formatar CNPJ com a máscara correta
 -- Autor: Gustavo Mota
 -- Data: 23/07/2025
 
