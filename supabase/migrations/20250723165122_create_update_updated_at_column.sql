@@ -3,7 +3,7 @@
 -- Autor: Gustavo Mota
 -- Data: 23/07/2025
 
-BEGIN
+BEGIN;
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
