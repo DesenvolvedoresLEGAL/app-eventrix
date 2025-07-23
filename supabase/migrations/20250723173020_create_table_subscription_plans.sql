@@ -52,6 +52,16 @@ CREATE TABLE subscription_plans (
     ),
     CONSTRAINT subscription_plans_sort_order_check CHECK (sort_order >= 0)
 );
+
+COMMENT ON TABLE subscription_plans IS 'Planos de assinatura do EVENTRIX™';
+
+COMMENT ON COLUMN subscription_plans.max_events_max IS '-1 indica ilimitado, valores grandes (999999) indicam limites muito altos';
+COMMENT ON COLUMN subscription_plans.max_visitors_max IS '-1 indica ilimitado, valores grandes (999999) indicam limites muito altos';
+COMMENT ON COLUMN subscription_plans.features IS 'Funcionalidades incluídas no plano (JSON)';
+COMMENT ON COLUMN subscription_plans.is_enterprise IS 'Plano enterprise com preço sob consulta';
+COMMENT ON COLUMN subscription_plans.max_admins IS 'Número máximo de administradores, valores grandes (999999) representam limites muito altos';
+COMMENT ON COLUMN subscription_plans.max_exhibitors IS 'Número máximo de expositores por evento, valores grandes (999999) representam limites muito altos';
+
 COMMIT;
 
 --ROLLBACK;
