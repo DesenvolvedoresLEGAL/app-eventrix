@@ -36,6 +36,14 @@ CREATE TABLE tenant_usage_stats (
     ),
     CONSTRAINT tenant_usage_stats_unique_period UNIQUE (tenant_id, period_start, period_end)
 );
+
+CREATE INDEX idx_tenant_usage_stats_tenant ON tenant_usage_stats(tenant_id);
+CREATE INDEX idx_tenant_usage_stats_period ON tenant_usage_stats(period_start, period_end);
+CREATE INDEX idx_tenant_usage_stats_tenant_period ON tenant_usage_stats(tenant_id, period_start, period_end);
+
+COMMENT ON TABLE tenant_usage_stats IS 'Estatísticas de uso dos tenants por período';
+COMMENT ON TABLE tenant_usage_stats IS 'Estatísticas de uso dos tenants por período';
+
 COMMIT;
 
 -- ROLLBACK;
