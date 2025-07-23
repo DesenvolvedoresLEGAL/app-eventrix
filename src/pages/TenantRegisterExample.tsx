@@ -1,14 +1,5 @@
-// import supabase from "@/integrations/supabase/client";
-// import { get } from "http";
-// import { useEffect, useState } from "react";
-
 import supabase from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-
-// interface BrazilianState {
-//     code: string;
-//     name: string;
-// }
 
 interface TenantRegistryData {
     slug: string;
@@ -25,33 +16,7 @@ interface TenantRegistryData {
 
 export default function TenantRegisterExample({ onSuccess }) {
 
-    // const [brazilianStates, setBrazilianStates] = useState<BrazilianState[]>([]);
-
-    // async function fetchBrazilianStates(): Promise<BrazilianState[]> {
-    //     try {
-    //         const {data, error} = await supabase
-    //             .from('brazilian_states')
-    //             .select('code, name');
-
-    //         if (error) throw error;
-
-    //         const mappedData = data.map((state: BrazilianState) => ({
-    //             code: state.code,
-    //             name: state.name
-    //         }));
-
-    //         setBrazilianStates(mappedData);
-    //         return mappedData;
-    //     } catch (error) {
-    //         if (import.meta.env.DEV) console.error("Error fetching Brazilian states:", error);
-    //         return [];
-    //     }
-    // }
-
-    // useEffect(() => {
-    //     fetchBrazilianStates();
-    // }, []);
-
+    const [currentStep, setCurrentStep] = useState(1);
     const [form, setForm] = useState({} as TenantRegistryData);
     const [registeredSlugs, setRegisteredSlugs] = useState<string[]>([]);
     const [organizerTypes, setOrganizerTypes] = useState([]);
@@ -135,8 +100,140 @@ export default function TenantRegisterExample({ onSuccess }) {
             .replace(/^-+|-+$/g, '');              // Remove hífens no início/fim
     }
 
+    function nextStep() {
+        if (currentStep < 3) setCurrentStep(currentStep + 1);
+    }
+
+    function prevStep() {
+        if (currentStep > 1) setCurrentStep(currentStep - 1);
+    }
+
     function handleLoadTennants() {
         fetchTenantData();
+    }
+
+    function renderStep() {
+        switch (currentStep) {
+            case 1:
+                return (
+                    <form className="flex w-full flex-col gap-5 max-w-lg mx-auto p-6 bg-white rounded-2xl shadow" onSubmit={handleSubmit}>
+                        <h2 className="text-2xl font-bold mb-4">Cadastro da Empresa</h2>
+                        {error && <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">{error}</div>}
+
+                        <div className="mb-4">
+                            <label className="block mb-1 font-medium">CNPJ</label>
+                            <input name="cnpj" required maxLength={18} value={form.cnpj}
+                                onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" placeholder="00.000.000/0000-00" />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block mb-1 font-medium">Razão Social</label>
+                            <input name="razao_social" required maxLength={200} value={form.razao_social}
+                                onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block mb-1 font-medium">Nome Fantasia</label>
+                            <input name="nome_fantasia" required maxLength={100} value={form.nome_fantasia}
+                                onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block mb-1 font-medium">E-mail de contato</label>
+                            <input type="email" name="contact_email" required maxLength={255} value={form.contact_email}
+                                onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block mb-1 font-medium">Tipo de Organizador</label>
+                            <select name="organizer_type_code" required value={form.organizer_type_code} onChange={handleChange} className="input w-full border-b-2 border-b-gray-500">
+                                <option value="">Selecione</option>
+                                {organizerTypes.map((t) => (
+                                    <option key={t.code} value={t.code}>{t.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block mb-1 font-medium">Segmento de Atuação</label>
+                            <select name="segment_code" required value={form.segment_code} onChange={handleChange} className="input w-full border-b-2 border-b-gray-500">
+                                <option value="">Selecione</option>
+                                {segments.map((s) => (
+                                    <option key={s.code} value={s.code}>{s.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block mb-1 font-medium">Estado</label>
+                            <select name="state_code" required value={form.state_code} onChange={handleChange} className="input w-full border-b-2 border-b-gray-500">
+                                <option value="">Selecione</option>
+                                {states.map((st) => (
+                                    <option key={st.code} value={st.code}>{st.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Plano fixo no MVP, pode ser escondido */}
+                        <input type="hidden" name="plan_code" value="start" />
+
+                                
+                    <button
+                        onClick={() => nextStep()}
+                        disabled={loading}
+                        className="w-full bg-[#4D2BFB] hover:bg-[#020CBC] text-white font-bold py-2 px-4 rounded-2xl transition"
+                    >
+                        Próximo
+                    </button>
+                    </form>
+                );
+                break;
+            case 2:
+                return (
+                    <div className="flex flex-row gap-4 items-center justify-between h-screen max-w-full">
+                    <button
+                        onClick={() => prevStep()}
+                        disabled={loading}
+                        className="bg-[#4D2BFB] hover:bg-[#020CBC] text-white font-bold py-2 px-4 rounded-2xl transition"
+                    >
+                        Anterior
+                    </button>
+                    <button
+                        onClick={() => nextStep()}
+                        disabled={loading}
+                        className="bg-[#4D2BFB] hover:bg-[#020CBC] text-white font-bold py-2 px-4 rounded-2xl transition"
+                    >
+                        Próximo
+                    </button>
+                    </div>
+                );
+                break;
+
+            case 3:
+                return (
+                    
+                    <div className="flex flex-row gap-4 items-center justify-between h-screen max-w-full">
+                    <button
+                        onClick={() => prevStep()}
+                        disabled={loading}
+                        className="bg-[#4D2BFB] hover:bg-[#020CBC] text-white font-bold py-2 px-4 rounded-2xl transition"
+                    >
+                        Anterior
+                    </button>
+                    <button
+
+                        disabled={loading}
+                        className="bg-[#4D2BFB] hover:bg-[#020CBC] text-white font-bold py-2 px-4 rounded-2xl transition"
+                    >
+                        {loading ? "Cadastrando..." : "Criar Empresa"}
+                    </button>
+                    </div>
+                );
+                break;
+
+            default:
+                break;
+        }
     }
 
     return (
@@ -145,75 +242,7 @@ export default function TenantRegisterExample({ onSuccess }) {
                 <h1>Tenant Registration Example</h1>
                 <p>This is an example page for tenant registration.</p>
             </div>
-            <form className="flex w-full flex-col gap-5 max-w-lg mx-auto p-6 bg-white rounded-2xl shadow" onSubmit={handleSubmit}>
-                <h2 className="text-2xl font-bold mb-4">Cadastro da Empresa</h2>
-                {error && <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">{error}</div>}
-
-                <div className="mb-4">
-                    <label className="block mb-1 font-medium">CNPJ</label>
-                    <input name="cnpj" required maxLength={18} value={form.cnpj}
-                        onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" placeholder="00.000.000/0000-00" />
-                </div>
-
-                <div className="mb-4">
-                    <label className="block mb-1 font-medium">Razão Social</label>
-                    <input name="razao_social" required maxLength={200} value={form.razao_social}
-                        onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" />
-                </div>
-
-                <div className="mb-4">
-                    <label className="block mb-1 font-medium">Nome Fantasia</label>
-                    <input name="nome_fantasia" required maxLength={100} value={form.nome_fantasia}
-                        onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" />
-                </div>
-
-                <div className="mb-4">
-                    <label className="block mb-1 font-medium">E-mail de contato</label>
-                    <input type="email" name="contact_email" required maxLength={255} value={form.contact_email}
-                        onChange={handleChange} className="input w-full border-b-2 border-b-gray-500" />
-                </div>
-
-                <div className="mb-4">
-                    <label className="block mb-1 font-medium">Tipo de Organizador</label>
-                    <select name="organizer_type_code" required value={form.organizer_type_code} onChange={handleChange} className="input w-full border-b-2 border-b-gray-500">
-                        <option value="">Selecione</option>
-                        {organizerTypes.map((t) => (
-                            <option key={t.code} value={t.code}>{t.name}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="mb-4">
-                    <label className="block mb-1 font-medium">Segmento de Atuação</label>
-                    <select name="segment_code" required value={form.segment_code} onChange={handleChange} className="input w-full border-b-2 border-b-gray-500">
-                        <option value="">Selecione</option>
-                        {segments.map((s) => (
-                            <option key={s.code} value={s.code}>{s.name}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="mb-4">
-                    <label className="block mb-1 font-medium">Estado</label>
-                    <select name="state_code" required value={form.state_code} onChange={handleChange} className="input w-full border-b-2 border-b-gray-500">
-                        <option value="">Selecione</option>
-                        {states.map((st) => (
-                            <option key={st.code} value={st.code}>{st.name}</option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Plano fixo no MVP, pode ser escondido */}
-                <input type="hidden" name="plan_code" value="start" />
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-[#4D2BFB] hover:bg-[#020CBC] text-white font-bold py-2 px-4 rounded-2xl transition"
-                >
-                    {loading ? "Cadastrando..." : "Criar Empresa"}
-                </button>
-            </form>
+            {renderStep()}
             <div
                 className="w-full mt-2 gap-3 flex flex-col-reverse justify-center items-center"
             >
