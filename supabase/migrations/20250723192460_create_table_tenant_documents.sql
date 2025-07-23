@@ -24,6 +24,16 @@ CREATE TABLE tenant_documents (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_tenant_documents_tenant ON tenant_documents(tenant_id);
+CREATE INDEX idx_tenant_documents_type ON tenant_documents(tenant_id, document_type);
+CREATE INDEX idx_tenant_documents_status ON tenant_documents(verification_status);
+CREATE INDEX idx_tenant_documents_expires ON tenant_documents(expires_at) WHERE expires_at IS NOT NULL;
+
+COMMENT ON TABLE tenant_documents IS 'Documentos legais e comprobatórios brasileiros';
+
+COMMENT ON COLUMN tenant_documents.verification_status IS 'Status da verificação do documento';
+
 COMMIT;
 
 -- ROLLBACK;
