@@ -22,6 +22,9 @@ CREATE TABLE brazilian_states (
         region IN ('Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul')
     )
 );
+
+COMMENT ON TABLE brazilian_states IS 'Estados e territórios brasileiros';
+
 COMMIT;
 
 --ROLLBACK;
