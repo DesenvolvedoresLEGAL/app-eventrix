@@ -21,6 +21,11 @@ CREATE INDEX idx_tenants_plan_expires ON tenants(plan_expires_at) WHERE plan_exp
 CREATE INDEX idx_tenants_created_at ON tenants(created_at);
 CREATE INDEX idx_tenants_last_login ON tenants(last_login_at);
 CREATE INDEX idx_tenants_onboarding ON tenants(onboarding_completed, onboarding_current_step);
+
+-- Full-text search indexes for Brazilian context
+CREATE INDEX idx_tenants_search_razao_social ON tenants USING gin(to_tsvector('portuguese', razao_social)); -- O gin faz o índice de texto completo, no lugar de buscar o que está escrito, ele busca por termos indexados.
+CREATE INDEX idx_tenants_search_nome_fantasia ON tenants USING gin(to_tsvector('portuguese', coalesce(nome_fantasia, '')));
+
 COMMIT;
 
 --ROLLBACK;
@@ -40,4 +45,6 @@ COMMIT;
 -- DROP INDEX IF EXISTS idx_tenants_created_at;
 -- DROP INDEX IF EXISTS idx_tenants_last_login;
 -- DROP INDEX IF EXISTS idx_tenants_onboarding;
+-- DROP INDEX IF EXISTS idx_tenants_search_razao_social;
+-- DROP INDEX IF EXISTS idx_tenants_search_nome_fantasia;
 -- COMMIT;
