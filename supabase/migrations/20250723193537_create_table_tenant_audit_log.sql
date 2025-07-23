@@ -34,6 +34,19 @@ CREATE TABLE tenant_audit_log (
         )
     )
 );
+
+CREATE INDEX idx_tenant_audit_log_tenant ON tenant_audit_log(tenant_id);
+CREATE INDEX idx_tenant_audit_log_user ON tenant_audit_log(user_id);
+CREATE INDEX idx_tenant_audit_log_action ON tenant_audit_log(action);
+CREATE INDEX idx_tenant_audit_log_table ON tenant_audit_log(table_name);
+CREATE INDEX idx_tenant_audit_log_record ON tenant_audit_log(table_name, record_id);
+CREATE INDEX idx_tenant_audit_log_created ON tenant_audit_log(created_at);
+CREATE INDEX idx_tenant_audit_log_tenant_created ON tenant_audit_log(tenant_id, created_at);
+
+COMMENT ON TABLE tenant_audit_log IS 'Log de auditoria completo para compliance LGPD';
+
+COMMENT ON COLUMN tenant_audit_log.lgpd_purpose IS 'Finalidade do processamento para compliance LGPD';
+
 COMMIT;
 
 --ROLLBACK;
