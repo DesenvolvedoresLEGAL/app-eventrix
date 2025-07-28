@@ -26,7 +26,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     // Check if user is already logged in
     const checkAuth = () => {
-      const storedUser = localStorage.getItem('hubx_user');
+      const storedUser = localStorage.getItem('eventrix_user');
       
       if (storedUser) {
         setUser(JSON.parse(storedUser));
@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('hubx_user');
+    localStorage.removeItem('eventrix_user');
     navigate('/login');
   };
   
