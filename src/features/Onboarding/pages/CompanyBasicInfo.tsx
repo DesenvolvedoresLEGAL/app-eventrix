@@ -1,11 +1,14 @@
 import React from 'react';
-import { BrazilianState } from '../types/types';
+import { BrazilianState, BusinessSegment } from '../types/types';
 import useBrazilianStates from '../hooks/useBrazilianStates';
+import useBusinessSegments from '../hooks/useBusinessSegments';
 
     const CompanyBasicInfo = () => {
 
-        const [states, setStates] = React.useState<BrazilianState[]>();
+        const [states, setStates] = React.useState<BrazilianState[]>([]);
+        const [segments, setSegments] = React.useState<BusinessSegment[]>([]);
         const { getStatesList } = useBrazilianStates();
+        const { getBusinessSegments } = useBusinessSegments();
 
         React.useEffect(() => {
             const fetchStates = async () => {
@@ -13,7 +16,13 @@ import useBrazilianStates from '../hooks/useBrazilianStates';
                 setStates(statesList);
             };
 
+            const fetchSegments = async () => {
+                const segmentsList = await getBusinessSegments();
+                setSegments(segmentsList);
+            }
+
             fetchStates();
+            fetchSegments();
         // eslint-disable-next-line react-hooks/exhaustive-deps
         }, []);
 
@@ -54,6 +63,17 @@ import useBrazilianStates from '../hooks/useBrazilianStates';
                         </select>
                     </div>
 
+                    <div className='flex flex-row mb-4 justify-between'>
+                        <select name="segmento" id="segmento" className='w-full p-2 border border-gray-300 rounded-lg' required>
+                            <option value="">Selecione o segmento</option>
+                            {segments.map((segment) => (
+                                <option key={segment.code} value={segment.code}>
+                                    {segment.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    
                     <button onClick={handlePrev}>Anterior</button>
                     <button type="submit">Próximo</button>
                 </form>
