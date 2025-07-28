@@ -8,8 +8,8 @@ BEGIN;
 CREATE POLICY "business_segments_read_all" ON business_segments
     FOR SELECT
     USING (auth.uid() IS NOT NULL);
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY "business_segments_read_all" ON business_segments;
--- COMMIT;
+DROP POLICY "business_segments_read_all" ON business_segments;
+COMMIT;

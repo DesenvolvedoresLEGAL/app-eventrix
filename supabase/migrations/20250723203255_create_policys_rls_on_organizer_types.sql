@@ -8,8 +8,8 @@ BEGIN;
 CREATE POLICY "organizer_types_read_all" ON organizer_types
     FOR SELECT
     USING (auth.uid() IS NOT NULL);
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY "organizer_types_read_all" ON organizer_types;
--- COMMIT;
+DROP POLICY "organizer_types_read_all" ON organizer_types;
+COMMIT;

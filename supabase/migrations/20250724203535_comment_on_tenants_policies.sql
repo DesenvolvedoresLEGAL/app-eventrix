@@ -5,8 +5,8 @@
 -- Data: 24/07/2025
 
 BEGIN;
-COMMENT ON POLICY "tenants_select_own_data" ON tenants IS 'Permite que tenants vejam apenas seus próprios dados';
-COMMENT ON POLICY "tenants_super_admin_all_access" ON tenants IS 'Super administradores têm acesso total';
+-- COMMENT ON POLICY "tenants_select_own_data" ON tenants IS 'Permite que tenants vejam apenas seus próprios dados';
+-- COMMENT ON POLICY "tenants_super_admin_all_access" ON tenants IS 'Super administradores têm acesso total';
 COMMIT;
 
 --ROLLBACK;

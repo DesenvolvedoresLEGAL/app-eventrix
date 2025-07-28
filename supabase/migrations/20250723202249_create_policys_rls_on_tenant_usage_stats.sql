@@ -11,8 +11,8 @@ CREATE POLICY "tenant_usage_stats_tenant_access" ON tenant_usage_stats
         tenant_id = get_current_tenant_id() OR
         is_super_admin()
     );
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY IF EXISTS "tenant_usage_stats_tenant_access" ON tenant_usage_stats;
--- COMMIT;
+DROP POLICY IF EXISTS "tenant_usage_stats_tenant_access" ON tenant_usage_stats;
+COMMIT;

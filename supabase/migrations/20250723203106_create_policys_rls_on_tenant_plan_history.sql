@@ -19,9 +19,9 @@ CREATE POLICY "tenant_plan_history_admin_insert" ON tenant_plan_history
          get_current_user_role() IN ('admin', 'owner')) OR
         is_super_admin()
     );
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY "tenant_plan_history_tenant_read" ON tenant_plan_history;
--- DROP POLICY "tenant_plan_history_admin_insert" ON tenant_plan_history;
--- COMMIT;
+DROP POLICY "tenant_plan_history_tenant_read" ON tenant_plan_history;
+DROP POLICY "tenant_plan_history_admin_insert" ON tenant_plan_history;
+COMMIT;
