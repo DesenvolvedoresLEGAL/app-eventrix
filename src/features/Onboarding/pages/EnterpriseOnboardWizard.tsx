@@ -114,6 +114,36 @@ const EnterpriseOnboardWizard: React.FC = () => {
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Primeiro Nome *
+              </label>
+              <Input
+                type="text"
+                id="first-name"
+                value={formData.firstName}
+                onChange={(e) => updateFormData('firstName', e.target.value)}
+                required
+                placeholder="Fulano"
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">Este será seu email de acesso ao sistema</p>
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Último Nome *
+              </label>
+              <Input
+                type="text"
+                id="last-name"
+                value={formData.lastName}
+                onChange={(e) => updateFormData('lastName', e.target.value)}
+                required
+                placeholder="De Tal"
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">Este será seu email de acesso ao sistema</p>
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email *
               </label>
               <Input
