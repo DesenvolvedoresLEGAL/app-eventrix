@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import supabase from '@/utils/supabase/client';
-import { Tables, TablesInsert } from '@/utils/supabase/types';
+import supabase from '@/utils/supabase/client'
+import { Tables, TablesInsert } from '@/utils/supabase/types'
+import { signUp } from '@/services/authService'
 
 // Supabase table type aliases
 export type BrazilianState = Tables<'brazilian_states'>;
@@ -168,24 +169,14 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       console.log(`FORM DATA: ${JSON.stringify(formData)}`)
 
-      const profileData: ProfileInsert = {
-        id: '',
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        full_name: formData.firstName + formData.lastName,
-        email: formData.email,
-        whatsapp_number: formData.whatsapp
-      } 
-
-      const { data: authData } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            profileData
-          }
-        }
-      });
+      const user = await signUp(
+        formData.email,
+        formData.password,
+        `${formData.firstName} ${formData.lastName}`,
+        formData.firstName,
+        formData.lastName,
+        formData.whatsapp || undefined
+      )
 
       const slug = generateSlug(formData.razaoSocial);
 
@@ -216,7 +207,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         endereco_cidade: formData.cidade,
         state_id: formData.estadoId,
         cep: formData.cep,
-        created_by: authData!.user.id || null,
+        created_by: user?.id || null,
         onboarding_current_step: 'dados_empresa',
         lgpd_acceptance_date: new Date().toISOString(),
         primary_color: '#4D2BFB',

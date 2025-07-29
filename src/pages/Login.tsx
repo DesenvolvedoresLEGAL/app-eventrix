@@ -1,24 +1,28 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Zap } from 'lucide-react';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowRight, Zap } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const { signIn } = useAuth()
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    // Simulate authentication
-    setTimeout(() => {
-      setLoading(false);
-      navigate('/dashboard');
-    }, 1500);
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      await signIn(email, password)
+      navigate('/dashboard')
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }
   
   return (
     <div className="min-h-screen flex flex-col md:flex-row tech-grid">
