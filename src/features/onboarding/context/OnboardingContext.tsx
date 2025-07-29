@@ -1,137 +1,91 @@
-
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
-import { 
-  OnboardingStep, 
-  TenantData, 
-  OnboardingContextType 
-} from '../types';
-import { 
-  ONBOARDING_STEPS, 
-  validateStep, 
-  getNextStep, 
-  getPreviousStep, 
-  getStepIndex 
-} from '../utils/stepValidations';
-
-type TenantRow = Database['public']['Tables']['tenants']['Row'];
+import { useAuth } from '@/context/AuthContext';
+import { OnboardingStep, TenantData, OnboardingContextType } from '../types';
+import { stepValidations, validateStep } from '../utils/stepValidations';
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user, session, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('dados_empresa');
   const [tenantData, setTenantData] = useState<Partial<TenantData>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch tenant data when user is authenticated
-  const fetchTenantData = useCallback(async () => {
-    if (!user || !session) return;
+  useEffect(() => {
+    if (user) {
+      loadTenantData();
+    }
+  }, [user]);
+
+  const loadTenantData = useCallback(async () => {
+    if (!user) return;
     
     setLoading(true);
-    setError(null);
-    
     try {
       const { data, error } = await supabase
         .from('tenants')
         .select('*')
-        .eq('contact_email', user.email)
+        .eq('user_id', user.id)
         .single();
       
-      if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-        console.error('Error fetching tenant data:', error);
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading tenant data:', error);
         setError('Erro ao carregar dados do tenant');
         return;
       }
       
       if (data) {
         setTenantData(data);
-        setCurrentStep(data.onboarding_current_step as OnboardingStep);
-      } else {
-        // New user, set default data
-        setTenantData({
-          contact_email: user.email || '',
-          onboarding_current_step: 'dados_empresa',
-          onboarding_completed: false,
-          setup_wizard_completed: false,
-          first_event_created: false
-        });
+        setCurrentStep(data.onboarding_current_step || 'dados_empresa');
       }
     } catch (err) {
-      console.error('Error in fetchTenantData:', err);
-      setError('Erro inesperado ao carregar dados');
+      console.error('Error loading tenant data:', err);
+      setError('Erro ao carregar dados do tenant');
     } finally {
       setLoading(false);
     }
-  }, [user, session]);
-
-  useEffect(() => {
-    if (!authLoading && user) {
-      fetchTenantData();
-    }
-  }, [authLoading, user, fetchTenantData]);
-
-  const updateTenantData = useCallback((data: Partial<TenantData>) => {
-    setTenantData(prev => ({ ...prev, ...data }));
-    setError(null);
-  }, []);
+  }, [user]);
 
   const saveTenantData = useCallback(async () => {
-    if (!user || !tenantData.contact_email) {
-      setError('Dados insuficientes para salvar');
-      return;
-    }
-
+    if (!user || !tenantData.slug) return;
+    
     setLoading(true);
     setError(null);
-
+    
     try {
       const dataToSave = {
         ...tenantData,
+        user_id: user.id,
         onboarding_current_step: currentStep,
         updated_at: new Date().toISOString()
       };
-
-      if (tenantData.id) {
-        // Update existing tenant
-        const { error } = await supabase
-          .from('tenants')
-          .update(dataToSave)
-          .eq('id', tenantData.id);
-
-        if (error) {
-          console.error('Error updating tenant:', error);
-          setError('Erro ao atualizar dados');
-          return;
-        }
-      } else {
-        // Create new tenant
-        const { data, error } = await supabase
-          .from('tenants')
-          .insert([dataToSave])
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error creating tenant:', error);
-          setError('Erro ao criar tenant');
-          return;
-        }
-
-        if (data) {
-          setTenantData(prev => ({ ...prev, id: data.id }));
-        }
+      
+      const { error } = await supabase
+        .from('tenants')
+        .upsert(dataToSave, { 
+          onConflict: 'user_id',
+          ignoreDuplicates: false 
+        });
+      
+      if (error) {
+        console.error('Error saving tenant data:', error);
+        setError('Erro ao salvar dados do tenant');
+        throw error;
       }
     } catch (err) {
-      console.error('Error in saveTenantData:', err);
-      setError('Erro inesperado ao salvar');
+      console.error('Error saving tenant data:', err);
+      setError('Erro ao salvar dados do tenant');
+      throw err;
     } finally {
       setLoading(false);
     }
   }, [user, tenantData, currentStep]);
+
+  const updateTenantData = useCallback((data: Partial<TenantData>) => {
+    setTenantData(prev => ({ ...prev, ...data }));
+  }, []);
 
   const validateCurrentStep = useCallback(() => {
     return validateStep(currentStep, tenantData);
@@ -139,109 +93,115 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const nextStep = useCallback(async () => {
     if (!validateCurrentStep()) {
-      setError('Preencha todos os campos obrigatórios antes de continuar');
+      setError('Por favor, preencha todos os campos obrigatórios');
       return;
     }
-
-    const next = getNextStep(currentStep);
-    if (!next) return;
-
-    // Save current progress before moving to next step
-    await saveTenantData();
     
-    if (!error) {
-      setCurrentStep(next);
+    try {
+      await saveTenantData();
+      
+      const steps: OnboardingStep[] = [
+        'dados_empresa', 'endereco', 'contato', 'plano', 
+        'identidade_visual', 'configuracoes', 'finalizado'
+      ];
+      
+      const currentIndex = steps.indexOf(currentStep);
+      if (currentIndex < steps.length - 1) {
+        setCurrentStep(steps[currentIndex + 1]);
+      }
+    } catch (err) {
+      console.error('Error proceeding to next step:', err);
     }
-  }, [currentStep, validateCurrentStep, saveTenantData, error]);
+  }, [currentStep, validateCurrentStep, saveTenantData]);
 
   const prevStep = useCallback(() => {
-    const prev = getPreviousStep(currentStep);
-    if (prev) {
-      setCurrentStep(prev);
-      setError(null);
+    const steps: OnboardingStep[] = [
+      'dados_empresa', 'endereco', 'contato', 'plano', 
+      'identidade_visual', 'configuracoes', 'finalizado'
+    ];
+    
+    const currentIndex = steps.indexOf(currentStep);
+    if (currentIndex > 0) {
+      setCurrentStep(steps[currentIndex - 1]);
     }
   }, [currentStep]);
 
   const goToStep = useCallback(async (step: OnboardingStep) => {
-    const targetIndex = getStepIndex(step);
-    const currentIndex = getStepIndex(currentStep);
+    if (!canProceedToStep(step)) {
+      setError('Você deve completar as etapas anteriores primeiro');
+      return;
+    }
     
-    // Can only go to completed steps or the next immediate step
-    if (targetIndex > currentIndex + 1) {
-      // Check if all intermediate steps are valid
-      for (let i = 0; i <= targetIndex; i++) {
-        const stepToCheck = ONBOARDING_STEPS[i];
-        if (!validateStep(stepToCheck, tenantData)) {
-          setError(`Complete a etapa ${stepToCheck} antes de continuar`);
-          return;
-        }
+    if (validateCurrentStep()) {
+      try {
+        await saveTenantData();
+        setCurrentStep(step);
+      } catch (err) {
+        console.error('Error saving before step change:', err);
       }
     }
-    
-    // Save current progress
-    if (targetIndex > currentIndex) {
-      await saveTenantData();
-      if (error) return;
-    }
-    
-    setCurrentStep(step);
-    setError(null);
-  }, [currentStep, tenantData, saveTenantData, error]);
+  }, [validateCurrentStep, saveTenantData]);
 
   const getStepProgress = useCallback(() => {
-    const completedSteps = ONBOARDING_STEPS.filter(step => 
-      validateStep(step, tenantData)
-    ).length;
-    return (completedSteps / ONBOARDING_STEPS.length) * 100;
-  }, [tenantData]);
+    const steps: OnboardingStep[] = [
+      'dados_empresa', 'endereco', 'contato', 'plano', 
+      'identidade_visual', 'configuracoes', 'finalizado'
+    ];
+    
+    const currentIndex = steps.indexOf(currentStep);
+    return Math.round(((currentIndex + 1) / steps.length) * 100);
+  }, [currentStep]);
 
   const isStepCompleted = useCallback((step: OnboardingStep) => {
     return validateStep(step, tenantData);
   }, [tenantData]);
 
   const canProceedToStep = useCallback((step: OnboardingStep) => {
-    const targetIndex = getStepIndex(step);
-    const currentIndex = getStepIndex(currentStep);
+    const steps: OnboardingStep[] = [
+      'dados_empresa', 'endereco', 'contato', 'plano', 
+      'identidade_visual', 'configuracoes', 'finalizado'
+    ];
+    
+    const targetIndex = steps.indexOf(step);
+    const currentIndex = steps.indexOf(currentStep);
     
     if (targetIndex <= currentIndex) return true;
     
-    // Check all previous steps are completed
     for (let i = 0; i < targetIndex; i++) {
-      if (!validateStep(ONBOARDING_STEPS[i], tenantData)) {
+      if (!isStepCompleted(steps[i])) {
         return false;
       }
     }
     
     return true;
-  }, [currentStep, tenantData]);
+  }, [currentStep, isStepCompleted]);
 
   const completeOnboarding = useCallback(async () => {
-    // Validate all steps
-    const allStepsValid = ONBOARDING_STEPS.slice(0, -1).every(step => 
-      validateStep(step, tenantData)
-    );
-    
-    if (!allStepsValid) {
-      setError('Complete todas as etapas antes de finalizar');
+    if (!validateCurrentStep()) {
+      setError('Por favor, complete todas as etapas obrigatórias');
       return;
     }
     
-    const finalData = {
-      ...tenantData,
-      onboarding_completed: true,
-      setup_wizard_completed: true,
-      onboarding_current_step: 'finalizado' as OnboardingStep
-    };
-    
-    updateTenantData(finalData);
-    setCurrentStep('finalizado');
-    await saveTenantData();
-  }, [tenantData, updateTenantData, saveTenantData]);
+    try {
+      const completedData = {
+        ...tenantData,
+        onboarding_completed: true,
+        onboarding_current_step: 'finalizado' as OnboardingStep
+      };
+      
+      setTenantData(completedData);
+      setCurrentStep('finalizado');
+      await saveTenantData();
+    } catch (err) {
+      console.error('Error completing onboarding:', err);
+      setError('Erro ao finalizar onboarding');
+    }
+  }, [validateCurrentStep, tenantData, saveTenantData]);
 
   const contextValue = useMemo(() => ({
     currentStep,
     tenantData,
-    loading: loading || authLoading,
+    loading,
     error,
     nextStep,
     prevStep,
@@ -254,21 +214,9 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     canProceedToStep,
     completeOnboarding
   }), [
-    currentStep,
-    tenantData,
-    loading,
-    authLoading,
-    error,
-    nextStep,
-    prevStep,
-    goToStep,
-    updateTenantData,
-    saveTenantData,
-    validateCurrentStep,
-    getStepProgress,
-    isStepCompleted,
-    canProceedToStep,
-    completeOnboarding
+    currentStep, tenantData, loading, error,
+    nextStep, prevStep, goToStep, updateTenantData, saveTenantData,
+    validateCurrentStep, getStepProgress, isStepCompleted, canProceedToStep, completeOnboarding
   ]);
 
   return (

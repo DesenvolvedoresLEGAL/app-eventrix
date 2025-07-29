@@ -3,13 +3,9 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useMe
 import { useNavigate } from 'react-router-dom';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
-
-type Profile = Database['public']['Tables']['profiles']['Row'];
 
 interface AuthContextType {
   user: User | null;
-  profile: Profile | null;
   session: Session | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error?: any }>;
@@ -22,29 +18,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-  
-  const fetchProfile = useCallback(async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      return null;
-    }
-  }, []);
   
   useEffect(() => {
     // Set up auth state listener first
@@ -53,16 +28,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // Defer profile fetching to avoid blocking
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id).then(setProfile);
-          }, 0);
-        } else {
-          setProfile(null);
-        }
-        
         setLoading(false);
       }
     );
@@ -72,16 +37,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('Initial session check:', session);
       setSession(session);
       setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchProfile(session.user.id).then(setProfile);
-      }
-      
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+  }, []);
   
   const login = useCallback(async (email: string, password: string) => {
     setLoading(true);
@@ -154,7 +114,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       setUser(null);
       setSession(null);
-      setProfile(null);
       navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);
@@ -165,13 +124,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const contextValue = useMemo(() => ({
     user,
-    profile,
     session,
     loading,
     login,
     logout,
     signUp
-  }), [user, profile, session, loading, login, logout, signUp]);
+  }), [user, session, loading, login, logout, signUp]);
   
   return (
     <AuthContext.Provider value={contextValue}>
