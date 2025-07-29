@@ -8,8 +8,12 @@ export type BusinessSegment = Tables<'business_segments'>;
 export type OrganizerType = Tables<'organizer_types'>;
 export type SubscriptionPlan = Tables<'subscription_plans'>;
 export type TenantInsert = TablesInsert<'tenants'>;
+export type ProfileInsert = TablesInsert<'profiles'>;
 
 export interface FormData {
+  firstName: string;
+  lastName: string;
+  fullName: string;
   email: string;
   password: string;
   razaoSocial: string;
@@ -55,10 +59,13 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [segments, setSegments] = useState<BusinessSegment[]>([]);
   const [organizerTypes, setOrganizerTypes] = useState<OrganizerType[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [defaultPlanId, setDefaultPlanId] = useState<string>('00ace61e-0853-4254-be82-b888e91ce3c4');
-  const [defaultStatusId, setDefaultStatusId] = useState<string>('cbfa8c27-aa51-4a64-9e71-3d068728d9f5');
+  const [defaultPlanId, setDefaultPlanId] = useState<string>('fd90279e-4d5f-49dd-b9ae-ca846a873ab1');
+  const [defaultStatusId, setDefaultStatusId] = useState<string>('5ef92fdc-706f-46b6-9172-dbcc36c297a8');
 
   const [formData, setFormData] = useState<FormData>({
+    firstName: '',
+    lastName: '',
+    fullName: '',
     email: '',
     password: '',
     razaoSocial: '',
@@ -159,9 +166,25 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const submit = async () => {
     setIsSubmitting(true);
     try {
+      console.log(`FORM DATA: ${JSON.stringify(formData)}`)
+
+      const profileData: ProfileInsert = {
+        id: '',
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        full_name: formData.firstName + formData.lastName,
+        email: formData.email,
+        whatsapp_number: formData.whatsapp
+      } 
+
       const { data: authData } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          data: {
+            profileData
+          }
+        }
       });
 
       const slug = generateSlug(formData.razaoSocial);
@@ -193,7 +216,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         endereco_cidade: formData.cidade,
         state_id: formData.estadoId,
         cep: formData.cep,
-        created_by: authData!.user.id,
+        created_by: authData!.user.id || null,
         onboarding_current_step: 'dados_empresa',
         lgpd_acceptance_date: new Date().toISOString(),
         primary_color: '#4D2BFB',
@@ -225,7 +248,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         .insert([tenantData])
         .select()
         .single();
-
+        
       if (tenantError) throw tenantError;
 
       if (tenantResult) {
