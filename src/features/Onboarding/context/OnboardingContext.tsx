@@ -116,7 +116,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           .from('subscription_plans')
           .select('*')
           .eq('is_active', true)
-          .order('price_monthly', {ascending: true});
+          .order('price_monthly', { ascending: true });
         if (plansData) {
           setPlans(plansData);
           const trialPlan = plansData.filter(p => p.code === 'trial' || p.code === 'free');
@@ -166,26 +166,9 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const submit = async () => {
     setIsSubmitting(true);
     try {
-      console.log(`FORM DATA: ${JSON.stringify(formData)}`)
+      console.log(`FORM DATA: ${JSON.stringify(formData)}`);
 
-      const profileData: ProfileInsert = {
-        id: '',
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        full_name: formData.firstName + formData.lastName,
-        email: formData.email,
-        whatsapp_number: formData.whatsapp
-      } 
-
-      const { data: authData } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            profileData
-          }
-        }
-      });
+      // TODO: implementar autenticação
 
       const slug = generateSlug(formData.razaoSocial);
 
@@ -216,7 +199,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         endereco_cidade: formData.cidade,
         state_id: formData.estadoId,
         cep: formData.cep,
-        created_by: authData!.user.id || null,
+        created_by: null,
         onboarding_current_step: 'dados_empresa',
         lgpd_acceptance_date: new Date().toISOString(),
         primary_color: '#4D2BFB',
@@ -248,7 +231,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         .insert([tenantData])
         .select()
         .single();
-        
+
       if (tenantError) throw tenantError;
 
       if (tenantResult) {
