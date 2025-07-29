@@ -59,8 +59,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [segments, setSegments] = useState<BusinessSegment[]>([]);
   const [organizerTypes, setOrganizerTypes] = useState<OrganizerType[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [defaultPlanId, setDefaultPlanId] = useState<string>('fd90279e-4d5f-49dd-b9ae-ca846a873ab1');
-  const [defaultStatusId, setDefaultStatusId] = useState<string>('5ef92fdc-706f-46b6-9172-dbcc36c297a8');
+  const [defaultPlanId, setDefaultPlanId] = useState<string>();
+  const [defaultStatusId, setDefaultStatusId] = useState<string>();
 
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
@@ -116,17 +116,17 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           .from('subscription_plans')
           .select('*')
           .eq('is_active', true)
-          .order('sort_order');
+          .order('price_monthly', {ascending: true});
         if (plansData) {
           setPlans(plansData);
-          const trialPlan = plansData.find(p => p.code === 'trial' || p.code === 'free');
-          if (trialPlan) setDefaultPlanId(trialPlan.id);
+          const trialPlan = plansData.filter(p => p.code === 'trial' || p.code === 'free');
+          if (trialPlan) setDefaultPlanId(trialPlan[0].id);
         }
 
         const { data: statusData } = await supabase
           .from('tenant_statuses')
           .select('id')
-          .eq('code', 'active')
+          .eq('code', 'ativo')
           .single();
         if (statusData) setDefaultStatusId(statusData.id);
       } catch (error) {
