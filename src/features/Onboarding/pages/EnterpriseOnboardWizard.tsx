@@ -3,7 +3,7 @@ import { ChevronRight, Building2, User, MapPin, Phone, Check, Loader2, FileText 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { useOnboarding, OnboardingProvider } from '../context/OnboardingContext';
+import { OnboardingProvider, useOnboarding } from '../context/OnboardingContext';
 
 interface StepIndicatorProps {
   step: number;
