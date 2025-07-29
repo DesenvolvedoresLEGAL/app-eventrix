@@ -1,16 +1,18 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Zap, Check, Building, User, Mail, Lock, Phone } from 'lucide-react';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowRight, ArrowLeft, Zap, Check, Building, User, Mail, Lock, Phone } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const Register = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const { signUp } = useAuth()
 
   const [formData, setFormData] = useState({
     // Passo 1 - Dados pessoais
@@ -45,14 +47,24 @@ const Register = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = () => {
-    setLoading(true);
-    // Simular criação de conta
-    setTimeout(() => {
-      setLoading(false);
-      navigate('/dashboard');
-    }, 2000);
-  };
+  const handleSubmit = async () => {
+    setLoading(true)
+    try {
+      await signUp(
+        formData.email,
+        formData.password,
+        `${formData.firstName} ${formData.lastName}`,
+        formData.firstName,
+        formData.lastName,
+        formData.phone
+      )
+      navigate('/dashboard')
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const renderStep = () => {
     switch (currentStep) {
