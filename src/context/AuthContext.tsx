@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import supabase from '@/utils/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
-import { signUp, signIn, signOut, sendMagicLink, resetPassword } from '@/services/authService'
+import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
 
 interface Tenant {
   id: string
@@ -44,6 +44,7 @@ interface AuthContextValue {
   signOut: typeof signOut
   sendMagicLink: typeof sendMagicLink
   resetPassword: typeof resetPassword
+  updatePassword: typeof updatePassword
   clearError: () => void
   refreshTenant: () => Promise<void>
 }
@@ -232,6 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     sendMagicLink,
     resetPassword,
+    updatePassword,
     clearError,
     refreshTenant
   }), [

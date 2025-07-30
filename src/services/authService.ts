@@ -1,4 +1,3 @@
-
 import supabase from '@/utils/supabase/client'
 
 export interface SignUpData {
@@ -69,6 +68,15 @@ export async function resetPassword(email: string) {
   )
   
   if (error) throw error
+}
+
+export async function updatePassword(password: string) {
+  const { data, error } = await supabase.auth.updateUser({
+    password: password
+  })
+  
+  if (error) throw error
+  return data.user
 }
 
 export async function signOut() {

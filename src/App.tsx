@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ResetPassword from "./pages/ResetPassword";
 import Plans from "./pages/Plans";
 import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
@@ -60,6 +61,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/data-test" element={<Teste />} />
           <Route path="/plans" element={<Plans />} />
           <Route
