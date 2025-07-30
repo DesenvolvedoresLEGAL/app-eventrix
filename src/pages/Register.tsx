@@ -1,360 +1,486 @@
 
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowLeft, Zap, Check, Building, User, Mail, Lock, Phone } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/context/AuthContext';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { useTenantValidation } from '@/hooks/useTenantValidation';
+import StepIndicator from '@/components/register/StepIndicator';
+import PersonalDataStep from '@/components/register/PersonalDataStep';
+import CompanyDataStep from '@/components/register/CompanyDataStep';
+import InviteCollaboratorsStep from '@/components/register/InviteCollaboratorsStep';
+import supabase from '@/utils/supabase/client';
 
-const Register = () => {
-  const [currentStep, setCurrentStep] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
-  const { signUp } = useAuth()
+interface PersonalData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+}
 
-  const [formData, setFormData] = useState({
-    // Passo 1 - Dados pessoais
+interface CompanyData {
+  tenantName: string;
+  slug: string;
+  domain: string;
+}
+
+interface Collaborator {
+  id: string;
+  email: string;
+  role: string;
+  invited: boolean;
+}
+
+/**
+ * Componente principal do wizard de registro em 3 passos
+ * Segue o design da imagem fornecida com gradiente azul e cores do Eventrix™
+ */
+const Register: React.FC = () => {
+  const navigate = useNavigate();
+  const { signUp } = useAuth();
+  const { validateField, formatPhone, generateSlug } = useFormValidation();
+  const { checkSlugAvailability, isCheckingSlug } = useTenantValidation();
+
+  // Estados do wizard
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Estados dos dados
+  const [personalData, setPersonalData] = useState<PersonalData>({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     password: '',
-    confirmPassword: '',
-    
-    // Passo 2 - Dados da empresa
-    companyName: '',
-    companySize: '',
-    position: '',
-    website: '',
-    
-    // Passo 3 - Sobre os eventos
-    eventTypes: '',
-    eventsPerYear: '',
-    avgVisitors: ''
+    confirmPassword: ''
   });
 
-  const updateFormData = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const [companyData, setCompanyData] = useState<CompanyData>({
+    tenantName: '',
+    slug: '',
+    domain: ''
+  });
 
-  const nextStep = () => {
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
-  };
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [newCollaboratorEmail, setNewCollaboratorEmail] = useState('');
+  const [isSendingInvites, setIsSendingInvites] = useState(false);
 
-  const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
-  };
+  // Estados de validação
+  const [personalErrors, setPersonalErrors] = useState<Record<string, string[]>>({});
+  const [companyErrors, setCompanyErrors] = useState<Record<string, string[]>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
 
-  const handleSubmit = async () => {
-    setLoading(true)
-    try {
-      await signUp(
-        formData.email,
-        formData.password,
-        `${formData.firstName} ${formData.lastName}`,
-        formData.firstName,
-        formData.lastName,
-        formData.phone
-      )
-      navigate('/dashboard')
-    } catch (err) {
-      alert((err as Error).message)
-    } finally {
-      setLoading(false)
+  // Estados de usuário criado
+  const [createdUserId, setCreatedUserId] = useState<string | null>(null);
+
+  const steps = [
+    { number: 1, title: 'Dados Pessoais', description: 'Informações básicas' },
+    { number: 2, title: 'Empresa', description: 'Configuração da organização' },
+    { number: 3, title: 'Convites', description: 'Adicionar colaboradores' }
+  ];
+
+  /**
+   * Atualiza dados pessoais e aplica formatação quando necessário
+   */
+  const handlePersonalDataChange = useCallback((field: keyof PersonalData, value: string) => {
+    let formattedValue = value;
+    
+    if (field === 'phone') {
+      formattedValue = formatPhone(value);
     }
-  }
+    
+    setPersonalData(prev => ({ ...prev, [field]: formattedValue }));
+    
+    // Limpar erros do campo quando usuário começar a digitar
+    if (personalErrors[field]) {
+      setPersonalErrors(prev => ({ ...prev, [field]: [] }));
+    }
+  }, [formatPhone, personalErrors]);
 
-  const renderStep = () => {
+  /**
+   * Atualiza dados da empresa e gera slug automaticamente
+   */
+  const handleCompanyDataChange = useCallback((field: keyof CompanyData, value: string) => {
+    setCompanyData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Gerar slug automaticamente quando o nome da empresa mudar
+      if (field === 'tenantName') {
+        newData.slug = generateSlug(value);
+      }
+      
+      return newData;
+    });
+    
+    // Limpar erros do campo
+    if (companyErrors[field]) {
+      setCompanyErrors(prev => ({ ...prev, [field]: [] }));
+    }
+  }, [generateSlug, companyErrors]);
+
+  /**
+   * Verifica disponibilidade do slug quando ele muda
+   */
+  useEffect(() => {
+    const checkSlug = async () => {
+      if (companyData.slug.length >= 3) {
+        const available = await checkSlugAvailability(companyData.slug);
+        setSlugAvailable(available);
+      } else {
+        setSlugAvailable(null);
+      }
+    };
+
+    const timeoutId = setTimeout(checkSlug, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [companyData.slug, checkSlugAvailability]);
+
+  /**
+   * Valida dados do passo 1
+   */
+  const validatePersonalData = useCallback((): boolean => {
+    const errors: Record<string, string[]> = {};
+
+    const firstNameValidation = validateField(personalData.firstName, { required: true, minLength: 2 });
+    if (!firstNameValidation.isValid) errors.firstName = firstNameValidation.errors;
+
+    const lastNameValidation = validateField(personalData.lastName, { required: true, minLength: 2 });
+    if (!lastNameValidation.isValid) errors.lastName = lastNameValidation.errors;
+
+    const emailValidation = validateField(personalData.email, { required: true, email: true });
+    if (!emailValidation.isValid) errors.email = emailValidation.errors;
+
+    if (personalData.phone) {
+      const phoneValidation = validateField(personalData.phone, { phone: true });
+      if (!phoneValidation.isValid) errors.phone = phoneValidation.errors;
+    }
+
+    const passwordValidation = validateField(personalData.password, { required: true, password: true });
+    if (!passwordValidation.isValid) errors.password = passwordValidation.errors;
+
+    if (personalData.password !== personalData.confirmPassword) {
+      errors.confirmPassword = ['As senhas não coincidem'];
+    }
+
+    setPersonalErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [personalData, validateField]);
+
+  /**
+   * Valida dados do passo 2
+   */
+  const validateCompanyData = useCallback((): boolean => {
+    const errors: Record<string, string[]> = {};
+
+    const tenantNameValidation = validateField(companyData.tenantName, { required: true, minLength: 3 });
+    if (!tenantNameValidation.isValid) errors.tenantName = tenantNameValidation.errors;
+
+    const slugValidation = validateField(companyData.slug, { required: true, minLength: 3 });
+    if (!slugValidation.isValid) errors.slug = slugValidation.errors;
+
+    if (slugAvailable === false) {
+      errors.slug = ['Este identificador já está em uso'];
+    }
+
+    setCompanyErrors(errors);
+    return Object.keys(errors).length === 0 && slugAvailable === true;
+  }, [companyData, validateField, slugAvailable]);
+
+  /**
+   * Avança para o próximo passo
+   */
+  const handleNextStep = async () => {
+    if (currentStep === 1) {
+      if (validatePersonalData()) {
+        setIsLoading(true);
+        try {
+          const userData = await signUp(
+            personalData.email,
+            personalData.password,
+            `${personalData.firstName} ${personalData.lastName}`,
+            personalData.firstName,
+            personalData.lastName,
+            personalData.phone || undefined
+          );
+          
+          if (userData?.id) {
+            setCreatedUserId(userData.id);
+            setCompletedSteps(prev => [...prev, 1]);
+            setCurrentStep(2);
+          }
+        } catch (error) {
+          console.error('Erro ao criar usuário:', error);
+          alert('Erro ao criar conta. Tente novamente.');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    } else if (currentStep === 2) {
+      if (validateCompanyData() && createdUserId) {
+        setIsLoading(true);
+        try {
+          // Criar tenant
+          const { error } = await supabase.from('tenants').insert({
+            slug: companyData.slug,
+            razao_social: companyData.tenantName,
+            nome_fantasia: companyData.tenantName,
+            contact_email: personalData.email,
+            email_domain: companyData.domain || null,
+            created_by: createdUserId,
+            organizer_type_id: '00000000-0000-0000-0000-000000000001', // Valor padrão
+            primary_segment_id: '00000000-0000-0000-0000-000000000001', // Valor padrão
+            state_id: '00000000-0000-0000-0000-000000000001', // Valor padrão
+            plan_id: '00000000-0000-0000-0000-000000000001', // Valor padrão
+            status_id: '00000000-0000-0000-0000-000000000001', // Valor padrão
+          });
+
+          if (error) {
+            console.error('Erro ao criar tenant:', error);
+            alert('Erro ao criar empresa. Tente novamente.');
+            return;
+          }
+
+          setCompletedSteps(prev => [...prev, 2]);
+          setCurrentStep(3);
+        } catch (error) {
+          console.error('Erro ao criar tenant:', error);
+          alert('Erro ao criar empresa. Tente novamente.');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    } else if (currentStep === 3) {
+      // Finalizar processo
+      setCompletedSteps(prev => [...prev, 3]);
+      navigate('/dashboard');
+    }
+  };
+
+  /**
+   * Volta para o passo anterior
+   */
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  /**
+   * Adiciona colaborador à lista
+   */
+  const handleAddCollaborator = () => {
+    if (newCollaboratorEmail.trim() && !collaborators.find(c => c.email === newCollaboratorEmail)) {
+      const newCollaborator: Collaborator = {
+        id: Date.now().toString(),
+        email: newCollaboratorEmail,
+        role: 'member',
+        invited: false
+      };
+      setCollaborators(prev => [...prev, newCollaborator]);
+      setNewCollaboratorEmail('');
+    }
+  };
+
+  /**
+   * Remove colaborador da lista
+   */
+  const handleRemoveCollaborator = (id: string) => {
+    setCollaborators(prev => prev.filter(c => c.id !== id));
+  };
+
+  /**
+   * Envia convites por magic link
+   */
+  const handleSendInvites = async () => {
+    setIsSendingInvites(true);
+    const pendingCollaborators = collaborators.filter(c => !c.invited);
+    
+    for (const collaborator of pendingCollaborators) {
+      try {
+        await supabase.auth.signInWithOtp({ 
+          email: collaborator.email,
+          options: {
+            data: {
+              tenant_slug: companyData.slug,
+              invited_by: personalData.email,
+              role: 'member'
+            }
+          }
+        });
+        
+        // Marcar como enviado
+        setCollaborators(prev => 
+          prev.map(c => c.id === collaborator.id ? { ...c, invited: true } : c)
+        );
+      } catch (error) {
+        console.error('Erro ao enviar convite para', collaborator.email, error);
+      }
+    }
+    
+    setIsSendingInvites(false);
+  };
+
+  /**
+   * Toggle visibility da senha
+   */
+  const handleTogglePasswordVisibility = (field: 'password' | 'confirmPassword') => {
+    if (field === 'password') {
+      setShowPassword(!showPassword);
+    } else {
+      setShowConfirmPassword(!showConfirmPassword);
+    }
+  };
+
+  /**
+   * Renderiza o passo atual
+   */
+  const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <User className="text-primary" size={20} />
-                <h3 className="text-xl font-semibold">Dados Pessoais</h3>
-              </div>
-              <p className="text-muted-foreground">Vamos começar com suas informações básicas</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Nome *</Label>
-                <Input
-                  value={formData.firstName}
-                  onChange={(e) => updateFormData('firstName', e.target.value)}
-                  placeholder="Seu nome"
-                />
-              </div>
-              <div>
-                <Label>Sobrenome *</Label>
-                <Input
-                  value={formData.lastName}
-                  onChange={(e) => updateFormData('lastName', e.target.value)}
-                  placeholder="Seu sobrenome"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label>Email *</Label>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) => updateFormData('email', e.target.value)}
-                placeholder="seu@email.com"
-              />
-            </div>
-
-            <div>
-              <Label>Telefone</Label>
-              <Input
-                value={formData.phone}
-                onChange={(e) => updateFormData('phone', e.target.value)}
-                placeholder="(11) 99999-9999"
-              />
-            </div>
-
-            <div>
-              <Label>Senha *</Label>
-              <Input
-                type="password"
-                value={formData.password}
-                onChange={(e) => updateFormData('password', e.target.value)}
-                placeholder="Mínimo 8 caracteres"
-              />
-            </div>
-
-            <div>
-              <Label>Confirmar Senha *</Label>
-              <Input
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => updateFormData('confirmPassword', e.target.value)}
-                placeholder="Digite a senha novamente"
-              />
-            </div>
-          </div>
+          <PersonalDataStep
+            data={personalData}
+            errors={personalErrors}
+            showPassword={showPassword}
+            showConfirmPassword={showConfirmPassword}
+            onDataChange={handlePersonalDataChange}
+            onTogglePasswordVisibility={handleTogglePasswordVisibility}
+          />
         );
-
       case 2:
         return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Building className="text-primary" size={20} />
-                <h3 className="text-xl font-semibold">Dados da Empresa</h3>
-              </div>
-              <p className="text-muted-foreground">Conte-nos sobre sua organização</p>
-            </div>
-
-            <div>
-              <Label>Nome da Empresa *</Label>
-              <Input
-                value={formData.companyName}
-                onChange={(e) => updateFormData('companyName', e.target.value)}
-                placeholder="Nome da sua empresa"
-              />
-            </div>
-
-            <div>
-              <Label>Tamanho da Empresa *</Label>
-              <Select onValueChange={(value) => updateFormData('companySize', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tamanho" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1-10">1-10 funcionários</SelectItem>
-                  <SelectItem value="11-50">11-50 funcionários</SelectItem>
-                  <SelectItem value="51-200">51-200 funcionários</SelectItem>
-                  <SelectItem value="201-500">201-500 funcionários</SelectItem>
-                  <SelectItem value="500+">500+ funcionários</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Seu Cargo *</Label>
-              <Input
-                value={formData.position}
-                onChange={(e) => updateFormData('position', e.target.value)}
-                placeholder="Ex: Gerente de Eventos"
-              />
-            </div>
-
-            <div>
-              <Label>Website</Label>
-              <Input
-                value={formData.website}
-                onChange={(e) => updateFormData('website', e.target.value)}
-                placeholder="https://suaempresa.com"
-              />
-            </div>
-          </div>
+          <CompanyDataStep
+            data={companyData}
+            errors={companyErrors}
+            slugAvailable={slugAvailable}
+            isCheckingSlug={isCheckingSlug}
+            onDataChange={handleCompanyDataChange}
+          />
         );
-
       case 3:
         return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Zap className="text-primary" size={20} />
-                <h3 className="text-xl font-semibold">Sobre seus Eventos</h3>
-              </div>
-              <p className="text-muted-foreground">Ajude-nos a personalizar sua experiência</p>
-            </div>
-
-            <div>
-              <Label>Tipos de Eventos *</Label>
-              <Select onValueChange={(value) => updateFormData('eventTypes', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo principal" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="corporativo">Eventos Corporativos</SelectItem>
-                  <SelectItem value="feiras">Feiras e Exposições</SelectItem>
-                  <SelectItem value="congressos">Congressos e Conferências</SelectItem>
-                  <SelectItem value="workshops">Workshops e Treinamentos</SelectItem>
-                  <SelectItem value="sociais">Eventos Sociais</SelectItem>
-                  <SelectItem value="esportivos">Eventos Esportivos</SelectItem>
-                  <SelectItem value="outros">Outros</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Eventos por Ano *</Label>
-              <Select onValueChange={(value) => updateFormData('eventsPerYear', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Quantos eventos você organiza?" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1-5">1-5 eventos</SelectItem>
-                  <SelectItem value="6-10">6-10 eventos</SelectItem>
-                  <SelectItem value="11-20">11-20 eventos</SelectItem>
-                  <SelectItem value="20+">Mais de 20 eventos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Média de Visitantes *</Label>
-              <Select onValueChange={(value) => updateFormData('avgVisitors', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Média de participantes por evento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0-100">Até 100 pessoas</SelectItem>
-                  <SelectItem value="101-500">101-500 pessoas</SelectItem>
-                  <SelectItem value="501-1000">501-1.000 pessoas</SelectItem>
-                  <SelectItem value="1001-5000">1.001-5.000 pessoas</SelectItem>
-                  <SelectItem value="5000+">Mais de 5.000 pessoas</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <InviteCollaboratorsStep
+            collaborators={collaborators}
+            newCollaboratorEmail={newCollaboratorEmail}
+            onNewEmailChange={setNewCollaboratorEmail}
+            onAddCollaborator={handleAddCollaborator}
+            onRemoveCollaborator={handleRemoveCollaborator}
+            onSendInvites={handleSendInvites}
+            isSendingInvites={isSendingInvites}
+          />
         );
-
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row tech-grid">
-      {/* Left side - Brand */}
-      <div className="legal-gradient-bg w-full md:w-2/5 text-white p-8 flex flex-col justify-between relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 tech-float"></div>
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* Sidebar com gradiente azul - baseado na imagem */}
+      <div className="w-full md:w-2/5 bg-gradient-to-br from-primary via-primary-dark to-primary text-white p-8 flex flex-col justify-between relative overflow-hidden">
+        {/* Elementos decorativos */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 animate-pulse-light"></div>
+        <div className="absolute bottom-20 left-0 w-24 h-24 bg-secondary/20 rounded-full -ml-12"></div>
         
         <div className="relative z-10">
+          {/* Header da marca */}
           <div className="flex items-center gap-2 mb-2">
             <h1 className="text-4xl font-black">EVENTRIX™</h1>
           </div>
-          <div className="flex items-center gap-1 mb-4">
+          <div className="flex items-center gap-1 mb-8">
             <Zap size={12} className="text-secondary" />
             <span className="text-sm font-semibold text-white/90">Powered by LEGAL AI</span>
           </div>
-          <p className="text-white/80 text-lg mb-8">Comece seu teste gratuito de 7 dias</p>
-
-          {/* Progress Steps */}
-          <div className="space-y-4 mb-8">
-            {[
-              { step: 1, title: "Dados Pessoais", desc: "Informações básicas" },
-              { step: 2, title: "Empresa", desc: "Sobre sua organização" },
-              { step: 3, title: "Eventos", desc: "Tipo de eventos que organiza" }
-            ].map((item) => (
-              <div key={item.step} className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  currentStep >= item.step 
-                    ? 'bg-secondary text-white' 
-                    : 'bg-white/20 text-white/60'
-                }`}>
-                  {currentStep > item.step ? <Check size={16} /> : item.step}
-                </div>
-                <div>
-                  <div className={`font-medium ${currentStep >= item.step ? 'text-white' : 'text-white/60'}`}>
-                    {item.title}
-                  </div>
-                  <div className="text-sm text-white/60">{item.desc}</div>
-                </div>
-              </div>
-            ))}
+          
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Criar sua conta</h2>
+            <p className="text-white/80 text-lg mb-8">Configure sua organização em poucos passos</p>
           </div>
+
+          {/* Indicador de passos */}
+          <StepIndicator
+            steps={steps}
+            currentStep={currentStep}
+            completedSteps={completedSteps}
+          />
         </div>
 
+        {/* Footer */}
         <div className="hidden md:block text-sm text-white/70 relative z-10">
           &copy; {new Date().getFullYear()} Eventrix™. Todos os direitos reservados.
         </div>
       </div>
 
-      {/* Right side - Form */}
+      {/* Conteúdo principal */}
       <div className="w-full md:w-3/5 flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-lg">
-          <div className="tech-card p-8">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2">
-                Criar <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Conta</span>
-              </h2>
-              <p className="text-muted-foreground">Passo {currentStep} de 3</p>
-              <div className="tech-badge tech-glow mt-4">
-                <span>✨ 7 dias grátis</span>
+        <div className="w-full max-w-2xl">
+          <div className="bg-card rounded-2xl shadow-card border p-8">
+            {/* Conteúdo do passo atual */}
+            {renderCurrentStep()}
+
+            {/* Botões de navegação */}
+            <div className="flex justify-between items-center mt-8 pt-6 border-t">
+              <div>
+                {currentStep > 1 && (
+                  <Button
+                    variant="outline"
+                    onClick={handlePrevStep}
+                    disabled={isLoading}
+                    className="flex items-center gap-2"
+                  >
+                    <ArrowLeft size={16} />
+                    Voltar
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+                {currentStep === 3 && (
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/dashboard')}
+                    disabled={isLoading}
+                  >
+                    Pular convites
+                  </Button>
+                )}
+                
+                <Button
+                  onClick={handleNextStep}
+                  disabled={isLoading || (currentStep === 2 && slugAvailable !== true)}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2 min-w-[120px]"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      {currentStep === 1 ? 'Criando...' : currentStep === 2 ? 'Salvando...' : 'Finalizando...'}
+                    </>
+                  ) : (
+                    <>
+                      {currentStep === 3 ? 'Finalizar' : 'Próximo'}
+                      <ArrowRight size={16} />
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
 
-            {renderStep()}
-
-            <div className="flex justify-between mt-8 gap-4">
-              {currentStep > 1 && (
-                <Button variant="outline" onClick={prevStep} className="flex items-center gap-2">
-                  <ArrowLeft size={16} />
-                  Voltar
-                </Button>
-              )}
-              
-              <div className="flex-1" />
-
-              {currentStep < 3 ? (
-                <Button onClick={nextStep} className="tech-button flex items-center gap-2">
-                  Próximo
-                  <ArrowRight size={16} />
-                </Button>
-              ) : (
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={loading}
-                  className="tech-button flex items-center gap-2"
-                >
-                  {loading ? 'Criando conta...' : 'Criar Conta'}
-                  {!loading && <ArrowRight size={16} />}
-                </Button>
-              )}
-            </div>
-
+            {/* Link para login */}
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Já tem uma conta? <a href="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">Fazer login</a>
+                Já tem uma conta?{' '}
+                <a 
+                  href="/login" 
+                  className="text-primary hover:text-primary/80 font-medium transition-colors"
+                >
+                  Fazer login
+                </a>
               </p>
             </div>
           </div>

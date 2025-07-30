@@ -1,15 +1,15 @@
-import CompanyBasicInfo from "@/features/Onboarding/components/CompanyBasicInfoStep";
-import ContactInfoStep from "@/features/Onboarding/components/ContactInfoStep";
-import LocationStep from "@/features/Onboarding/components/LocationStep";
-import UserRegister from "@/features/Onboarding/components/UserRegisterStep";
-import EnterpriseOnboardWizard from "@/features/Onboarding/pages/EnterpriseOnboardWizard";
-import React from "react";
 
-const Teste = () => (
-  <div className="min-h-screen gap-5 p-10 flex flex-col items-center justify-center bg-muted">
-    <h1>Área de testes de desenvolvimento</h1>
-    <EnterpriseOnboardWizard />
-  </div>
-);
+import React from 'react';
 
-export default Teste;
+const Test = () => {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-4">Página de Teste</h1>
+        <p className="text-muted-foreground">Esta é uma página de teste temporária.</p>
+      </div>
+    </div>
+  );
+};
+
+export default Test;
