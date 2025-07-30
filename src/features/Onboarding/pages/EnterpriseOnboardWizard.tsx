@@ -475,7 +475,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Cadastro de Empresa</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">Cadastro de Cliente</h1>
           <p className="text-gray-600">Complete todos os passos para criar sua conta empresarial</p>
         </div>
 
