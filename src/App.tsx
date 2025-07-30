@@ -28,9 +28,6 @@ import Registration from "./pages/Registration";
 import CheckIn from "./pages/CheckIn";
 import AccessHistory from "./pages/AccessHistory";
 import Marketing from "./pages/Marketing";
-import LiveOps from "./pages/LiveOps";
-import Finance from "./pages/Finance";
-import Settings from "./pages/Settings";
 import MarketingAds from "./pages/MarketingAds";
 import MarketingContent from "./pages/MarketingContent";
 import MarketingEmail from "./pages/MarketingEmail";
@@ -49,7 +46,6 @@ import AIValidator from "./pages/AIValidator";
 import HeatmapAI from "./pages/HeatmapAI";
 import DynamicPricing from "./pages/DynamicPricing";
 import LegalAI from "./pages/LegalAI";
-import Test from './pages/Test';
 import Teste from './pages/Test';
 
 const queryClient = new QueryClient();
