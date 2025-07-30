@@ -7,12 +7,11 @@
 BEGIN;
 DROP TRIGGER IF EXISTS trigger_handle_auth_signup ON auth.users;
 CREATE TRIGGER trigger_handle_auth_signup
-  BEFORE INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_auth_signup();
--- COMMIT;
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_auth_signup();
+COMMIT;
 
 -- ROLLBACK;
-DROP TRIGGER IF EXISTS trigger_handle_auth_signup ON auth.users;
--- DROP FUNCTION IF EXISTS public.handle_auth_signup();
-COMMIT;
+-- DROP TRIGGER IF EXISTS trigger_handle_auth_signup ON auth.users;
+-- COMMIT;
