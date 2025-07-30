@@ -19,9 +19,9 @@ CREATE POLICY "tenant_documents_admin_modify" ON tenant_documents
          get_current_user_role() IN ('admin', 'owner')) OR
         is_super_admin()
     );
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY "tenant_documents_tenant_access" ON tenant_documents;
--- DROP POLICY "tenant_documents_admin_modify" ON tenant_documents;
--- COMMIT;
+DROP POLICY "tenant_documents_tenant_access" ON tenant_documents;
+DROP POLICY "tenant_documents_admin_modify" ON tenant_documents;
+COMMIT;

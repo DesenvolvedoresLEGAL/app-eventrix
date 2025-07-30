@@ -33,11 +33,11 @@ CREATE POLICY "tenants_insert_registration" ON tenants
         is_super_admin() OR
         get_current_user_role() = 'registration'
     );
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY IF EXISTS tenants_select_own_data ON tenants;
--- DROP POLICY IF EXISTS tenants_update_own_data ON tenants;
--- DROP POLICY IF EXISTS tenants_super_admin_all_access ON tenants;
--- DROP POLICY IF EXISTS tenants_insert_registration ON tenants;
--- COMMIT;
+DROP POLICY IF EXISTS tenants_select_own_data ON tenants;
+DROP POLICY IF EXISTS tenants_update_own_data ON tenants;
+DROP POLICY IF EXISTS tenants_super_admin_all_access ON tenants;
+DROP POLICY IF EXISTS tenants_insert_registration ON tenants;
+COMMIT;

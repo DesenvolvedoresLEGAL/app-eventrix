@@ -8,8 +8,8 @@ BEGIN;
 CREATE POLICY "tenant_statuses_read_all" ON tenant_statuses
     FOR SELECT
     USING (auth.uid() IS NOT NULL);
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY "tenant_statuses_read_all" ON tenant_statuses;
--- COMMIT;
+DROP POLICY "tenant_statuses_read_all" ON tenant_statuses;
+COMMIT;

@@ -8,8 +8,8 @@ BEGIN;
 CREATE POLICY "brazilian_states_read_all" ON brazilian_states
     FOR SELECT
     USING (auth.uid() IS NOT NULL);
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY "brazilian_states_read_all" ON brazilian_states;
--- COMMIT;
+DROP POLICY "brazilian_states_read_all" ON brazilian_states;
+COMMIT;

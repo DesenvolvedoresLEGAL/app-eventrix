@@ -19,9 +19,9 @@ CREATE POLICY "tenant_settings_admin_modify" ON tenant_settings
          get_current_user_role() IN ('admin', 'owner')) OR
         is_super_admin()
     );
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY IF EXISTS tenant_settings_tenant_access ON tenant_settings;
--- DROP POLICY IF EXISTS tenant_settings_admin_modify ON tenant_settings;
--- COMMIT;
+DROP POLICY IF EXISTS tenant_settings_tenant_access ON tenant_settings;
+DROP POLICY IF EXISTS tenant_settings_admin_modify ON tenant_settings;
+COMMIT;

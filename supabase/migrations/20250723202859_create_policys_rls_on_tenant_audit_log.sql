@@ -20,9 +20,9 @@ CREATE POLICY "tenant_audit_log_system_insert" ON tenant_audit_log
         is_super_admin() OR
         get_current_user_role() = 'system'
     );
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY "tenant_audit_log_tenant_read" ON tenant_audit_log;
--- DROP POLICY "tenant_audit_log_system_insert" ON tenant_audit_log;
--- COMMIT;
+DROP POLICY "tenant_audit_log_tenant_read" ON tenant_audit_log;
+DROP POLICY "tenant_audit_log_system_insert" ON tenant_audit_log;
+COMMIT;

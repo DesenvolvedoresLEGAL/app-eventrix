@@ -8,8 +8,8 @@ BEGIN;
 CREATE POLICY "subscription_plans_read_all" ON subscription_plans
     FOR SELECT
     USING (auth.uid() IS NOT NULL);
-COMMIT;
+-- COMMIT;
 
 --ROLLBACK;
--- DROP POLICY "subscription_plans_read_all" ON subscription_plans;
--- COMMIT;
+DROP POLICY "subscription_plans_read_all" ON subscription_plans;
+COMMIT;

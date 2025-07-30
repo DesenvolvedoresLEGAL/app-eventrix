@@ -12,6 +12,25 @@ INSERT INTO subscription_plans (
     support_type, features, is_popular, sort_order
 ) VALUES
 (
+    'trial', 'EVENTRIX™ Trial', 
+    'Sete dias de amostra para você ver que o EVENTRIX É para o seu negócio.',
+    0.01, 0.01,
+    1, 1, 1, 50, 200, 5,
+    'email',
+    '{
+        "basic_dashboard": true,
+        "event_creation": true,
+        "exhibitor_management": false,
+        "basic_credentialing": false,
+        "email_marketing": false,
+        "basic_reports": false,
+        "whatsapp_integration": false,
+        "pix_payments": false,
+        "basic_support": false
+    }'::jsonb,
+    false, 1
+),
+(
     'start', 'EVENTRIX™ Start', 
     'Ideal para começar com seus primeiros eventos. Funcionalidades essenciais para pequenas empresas.',
     297.00, 2970.00,
