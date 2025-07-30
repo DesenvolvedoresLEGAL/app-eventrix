@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -79,11 +79,11 @@ const Register: React.FC = () => {
   // Estados de usuário criado
   const [createdUserId, setCreatedUserId] = useState<string | null>(null);
 
-  const steps = [
+  const steps = useMemo(() => [
     { number: 1, title: 'Dados Pessoais', description: 'Informações básicas' },
     { number: 2, title: 'Empresa', description: 'Configuração da organização' },
     { number: 3, title: 'Convites', description: 'Adicionar colaboradores' }
-  ];
+  ], []);
 
   /**
    * Atualiza dados pessoais e aplica formatação quando necessário
@@ -225,9 +225,10 @@ const Register: React.FC = () => {
       if (validateCompanyData() && createdUserId) {
         setIsLoading(true);
         try {
-          // Criar tenant
+          // Criar tenant com todos os campos obrigatórios
           const { error } = await supabase.from('tenants').insert({
             slug: companyData.slug,
+            cnpj: '00.000.000/0000-00', // Valor temporário - será preenchido depois
             razao_social: companyData.tenantName,
             nome_fantasia: companyData.tenantName,
             contact_email: personalData.email,
@@ -238,6 +239,11 @@ const Register: React.FC = () => {
             state_id: '00000000-0000-0000-0000-000000000001', // Valor padrão
             plan_id: '00000000-0000-0000-0000-000000000001', // Valor padrão
             status_id: '00000000-0000-0000-0000-000000000001', // Valor padrão
+            // Campos de endereço obrigatórios - valores temporários
+            endereco_logradouro: 'A definir',
+            endereco_bairro: 'A definir',
+            endereco_cidade: 'A definir',
+            cep: '00000-000'
           });
 
           if (error) {
