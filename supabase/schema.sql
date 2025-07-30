@@ -477,29 +477,17 @@ ALTER FUNCTION "public"."get_current_user_role"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."handle_auth_signup"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
+    LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
-DECLARE
-    v_first_name    TEXT := COALESCE(NEW.user_metadata->>'first_name', '');
-    v_last_name     TEXT := COALESCE(NEW.user_metadata->>'last_name', '');
-    v_full_name     TEXT := COALESCE(NEW.user_metadata->>'full_name', '');
-    v_whatsapp      TEXT := NULLIF(NEW.user_metadata->>'whatsapp_number', '');
 BEGIN
     INSERT INTO public.profiles (
-        id,
-        first_name,
-        last_name,
-        full_name,
-        email,
-        whatsapp_number,
-        is_active
+        id, email, first_name, last_name, full_name, is_active
     ) VALUES (
-        auth.uid(),
-        v_first_name,
-        v_last_name,
-        v_full_name,
-        auth.email(),
-        v_whatsapp,
+        NEW.id,
+        COALESCE(NEW.email, ''),
+        'test_first',
+        'test_last',
+        '',
         TRUE
     );
     RETURN NEW;
@@ -843,7 +831,7 @@ COMMENT ON TABLE "public"."organizer_types" IS 'Tipos de organizadores de evento
 
 
 CREATE TABLE IF NOT EXISTS "public"."profiles" (
-    "id" "uuid" NOT NULL,
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "first_name" character varying(100) NOT NULL,
     "last_name" character varying(100) NOT NULL,
     "full_name" character varying(200) DEFAULT ''::character varying NOT NULL,
