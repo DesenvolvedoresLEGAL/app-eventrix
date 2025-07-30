@@ -58,6 +58,19 @@ export async function sendMagicLink(email: string) {
   if (error) throw error
 }
 
+export async function resetPassword(email: string) {
+  const redirectUrl = `${window.location.origin}/reset-password`
+  
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    email.trim().toLowerCase(),
+    {
+      redirectTo: redirectUrl,
+    }
+  )
+  
+  if (error) throw error
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut()
   if (error) throw error

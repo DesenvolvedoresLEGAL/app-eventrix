@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Zap, Eye, EyeOff, AlertCircle } from 'lucide-react'
@@ -10,9 +9,10 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
   
   const navigate = useNavigate()
-  const { signIn, loading, error, clearError, isAuthenticated } = useAuth()
+  const { signIn, resetPassword, loading, error, clearError, isAuthenticated } = useAuth()
   const { toast } = useToast()
 
   // Validação em tempo real
@@ -82,6 +82,48 @@ const Login = () => {
     } catch (err) {
       // Erro já tratado no AuthContext
       console.error('Login error:', err)
+    }
+  }
+
+  const handleForgotPassword = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    
+    if (!email.trim()) {
+      toast({
+        title: "Email necessário",
+        description: "Por favor, digite seu email antes de solicitar a redefinição de senha",
+        variant: "destructive"
+      })
+      return
+    }
+
+    const emailErrors = validateForm()
+    if (emailErrors.email) {
+      toast({
+        title: "Email inválido",
+        description: emailErrors.email,
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      setIsResettingPassword(true)
+      await resetPassword(email.trim())
+      
+      toast({
+        title: "Email enviado!",
+        description: "Verifique sua caixa de entrada para redefinir sua senha",
+        variant: "default"
+      })
+    } catch (err) {
+      toast({
+        title: "Erro ao enviar email",
+        description: "Não foi possível enviar o email de redefinição. Tente novamente.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsResettingPassword(false)
     }
   }
 
@@ -185,7 +227,14 @@ const Login = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label htmlFor="password" className="block text-sm font-semibold">Senha</label>
-                  <a href="#" className="text-sm text-primary hover:text-primary/80 font-medium transition-colors">Esqueceu?</a>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={isResettingPassword}
+                    className="text-sm text-primary hover:text-primary/80 font-medium transition-colors disabled:opacity-50"
+                  >
+                    {isResettingPassword ? 'Enviando...' : 'Esqueceu?'}
+                  </button>
                 </div>
                 <div className="relative">
                   <input
