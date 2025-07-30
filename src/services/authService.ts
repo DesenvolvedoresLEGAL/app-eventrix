@@ -1,17 +1,26 @@
+
 import supabase from '@/utils/supabase/client'
 
-export async function signUp(
-  email: string,
-  password: string,
-  fullName: string,
-  firstName: string,
-  lastName: string,
+export interface SignUpData {
+  email: string
+  password: string
+  fullName: string
+  firstName: string
+  lastName: string
   whatsapp?: string
-) {
-  const { data, error } = await supabase.auth.signUp({
+}
+
+export async function signUp(data: SignUpData) {
+  const { email, password, fullName, firstName, lastName, whatsapp } = data
+
+  // emailRedirectTo é OBRIGATÓRIO
+  const redirectUrl = `${window.location.origin}/`
+
+  const { data: authData, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: redirectUrl,
       data: {
         email: email,
         full_name: fullName,
@@ -23,17 +32,29 @@ export async function signUp(
   })
 
   if (error) throw error
-  return data.user
+  return authData.user
 }
 
 export async function signIn(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ 
+    email: email.trim().toLowerCase(), 
+    password 
+  })
+  
   if (error) throw error
   return data.user
 }
 
 export async function sendMagicLink(email: string) {
-  const { error } = await supabase.auth.signInWithOtp({ email })
+  const redirectUrl = `${window.location.origin}/`
+  
+  const { error } = await supabase.auth.signInWithOtp({ 
+    email: email.trim().toLowerCase(),
+    options: {
+      emailRedirectTo: redirectUrl
+    }
+  })
+  
   if (error) throw error
 }
 
