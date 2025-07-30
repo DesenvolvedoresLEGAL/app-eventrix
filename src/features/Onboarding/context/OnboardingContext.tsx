@@ -169,14 +169,13 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       console.log(`FORM DATA: ${JSON.stringify(formData)}`);
 
-      const user = await signUp(
-        formData.email,
-        formData.password,
-        `${formData.firstName} ${formData.lastName}`,
-        formData.firstName,
-        formData.lastName,
-        formData.whatsapp || undefined
-      )
+      const user = await signUp({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        whatsappNumber: formData.whatsapp || undefined
+      });
 
       console.log(user);
 
