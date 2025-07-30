@@ -1,147 +1,190 @@
 
-import React from 'react';
-import { Users, Mail, Plus, X, Send, Check } from 'lucide-react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-
-interface Collaborator {
-  id: string;
-  email: string;
-  role: string;
-  invited: boolean;
-}
+import { Label } from '@/components/ui/label';
+import { Users, Mail, Plus, X, Send, Check } from 'lucide-react';
+import { emailPattern } from '@/hooks/useFormValidation';
+import supabase from '@/utils/supabase/client';
 
 interface InviteCollaboratorsStepProps {
-  collaborators: Collaborator[];
-  newCollaboratorEmail: string;
-  onNewEmailChange: (email: string) => void;
-  onAddCollaborator: () => void;
-  onRemoveCollaborator: (id: string) => void;
-  onSendInvites: () => void;
-  isSendingInvites: boolean;
+  tenantSlug: string;
 }
 
-/**
- * Componente para o terceiro passo do wizard - Convitar Colaboradores
- */
-const InviteCollaboratorsStep: React.FC<InviteCollaboratorsStepProps> = ({
-  collaborators,
-  newCollaboratorEmail,
-  onNewEmailChange,
-  onAddCollaborator,
-  onRemoveCollaborator,
-  onSendInvites,
-  isSendingInvites
+interface Invite {
+  email: string;
+  status: 'pending' | 'sent' | 'error';
+}
+
+export const InviteCollaboratorsStep: React.FC<InviteCollaboratorsStepProps> = ({ 
+  tenantSlug 
 }) => {
-  const handleAddCollaborator = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newCollaboratorEmail.trim()) {
-      onAddCollaborator();
+  const [emailInput, setEmailInput] = useState('');
+  const [invites, setInvites] = useState<Invite[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const addEmail = () => {
+    if (!emailInput.trim() || !emailPattern.test(emailInput)) {
+      return;
+    }
+
+    if (invites.some(invite => invite.email === emailInput.toLowerCase())) {
+      return;
+    }
+
+    setInvites(prev => [...prev, { 
+      email: emailInput.toLowerCase(), 
+      status: 'pending' 
+    }]);
+    setEmailInput('');
+  };
+
+  const removeEmail = (emailToRemove: string) => {
+    setInvites(prev => prev.filter(invite => invite.email !== emailToRemove));
+  };
+
+  const sendInvite = async (email: string) => {
+    setInvites(prev => prev.map(invite => 
+      invite.email === email 
+        ? { ...invite, status: 'pending' }
+        : invite
+    ));
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/invite/${tenantSlug}`
+        }
+      });
+
+      if (error) throw error;
+
+      setInvites(prev => prev.map(invite => 
+        invite.email === email 
+          ? { ...invite, status: 'sent' }
+          : invite
+      ));
+    } catch (error) {
+      console.error('Error sending invite:', error);
+      setInvites(prev => prev.map(invite => 
+        invite.email === email 
+          ? { ...invite, status: 'error' }
+          : invite
+      ));
+    }
+  };
+
+  const sendAllInvites = async () => {
+    setIsLoading(true);
+    const pendingInvites = invites.filter(invite => invite.status === 'pending');
+    
+    for (const invite of pendingInvites) {
+      await sendInvite(invite.email);
+    }
+    
+    setIsLoading(false);
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'sent':
+        return <Check className="text-green-500" size={16} />;
+      case 'error':
+        return <X className="text-destructive" size={16} />;
+      default:
+        return <Send className="text-muted-foreground" size={16} />;
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="bg-primary/10 p-3 rounded-full">
-            <Users className="text-primary" size={24} />
-          </div>
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Users className="text-primary" size={20} />
+          <h3 className="text-xl font-semibold">Convide sua Equipe</h3>
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Convitar Colaboradores</h2>
-        <p className="text-muted-foreground">Adicione membros à sua equipe (opcional)</p>
+        <p className="text-muted-foreground">Adicione colaboradores ao seu workspace</p>
       </div>
 
       <div className="space-y-4">
-        <form onSubmit={handleAddCollaborator} className="flex gap-2">
-          <div className="flex-1">
-            <Label htmlFor="collaboratorEmail" className="sr-only">Email do colaborador</Label>
-            <div className="relative">
+        <div>
+          <Label htmlFor="email">Adicionar Colaborador</Label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
               <Input
-                id="collaboratorEmail"
+                id="email"
                 type="email"
-                value={newCollaboratorEmail}
-                onChange={(e) => onNewEmailChange(e.target.value)}
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addEmail()}
                 placeholder="colaborador@empresa.com"
                 className="pl-10"
               />
             </div>
+            <Button 
+              onClick={addEmail}
+              disabled={!emailInput.trim() || !emailPattern.test(emailInput)}
+              variant="outline"
+            >
+              <Plus size={16} />
+            </Button>
           </div>
-          <Button type="submit" disabled={!newCollaboratorEmail.trim()}>
-            <Plus size={16} />
-          </Button>
-        </form>
+        </div>
 
-        {collaborators.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-medium text-sm">Colaboradores adicionados:</h3>
-            <div className="space-y-2">
-              {collaborators.map((collaborator) => (
-                <div
-                  key={collaborator.id}
-                  className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border"
+        {invites.length > 0 && (
+          <div className="space-y-2">
+            <Label>Convites ({invites.length})</Label>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {invites.map((invite) => (
+                <div 
+                  key={invite.email}
+                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                      {collaborator.invited ? (
-                        <Check className="text-green-500" size={14} />
-                      ) : (
-                        <Mail className="text-primary" size={14} />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{collaborator.email}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {collaborator.invited ? 'Convite enviado' : 'Aguardando convite'}
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(invite.status)}
+                    <span className="text-sm">{invite.email}</span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onRemoveCollaborator(collaborator.id)}
-                    disabled={collaborator.invited}
-                  >
-                    <X size={14} />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {invite.status === 'pending' && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => sendInvite(invite.email)}
+                      >
+                        Enviar
+                      </Button>
+                    )}
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => removeEmail(invite.email)}
+                    >
+                      <X size={14} />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
-
-            <Button
-              onClick={onSendInvites}
-              disabled={isSendingInvites || collaborators.every(c => c.invited)}
-              className="w-full"
-            >
-              {isSendingInvites ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Enviando convites...
-                </>
-              ) : (
-                <>
-                  <Send size={16} className="mr-2" />
-                  Enviar convites por email
-                </>
-              )}
-            </Button>
           </div>
         )}
 
-        <div className="bg-muted/30 rounded-lg p-4 border-l-4 border-secondary">
-          <h4 className="font-medium text-sm mb-2">✨ Sobre os convites</h4>
-          <ul className="text-xs text-muted-foreground space-y-1">
-            <li>• Os colaboradores receberão um link mágico por email</li>
-            <li>• Eles poderão acessar diretamente sem criar senha</li>
-            <li>• Você pode gerenciar permissões depois na área de configurações</li>
-            <li>• Este passo é opcional, você pode pular se preferir</li>
-          </ul>
+        {invites.some(invite => invite.status === 'pending') && (
+          <Button 
+            onClick={sendAllInvites}
+            disabled={isLoading}
+            className="w-full"
+          >
+            {isLoading ? 'Enviando...' : 'Enviar Todos os Convites'}
+          </Button>
+        )}
+
+        <div className="text-center text-sm text-muted-foreground">
+          <p>Os colaboradores receberão um link mágico por email</p>
+          <p>Você pode adicionar mais pessoas depois</p>
         </div>
       </div>
     </div>
   );
 };
-
-export default InviteCollaboratorsStep;

@@ -1,82 +1,80 @@
 
 import { useMemo } from 'react';
 
-interface ValidationRules {
-  email?: boolean;
+export interface ValidationRules {
   required?: boolean;
   minLength?: number;
-  password?: boolean;
-  phone?: boolean;
+  maxLength?: number;
+  pattern?: RegExp;
+  custom?: (value: string) => string | null;
 }
 
-interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
+export interface FormField {
+  name: string;
+  value: string;
+  rules: ValidationRules;
 }
 
-export const useFormValidation = () => {
-  const validateField = useMemo(() => (value: string, rules: ValidationRules): ValidationResult => {
-    const errors: string[] = [];
+export const useFormValidation = (fields: FormField[]) => {
+  const errors = useMemo(() => {
+    const fieldErrors: Record<string, string> = {};
 
-    if (rules.required && (!value || value.trim() === '')) {
-      errors.push('Este campo é obrigatório');
-    }
-
-    if (rules.minLength && value.length < rules.minLength) {
-      errors.push(`Mínimo de ${rules.minLength} caracteres`);
-    }
-
-    if (rules.email && value) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(value)) {
-        errors.push('Email inválido');
+    fields.forEach(({ name, value, rules }) => {
+      if (rules.required && !value.trim()) {
+        fieldErrors[name] = 'Este campo é obrigatório';
+        return;
       }
-    }
 
-    if (rules.password && value) {
-      if (value.length < 8) {
-        errors.push('Senha deve ter no mínimo 8 caracteres');
+      if (rules.minLength && value.length < rules.minLength) {
+        fieldErrors[name] = `Mínimo ${rules.minLength} caracteres`;
+        return;
       }
-      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
-        errors.push('Senha deve conter ao menos: 1 maiúscula, 1 minúscula e 1 número');
+
+      if (rules.maxLength && value.length > rules.maxLength) {
+        fieldErrors[name] = `Máximo ${rules.maxLength} caracteres`;
+        return;
       }
-    }
 
-    if (rules.phone && value) {
-      const phoneRegex = /^\(\d{2}\)\s\d{4,5}-\d{4}$/;
-      if (!phoneRegex.test(value)) {
-        errors.push('Formato: (11) 99999-9999');
+      if (rules.pattern && !rules.pattern.test(value)) {
+        fieldErrors[name] = 'Formato inválido';
+        return;
       }
-    }
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }, []);
+      if (rules.custom) {
+        const customError = rules.custom(value);
+        if (customError) {
+          fieldErrors[name] = customError;
+          return;
+        }
+      }
+    });
 
-  const formatPhone = useMemo(() => (value: string): string => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 2) return `(${numbers}`;
-    if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-    if (numbers.length <= 10) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
-    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
-  }, []);
+    return fieldErrors;
+  }, [fields]);
 
-  const generateSlug = useMemo(() => (name: string): string => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-  }, []);
+  const isValid = Object.keys(errors).length === 0;
 
-  return {
-    validateField,
-    formatPhone,
-    generateSlug
-  };
+  return { errors, isValid };
+};
+
+export const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export const phonePattern = /^\(?([0-9]{2})\)?[-. ]?([0-9]{4,5})[-. ]?([0-9]{4})$/;
+
+export const passwordValidation = (password: string): string | null => {
+  if (password.length < 8) return 'Senha deve ter pelo menos 8 caracteres';
+  if (!/[A-Z]/.test(password)) return 'Senha deve conter pelo menos uma letra maiúscula';
+  if (!/[0-9]/.test(password)) return 'Senha deve conter pelo menos um número';
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return 'Senha deve conter pelo menos um símbolo';
+  return null;
+};
+
+export const slugify = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 50);
 };

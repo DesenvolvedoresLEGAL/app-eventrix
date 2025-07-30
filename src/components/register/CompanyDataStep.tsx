@@ -1,112 +1,117 @@
 
-import React from 'react';
-import { Building, Globe, Check, X, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-interface CompanyData {
-  tenantName: string;
-  slug: string;
-  domain: string;
-}
+import { Building, Globe, Check, X, Loader2 } from 'lucide-react';
+import { slugify } from '@/hooks/useFormValidation';
+import { useTenantValidation } from '@/hooks/useTenantValidation';
 
 interface CompanyDataStepProps {
-  data: CompanyData;
-  errors: Record<string, string[]>;
-  slugAvailable: boolean | null;
-  isCheckingSlug: boolean;
-  onDataChange: (field: keyof CompanyData, value: string) => void;
+  formData: {
+    tenantName: string;
+    slug: string;
+    domain: string;
+  };
+  errors: Record<string, string>;
+  onChange: (field: string, value: string) => void;
 }
 
-/**
- * Componente para o segundo passo do wizard - Dados da Empresa
- */
-const CompanyDataStep: React.FC<CompanyDataStepProps> = ({
-  data,
-  errors,
-  slugAvailable,
-  isCheckingSlug,
-  onDataChange
+export const CompanyDataStep: React.FC<CompanyDataStepProps> = ({ 
+  formData, 
+  errors, 
+  onChange 
 }) => {
-  const getSlugStatus = () => {
-    if (isCheckingSlug) {
-      return <Loader2 className="text-muted-foreground animate-spin" size={16} />;
-    }
-    if (slugAvailable === true) {
-      return <Check className="text-green-500" size={16} />;
-    }
-    if (slugAvailable === false) {
-      return <X className="text-destructive" size={16} />;
-    }
-    return null;
-  };
+  const { checkSlugAvailability, isChecking } = useTenantValidation();
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
 
-  const getSlugMessage = () => {
-    if (isCheckingSlug) return 'Verificando disponibilidade...';
-    if (slugAvailable === true) return 'Slug disponível!';
-    if (slugAvailable === false) return 'Slug já está em uso';
-    return '';
+  useEffect(() => {
+    if (formData.tenantName) {
+      const newSlug = slugify(formData.tenantName);
+      onChange('slug', newSlug);
+    }
+  }, [formData.tenantName, onChange]);
+
+  useEffect(() => {
+    const checkSlug = async () => {
+      if (!formData.slug) {
+        setSlugStatus('idle');
+        return;
+      }
+
+      setSlugStatus('checking');
+      const isAvailable = await checkSlugAvailability(formData.slug);
+      setSlugStatus(isAvailable ? 'available' : 'taken');
+    };
+
+    const debounceTimer = setTimeout(checkSlug, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [formData.slug, checkSlugAvailability]);
+
+  const getSlugStatusIcon = () => {
+    switch (slugStatus) {
+      case 'checking':
+        return <Loader2 className="animate-spin text-muted-foreground" size={16} />;
+      case 'available':
+        return <Check className="text-green-500" size={16} />;
+      case 'taken':
+        return <X className="text-destructive" size={16} />;
+      default:
+        return null;
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="bg-primary/10 p-3 rounded-full">
-            <Building className="text-primary" size={24} />
-          </div>
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Building className="text-primary" size={20} />
+          <h3 className="text-xl font-semibold">Dados da Empresa</h3>
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Dados da Empresa</h2>
-        <p className="text-muted-foreground">Configure sua organização na plataforma</p>
+        <p className="text-muted-foreground">Conte-nos sobre sua organização</p>
       </div>
 
       <div>
         <Label htmlFor="tenantName">Nome da Empresa *</Label>
         <Input
           id="tenantName"
-          value={data.tenantName}
-          onChange={(e) => onDataChange('tenantName', e.target.value)}
+          value={formData.tenantName}
+          onChange={(e) => onChange('tenantName', e.target.value)}
           placeholder="Nome da sua empresa"
           className={errors.tenantName ? 'border-destructive' : ''}
         />
         {errors.tenantName && (
-          <p className="text-xs text-destructive mt-1">{errors.tenantName[0]}</p>
+          <p className="text-sm text-destructive mt-1">{errors.tenantName}</p>
         )}
       </div>
 
       <div>
-        <Label htmlFor="slug">Identificador Único (Slug) *</Label>
+        <Label htmlFor="slug">URL da Empresa *</Label>
         <div className="relative">
-          <Input
-            id="slug"
-            value={data.slug}
-            onChange={(e) => onDataChange('slug', e.target.value)}
-            placeholder="minha-empresa"
-            className={`pr-10 ${errors.slug ? 'border-destructive' : ''} ${
-              slugAvailable === false ? 'border-destructive' : ''
-            }`}
-          />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            {getSlugStatus()}
+          <div className="flex">
+            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
+              eventrix.app/
+            </span>
+            <Input
+              id="slug"
+              value={formData.slug}
+              onChange={(e) => onChange('slug', slugify(e.target.value))}
+              placeholder="sua-empresa"
+              className={`rounded-l-none ${errors.slug || slugStatus === 'taken' ? 'border-destructive' : ''}`}
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              {getSlugStatusIcon()}
+            </div>
           </div>
         </div>
-        <div className="mt-1 space-y-1">
-          <p className="text-xs text-muted-foreground">
-            Será usado na URL: https://{data.slug || 'sua-empresa'}.eventrix.com
-          </p>
-          {getSlugMessage() && (
-            <p className={`text-xs ${
-              slugAvailable === true ? 'text-green-600' : 
-              slugAvailable === false ? 'text-destructive' : 
-              'text-muted-foreground'
-            }`}>
-              {getSlugMessage()}
-            </p>
-          )}
-          {errors.slug && (
-            <p className="text-xs text-destructive">{errors.slug[0]}</p>
-          )}
-        </div>
+        {slugStatus === 'taken' && (
+          <p className="text-sm text-destructive mt-1">Este nome já está em uso</p>
+        )}
+        {slugStatus === 'available' && (
+          <p className="text-sm text-green-600 mt-1">Disponível!</p>
+        )}
+        {errors.slug && (
+          <p className="text-sm text-destructive mt-1">{errors.slug}</p>
+        )}
       </div>
 
       <div>
@@ -115,31 +120,19 @@ const CompanyDataStep: React.FC<CompanyDataStepProps> = ({
           <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
           <Input
             id="domain"
-            value={data.domain}
-            onChange={(e) => onDataChange('domain', e.target.value)}
-            placeholder="eventos.suaempresa.com"
+            value={formData.domain}
+            onChange={(e) => onChange('domain', e.target.value)}
+            placeholder="meusistema.com.br"
             className={`pl-10 ${errors.domain ? 'border-destructive' : ''}`}
           />
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          Configure depois na área de configurações
-        </p>
         {errors.domain && (
-          <p className="text-xs text-destructive mt-1">{errors.domain[0]}</p>
+          <p className="text-sm text-destructive mt-1">{errors.domain}</p>
         )}
-      </div>
-
-      <div className="bg-muted/30 rounded-lg p-4 border-l-4 border-primary">
-        <h4 className="font-medium text-sm mb-2">ℹ️ Sobre o Identificador Único</h4>
-        <ul className="text-xs text-muted-foreground space-y-1">
-          <li>• Será usado na URL da sua conta</li>
-          <li>• Deve ser único na plataforma</li>
-          <li>• Apenas letras, números e hífens</li>
-          <li>• Não pode ser alterado depois</li>
-        </ul>
+        <p className="text-sm text-muted-foreground mt-1">
+          Conecte seu próprio domínio (pode ser configurado depois)
+        </p>
       </div>
     </div>
   );
 };
-
-export default CompanyDataStep;

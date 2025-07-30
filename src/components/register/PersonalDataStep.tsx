@@ -1,47 +1,34 @@
 
 import React from 'react';
-import { User, Mail, Phone, Lock, Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-interface PersonalData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-}
+import { User, Mail, Lock, Phone } from 'lucide-react';
 
 interface PersonalDataStepProps {
-  data: PersonalData;
-  errors: Record<string, string[]>;
-  showPassword: boolean;
-  showConfirmPassword: boolean;
-  onDataChange: (field: keyof PersonalData, value: string) => void;
-  onTogglePasswordVisibility: (field: 'password' | 'confirmPassword') => void;
+  formData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    password: string;
+    confirmPassword: string;
+  };
+  errors: Record<string, string>;
+  onChange: (field: string, value: string) => void;
 }
 
-/**
- * Componente para o primeiro passo do wizard - Dados Pessoais
- */
-const PersonalDataStep: React.FC<PersonalDataStepProps> = ({
-  data,
-  errors,
-  showPassword,
-  showConfirmPassword,
-  onDataChange,
-  onTogglePasswordVisibility
+export const PersonalDataStep: React.FC<PersonalDataStepProps> = ({ 
+  formData, 
+  errors, 
+  onChange 
 }) => {
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="bg-primary/10 p-3 rounded-full">
-            <User className="text-primary" size={24} />
-          </div>
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <User className="text-primary" size={20} />
+          <h3 className="text-xl font-semibold">Dados Pessoais</h3>
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Dados Pessoais</h2>
         <p className="text-muted-foreground">Vamos começar com suas informações básicas</p>
       </div>
 
@@ -50,27 +37,26 @@ const PersonalDataStep: React.FC<PersonalDataStepProps> = ({
           <Label htmlFor="firstName">Nome *</Label>
           <Input
             id="firstName"
-            value={data.firstName}
-            onChange={(e) => onDataChange('firstName', e.target.value)}
+            value={formData.firstName}
+            onChange={(e) => onChange('firstName', e.target.value)}
             placeholder="Seu nome"
             className={errors.firstName ? 'border-destructive' : ''}
           />
           {errors.firstName && (
-            <p className="text-xs text-destructive mt-1">{errors.firstName[0]}</p>
+            <p className="text-sm text-destructive mt-1">{errors.firstName}</p>
           )}
         </div>
-
         <div>
           <Label htmlFor="lastName">Sobrenome *</Label>
           <Input
             id="lastName"
-            value={data.lastName}
-            onChange={(e) => onDataChange('lastName', e.target.value)}
+            value={formData.lastName}
+            onChange={(e) => onChange('lastName', e.target.value)}
             placeholder="Seu sobrenome"
             className={errors.lastName ? 'border-destructive' : ''}
           />
           {errors.lastName && (
-            <p className="text-xs text-destructive mt-1">{errors.lastName[0]}</p>
+            <p className="text-sm text-destructive mt-1">{errors.lastName}</p>
           )}
         </div>
       </div>
@@ -82,14 +68,14 @@ const PersonalDataStep: React.FC<PersonalDataStepProps> = ({
           <Input
             id="email"
             type="email"
-            value={data.email}
-            onChange={(e) => onDataChange('email', e.target.value)}
+            value={formData.email}
+            onChange={(e) => onChange('email', e.target.value)}
             placeholder="seu@email.com"
             className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
           />
         </div>
         {errors.email && (
-          <p className="text-xs text-destructive mt-1">{errors.email[0]}</p>
+          <p className="text-sm text-destructive mt-1">{errors.email}</p>
         )}
       </div>
 
@@ -99,14 +85,14 @@ const PersonalDataStep: React.FC<PersonalDataStepProps> = ({
           <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
           <Input
             id="phone"
-            value={data.phone}
-            onChange={(e) => onDataChange('phone', e.target.value)}
+            value={formData.phone}
+            onChange={(e) => onChange('phone', e.target.value)}
             placeholder="(11) 99999-9999"
             className={`pl-10 ${errors.phone ? 'border-destructive' : ''}`}
           />
         </div>
         {errors.phone && (
-          <p className="text-xs text-destructive mt-1">{errors.phone[0]}</p>
+          <p className="text-sm text-destructive mt-1">{errors.phone}</p>
         )}
       </div>
 
@@ -116,22 +102,15 @@ const PersonalDataStep: React.FC<PersonalDataStepProps> = ({
           <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
           <Input
             id="password"
-            type={showPassword ? 'text' : 'password'}
-            value={data.password}
-            onChange={(e) => onDataChange('password', e.target.value)}
+            type="password"
+            value={formData.password}
+            onChange={(e) => onChange('password', e.target.value)}
             placeholder="Mínimo 8 caracteres"
-            className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
+            className={`pl-10 ${errors.password ? 'border-destructive' : ''}`}
           />
-          <button
-            type="button"
-            onClick={() => onTogglePasswordVisibility('password')}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
         </div>
         {errors.password && (
-          <p className="text-xs text-destructive mt-1">{errors.password[0]}</p>
+          <p className="text-sm text-destructive mt-1">{errors.password}</p>
         )}
       </div>
 
@@ -141,26 +120,17 @@ const PersonalDataStep: React.FC<PersonalDataStepProps> = ({
           <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
           <Input
             id="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
-            value={data.confirmPassword}
-            onChange={(e) => onDataChange('confirmPassword', e.target.value)}
+            type="password"
+            value={formData.confirmPassword}
+            onChange={(e) => onChange('confirmPassword', e.target.value)}
             placeholder="Digite a senha novamente"
-            className={`pl-10 pr-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
+            className={`pl-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
           />
-          <button
-            type="button"
-            onClick={() => onTogglePasswordVisibility('confirmPassword')}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
         </div>
         {errors.confirmPassword && (
-          <p className="text-xs text-destructive mt-1">{errors.confirmPassword[0]}</p>
+          <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>
         )}
       </div>
     </div>
   );
 };
-
-export default PersonalDataStep;

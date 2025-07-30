@@ -1,15 +1,11 @@
 
-import React from 'react';
+import React from "react";
 
-const Test = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Página de Teste</h1>
-        <p className="text-muted-foreground">Esta é uma página de teste temporária.</p>
-      </div>
-    </div>
-  );
-};
+const Test = () => (
+  <div className="min-h-screen gap-5 p-10 flex flex-col items-center justify-center bg-muted">
+    <h1>Área de testes de desenvolvimento</h1>
+    <p>Página de teste temporária</p>
+  </div>
+);
 
 export default Test;

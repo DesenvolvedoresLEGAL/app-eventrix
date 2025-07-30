@@ -1,59 +1,54 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import supabase from '@/utils/supabase/client';
 
 export const useTenantValidation = () => {
-  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
 
-  const checkSlugAvailability = async (slug: string): Promise<boolean> => {
-    if (!slug || slug.length < 3) return false;
+  const checkSlugAvailability = useCallback(async (slug: string): Promise<boolean> => {
+    if (!slug.trim()) return false;
     
-    setIsCheckingSlug(true);
-    
+    setIsChecking(true);
     try {
       const { data, error } = await supabase
         .from('tenants')
-        .select('slug')
+        .select('id')
         .eq('slug', slug)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao verificar slug:', error);
-        return false;
-      }
-
-      return !data; // true se não encontrou (disponível)
+      if (error) throw error;
+      
+      return !data; // true if available (no data found)
     } catch (error) {
-      console.error('Erro ao verificar slug:', error);
+      console.error('Error checking slug availability:', error);
       return false;
     } finally {
-      setIsCheckingSlug(false);
+      setIsChecking(false);
     }
-  };
+  }, []);
 
-  const checkUserHasTenant = async (userId: string): Promise<boolean> => {
+  const checkUserHasTenant = useCallback(async (userId: string): Promise<boolean> => {
+    if (!userId) return false;
+    
     try {
       const { data, error } = await supabase
         .from('tenants')
         .select('id')
         .eq('created_by', userId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao verificar tenant do usuário:', error);
-        return false;
-      }
-
-      return !!data; // true se encontrou tenant
+      if (error) throw error;
+      
+      return !!data; // true if user already has a tenant
     } catch (error) {
-      console.error('Erro ao verificar tenant:', error);
+      console.error('Error checking user tenant:', error);
       return false;
     }
-  };
+  }, []);
 
   return {
     checkSlugAvailability,
     checkUserHasTenant,
-    isCheckingSlug
+    isChecking
   };
 };
