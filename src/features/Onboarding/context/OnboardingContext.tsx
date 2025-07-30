@@ -178,6 +178,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         formData.whatsapp || undefined
       )
 
+      console.log(user);
+
       const slug = generateSlug(formData.razaoSocial);
 
       const trialEndsAt = new Date();
