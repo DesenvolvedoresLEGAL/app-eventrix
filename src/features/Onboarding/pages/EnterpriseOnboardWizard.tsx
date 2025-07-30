@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useMemo } from 'react';
 import { ChevronRight, Building2, User, MapPin, Phone, Check, Loader2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,7 @@ interface StepIndicatorProps {
   icon: React.ReactNode;
 }
 
-const StepIndicator: React.FC<StepIndicatorProps> = ({ step, currentStep, title, icon }) => {
+const StepIndicator: React.FC<StepIndicatorProps> = React.memo(({ step, currentStep, title, icon }) => {
   const isActive = currentStep === step;
   const isCompleted = currentStep > step;
 
@@ -44,8 +45,9 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ step, currentStep, title,
       )}
     </div>
   );
-};
+});
 
+StepIndicator.displayName = 'StepIndicator';
 
 const EnterpriseOnboardWizard: React.FC = () => {
   const {
@@ -62,6 +64,8 @@ const EnterpriseOnboardWizard: React.FC = () => {
     submit,
   } = useOnboarding();
 
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+
   const handleNext = () => {
     if (currentStep < 5) {
       nextStep();
@@ -74,7 +78,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
     prevStep();
   };
 
-  const formatCNPJ = (value: string) => {
+  const formatCNPJ = useMemo(() => (value: string) => {
     return value
       .replace(/\D/g, '')
       .replace(/(\d{2})(\d)/, '$1.$2')
@@ -82,30 +86,34 @@ const EnterpriseOnboardWizard: React.FC = () => {
       .replace(/(\d{3})(\d)/, '$1/$2')
       .replace(/(\d{4})(\d)/, '$1-$2')
       .substring(0, 18);
-  };
+  }, []);
 
-  const formatCEP = (value: string) => {
+  const formatCEP = useMemo(() => (value: string) => {
     return value
       .replace(/\D/g, '')
       .replace(/(\d{5})(\d)/, '$1-$2')
       .substring(0, 9);
-  };
+  }, []);
 
-  const formatPhone = (value: string) => {
+  const formatPhone = useMemo(() => (value: string) => {
     return value
       .replace(/\D/g, '')
       .replace(/(\d{2})(\d)/, '($1) $2')
       .replace(/(\d{5})(\d)/, '$1-$2')
       .substring(0, 15);
-  };
+  }, []);
 
-  const steps = [
+  const steps = useMemo(() => [
     { number: 1, title: 'Usuário', icon: <User className="w-6 h-6" /> },
     { number: 2, title: 'Dados da Empresa', icon: <Building2 className="w-6 h-6" /> },
     { number: 3, title: 'Documentos', icon: <FileText className="w-6 h-6" /> },
     { number: 4, title: 'Contato', icon: <Phone className="w-6 h-6" /> },
     { number: 5, title: 'Localização', icon: <MapPin className="w-6 h-6" /> }
-  ];
+  ], []);
+
+  const passwordsMatch = useMemo(() => {
+    return formData.password === confirmPassword && formData.password.length > 0;
+  }, [formData.password, confirmPassword]);
 
   const renderStep = () => {
     switch (currentStep) {
@@ -113,7 +121,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
         return (
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="first-name" className="block text-sm font-medium text-gray-700 mb-1">
                 Primeiro Nome *
               </label>
               <Input
@@ -125,10 +133,9 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 placeholder="Fulano"
                 className="w-full"
               />
-              <p className="text-xs text-gray-500 mt-1">Este será seu email de acesso ao sistema</p>
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="last-name" className="block text-sm font-medium text-gray-700 mb-1">
                 Último Nome *
               </label>
               <Input
@@ -140,7 +147,6 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 placeholder="De Tal"
                 className="w-full"
               />
-              <p className="text-xs text-gray-500 mt-1">Este será seu email de acesso ao sistema</p>
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -170,6 +176,29 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 placeholder="Mínimo 6 caracteres"
                 className="w-full"
               />
+            </div>
+            <div>
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+                Confirmar Senha *
+              </label>
+              <Input
+                type="password"
+                id="confirm-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                placeholder="Digite a senha novamente"
+                className={cn(
+                  "w-full",
+                  confirmPassword.length > 0 && !passwordsMatch ? "border-red-500" : ""
+                )}
+              />
+              {confirmPassword.length > 0 && !passwordsMatch && (
+                <p className="text-xs text-red-500 mt-1">As senhas não coincidem</p>
+              )}
+              {passwordsMatch && confirmPassword.length > 0 && (
+                <p className="text-xs text-green-500 mt-1">✓ Senhas coincidem</p>
+              )}
             </div>
           </div>
         );
@@ -470,6 +499,13 @@ const EnterpriseOnboardWizard: React.FC = () => {
     }
   };
 
+  const canProceedToNextStep = useMemo(() => {
+    if (currentStep === 1) {
+      return passwordsMatch && formData.password.length >= 6;
+    }
+    return true;
+  }, [currentStep, passwordsMatch, formData.password.length]);
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4">
@@ -514,7 +550,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !canProceedToNextStep}
               >
                 {isSubmitting ? (
                   <>
