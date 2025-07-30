@@ -172,9 +172,10 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const user = await signUp({
         email: formData.email,
         password: formData.password,
+        fullName: `${formData.firstName} ${formData.lastName}`,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        whatsappNumber: formData.whatsapp || undefined
+        whatsapp: formData.whatsapp || undefined
       });
 
       console.log(user);
