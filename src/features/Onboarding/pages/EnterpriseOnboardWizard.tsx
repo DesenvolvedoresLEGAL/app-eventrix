@@ -559,7 +559,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
             </div>
             <div className="mt-4 p-3 bg-green-100 border border-green-200 rounded">
               <p className="text-green-800 text-sm">
-                ✓ Você terá 30 dias de teste grátis para experimentar todas as funcionalidades da plataforma
+                ✓ Você terá 7 dias de teste grátis para experimentar todas as funcionalidades da plataforma
               </p>
             </div>
           </div>
