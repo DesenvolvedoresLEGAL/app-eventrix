@@ -1,237 +1,307 @@
 
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Zap } from 'lucide-react';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowRight, ArrowLeft, Zap, Check, Building, User, Mail, Lock, Phone } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
-import { StepIndicator } from '@/components/register/StepIndicator';
-import { PersonalDataStep } from '@/components/register/PersonalDataStep';
-import { CompanyDataStep } from '@/components/register/CompanyDataStep';
-import { InviteCollaboratorsStep } from '@/components/register/InviteCollaboratorsStep';
-import { useFormValidation, emailPattern, phonePattern, passwordValidation } from '@/hooks/useFormValidation';
-import { useTenantValidation } from '@/hooks/useTenantValidation';
-import supabase from '@/utils/supabase/client';
-
-interface FormData {
-  // Step 1
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-  // Step 2
-  tenantName: string;
-  slug: string;
-  domain: string;
-}
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const Register = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState<string>('');
-  const navigate = useNavigate();
-  const { signUp } = useAuth();
-  const { checkUserHasTenant } = useTenantValidation();
+  const [currentStep, setCurrentStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const { signUp } = useAuth()
 
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState({
+    // Passo 1 - Dados pessoais
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: '',
-    tenantName: '',
-    slug: '',
-    domain: ''
+    
+    // Passo 2 - Dados da empresa
+    companyName: '',
+    companySize: '',
+    position: '',
+    website: '',
+    
+    // Passo 3 - Sobre os eventos
+    eventTypes: '',
+    eventsPerYear: '',
+    avgVisitors: ''
   });
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Validation for Step 1
-  const step1Fields = useMemo(() => [
-    { name: 'firstName', value: formData.firstName, rules: { required: true, minLength: 2 } },
-    { name: 'lastName', value: formData.lastName, rules: { required: true, minLength: 2 } },
-    { name: 'email', value: formData.email, rules: { required: true, pattern: emailPattern } },
-    { name: 'phone', value: formData.phone, rules: { pattern: phonePattern } },
-    { name: 'password', value: formData.password, rules: { required: true, custom: passwordValidation } },
-    { 
-      name: 'confirmPassword', 
-      value: formData.confirmPassword, 
-      rules: { 
-        required: true,
-        custom: (value) => value !== formData.password ? 'Senhas não coincidem' : null
-      }
-    }
-  ], [formData]);
+  const nextStep = () => {
+    if (currentStep < 3) setCurrentStep(currentStep + 1);
+  };
 
-  // Validation for Step 2
-  const step2Fields = useMemo(() => [
-    { name: 'tenantName', value: formData.tenantName, rules: { required: true, minLength: 2 } },
-    { name: 'slug', value: formData.slug, rules: { required: true, minLength: 2 } }
-  ], [formData]);
+  const prevStep = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
+  };
 
-  const { errors: step1Errors, isValid: step1Valid } = useFormValidation(step1Fields);
-  const { errors: step2Errors, isValid: step2Valid } = useFormValidation(step2Fields);
-
-  const handleStep1Submit = async () => {
-    if (!step1Valid) return;
-
-    setLoading(true);
+  const handleSubmit = async () => {
+    setLoading(true)
     try {
-      const user = await signUp(
+      await signUp(
         formData.email,
         formData.password,
         `${formData.firstName} ${formData.lastName}`,
         formData.firstName,
         formData.lastName,
         formData.phone
-      );
-      
-      if (user?.id) {
-        setUserId(user.id);
-        
-        // Check if user already has a tenant
-        const hasTenant = await checkUserHasTenant(user.id);
-        if (hasTenant) {
-          alert('Você já possui uma empresa cadastrada');
-          navigate('/dashboard');
-          return;
-        }
-
-        setCompletedSteps(prev => [...prev, 1]);
-        setCurrentStep(2);
-      }
-    } catch (error) {
-      alert((error as Error).message);
+      )
+      navigate('/dashboard')
+    } catch (err) {
+      alert((err as Error).message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-
-  const handleStep2Submit = async () => {
-    if (!step2Valid) return;
-
-    setLoading(true);
-    try {
-      // Create tenant
-      const { data: tenantData, error: tenantError } = await supabase
-        .from('tenants')
-        .insert([{
-          slug: formData.slug,
-          razao_social: formData.tenantName,
-          nome_fantasia: formData.tenantName,
-          contact_email: formData.email,
-          email_domain: formData.domain || null,
-          created_by: userId,
-          cnpj: '00.000.000/0000-00', // Default CNPJ - will be updated later
-          endereco_logradouro: 'A definir',
-          endereco_bairro: 'A definir', 
-          endereco_cidade: 'A definir',
-          cep: '00000-000',
-          state_id: (await supabase.from('brazilian_states').select('id').eq('code', 'SP').single()).data?.id,
-          organizer_type_id: (await supabase.from('organizer_types').select('id').eq('code', 'empresa').single()).data?.id,
-          primary_segment_id: (await supabase.from('business_segments').select('id').eq('code', 'outros').single()).data?.id,
-          plan_id: (await supabase.from('subscription_plans').select('id').eq('code', 'trial').single()).data?.id,
-          status_id: (await supabase.from('tenant_statuses').select('id').eq('code', 'ativo').single()).data?.id
-        }])
-        .select()
-        .single();
-
-      if (tenantError) throw tenantError;
-
-      setCompletedSteps(prev => [...prev, 2]);
-      setCurrentStep(3);
-    } catch (error) {
-      console.error('Error creating tenant:', error);
-      alert('Erro ao criar empresa. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFinalSubmit = () => {
-    setCompletedSteps(prev => [...prev, 3]);
-    alert('Cadastro realizado com sucesso! Bem-vindo ao Eventrix™');
-    navigate('/dashboard');
-  };
-
-  const nextStep = () => {
-    if (currentStep === 1) {
-      handleStep1Submit();
-    } else if (currentStep === 2) {
-      handleStep2Submit();
-    } else {
-      handleFinalSubmit();
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
+  }
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <PersonalDataStep
-            formData={formData}
-            errors={step1Errors}
-            onChange={updateFormData}
-          />
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <User className="text-primary" size={20} />
+                <h3 className="text-xl font-semibold">Dados Pessoais</h3>
+              </div>
+              <p className="text-muted-foreground">Vamos começar com suas informações básicas</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Nome *</Label>
+                <Input
+                  value={formData.firstName}
+                  onChange={(e) => updateFormData('firstName', e.target.value)}
+                  placeholder="Seu nome"
+                />
+              </div>
+              <div>
+                <Label>Sobrenome *</Label>
+                <Input
+                  value={formData.lastName}
+                  onChange={(e) => updateFormData('lastName', e.target.value)}
+                  placeholder="Seu sobrenome"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Email *</Label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => updateFormData('email', e.target.value)}
+                placeholder="seu@email.com"
+              />
+            </div>
+
+            <div>
+              <Label>Telefone</Label>
+              <Input
+                value={formData.phone}
+                onChange={(e) => updateFormData('phone', e.target.value)}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+
+            <div>
+              <Label>Senha *</Label>
+              <Input
+                type="password"
+                value={formData.password}
+                onChange={(e) => updateFormData('password', e.target.value)}
+                placeholder="Mínimo 8 caracteres"
+              />
+            </div>
+
+            <div>
+              <Label>Confirmar Senha *</Label>
+              <Input
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                placeholder="Digite a senha novamente"
+              />
+            </div>
+          </div>
         );
+
       case 2:
         return (
-          <CompanyDataStep
-            formData={formData}
-            errors={step2Errors}
-            onChange={updateFormData}
-          />
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Building className="text-primary" size={20} />
+                <h3 className="text-xl font-semibold">Dados da Empresa</h3>
+              </div>
+              <p className="text-muted-foreground">Conte-nos sobre sua organização</p>
+            </div>
+
+            <div>
+              <Label>Nome da Empresa *</Label>
+              <Input
+                value={formData.companyName}
+                onChange={(e) => updateFormData('companyName', e.target.value)}
+                placeholder="Nome da sua empresa"
+              />
+            </div>
+
+            <div>
+              <Label>Tamanho da Empresa *</Label>
+              <Select onValueChange={(value) => updateFormData('companySize', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tamanho" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-10">1-10 funcionários</SelectItem>
+                  <SelectItem value="11-50">11-50 funcionários</SelectItem>
+                  <SelectItem value="51-200">51-200 funcionários</SelectItem>
+                  <SelectItem value="201-500">201-500 funcionários</SelectItem>
+                  <SelectItem value="500+">500+ funcionários</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Seu Cargo *</Label>
+              <Input
+                value={formData.position}
+                onChange={(e) => updateFormData('position', e.target.value)}
+                placeholder="Ex: Gerente de Eventos"
+              />
+            </div>
+
+            <div>
+              <Label>Website</Label>
+              <Input
+                value={formData.website}
+                onChange={(e) => updateFormData('website', e.target.value)}
+                placeholder="https://suaempresa.com"
+              />
+            </div>
+          </div>
         );
+
       case 3:
         return (
-          <InviteCollaboratorsStep tenantSlug={formData.slug} />
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Zap className="text-primary" size={20} />
+                <h3 className="text-xl font-semibold">Sobre seus Eventos</h3>
+              </div>
+              <p className="text-muted-foreground">Ajude-nos a personalizar sua experiência</p>
+            </div>
+
+            <div>
+              <Label>Tipos de Eventos *</Label>
+              <Select onValueChange={(value) => updateFormData('eventTypes', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo principal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="corporativo">Eventos Corporativos</SelectItem>
+                  <SelectItem value="feiras">Feiras e Exposições</SelectItem>
+                  <SelectItem value="congressos">Congressos e Conferências</SelectItem>
+                  <SelectItem value="workshops">Workshops e Treinamentos</SelectItem>
+                  <SelectItem value="sociais">Eventos Sociais</SelectItem>
+                  <SelectItem value="esportivos">Eventos Esportivos</SelectItem>
+                  <SelectItem value="outros">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Eventos por Ano *</Label>
+              <Select onValueChange={(value) => updateFormData('eventsPerYear', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Quantos eventos você organiza?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-5">1-5 eventos</SelectItem>
+                  <SelectItem value="6-10">6-10 eventos</SelectItem>
+                  <SelectItem value="11-20">11-20 eventos</SelectItem>
+                  <SelectItem value="20+">Mais de 20 eventos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Média de Visitantes *</Label>
+              <Select onValueChange={(value) => updateFormData('avgVisitors', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Média de participantes por evento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0-100">Até 100 pessoas</SelectItem>
+                  <SelectItem value="101-500">101-500 pessoas</SelectItem>
+                  <SelectItem value="501-1000">501-1.000 pessoas</SelectItem>
+                  <SelectItem value="1001-5000">1.001-5.000 pessoas</SelectItem>
+                  <SelectItem value="5000+">Mais de 5.000 pessoas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         );
+
       default:
         return null;
     }
   };
 
-  const getStepValid = () => {
-    switch (currentStep) {
-      case 1:
-        return step1Valid;
-      case 2:
-        return step2Valid;
-      case 3:
-        return true; // Step 3 is always valid (optional invites)
-      default:
-        return false;
-    }
-  };
-
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Left Sidebar */}
-      <div className="w-full md:w-2/5 bg-gradient-to-br from-blue-700 to-blue-400 text-white p-8 flex flex-col justify-between relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+    <div className="min-h-screen flex flex-col md:flex-row tech-grid">
+      {/* Left side - Brand */}
+      <div className="legal-gradient-bg w-full md:w-2/5 text-white p-8 flex flex-col justify-between relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 tech-float"></div>
         
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
             <h1 className="text-4xl font-black">EVENTRIX™</h1>
           </div>
           <div className="flex items-center gap-1 mb-4">
-            <Zap size={12} className="text-white" />
+            <Zap size={12} className="text-secondary" />
             <span className="text-sm font-semibold text-white/90">Powered by LEGAL AI</span>
           </div>
-          <p className="text-white/80 text-lg mb-8">Crie sua conta e comece seu teste gratuito</p>
+          <p className="text-white/80 text-lg mb-8">Comece seu teste gratuito de 7 dias</p>
 
-          <StepIndicator currentStep={currentStep} completedSteps={completedSteps} />
+          {/* Progress Steps */}
+          <div className="space-y-4 mb-8">
+            {[
+              { step: 1, title: "Dados Pessoais", desc: "Informações básicas" },
+              { step: 2, title: "Empresa", desc: "Sobre sua organização" },
+              { step: 3, title: "Eventos", desc: "Tipo de eventos que organiza" }
+            ].map((item) => (
+              <div key={item.step} className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                  currentStep >= item.step 
+                    ? 'bg-secondary text-white' 
+                    : 'bg-white/20 text-white/60'
+                }`}>
+                  {currentStep > item.step ? <Check size={16} /> : item.step}
+                </div>
+                <div>
+                  <div className={`font-medium ${currentStep >= item.step ? 'text-white' : 'text-white/60'}`}>
+                    {item.title}
+                  </div>
+                  <div className="text-sm text-white/60">{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="hidden md:block text-sm text-white/70 relative z-10">
@@ -239,17 +309,17 @@ const Register = () => {
         </div>
       </div>
 
-      {/* Right Content */}
+      {/* Right side - Form */}
       <div className="w-full md:w-3/5 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-lg">
-          <div className="bg-card p-8 rounded-lg border shadow-lg">
+          <div className="tech-card p-8">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-2">
-                Criar <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Conta</span>
+                Criar <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Conta</span>
               </h2>
               <p className="text-muted-foreground">Passo {currentStep} de 3</p>
-              <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mt-4">
-                ✨ 7 dias grátis
+              <div className="tech-badge tech-glow mt-4">
+                <span>✨ 7 dias grátis</span>
               </div>
             </div>
 
@@ -265,14 +335,21 @@ const Register = () => {
               
               <div className="flex-1" />
 
-              <Button 
-                onClick={nextStep} 
-                disabled={loading || !getStepValid()}
-                className="bg-primary hover:bg-primary/90 flex items-center gap-2"
-              >
-                {loading ? 'Carregando...' : currentStep === 3 ? 'Finalizar' : 'Próximo'}
-                {!loading && <ArrowRight size={16} />}
-              </Button>
+              {currentStep < 3 ? (
+                <Button onClick={nextStep} className="tech-button flex items-center gap-2">
+                  Próximo
+                  <ArrowRight size={16} />
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={loading}
+                  className="tech-button flex items-center gap-2"
+                >
+                  {loading ? 'Criando conta...' : 'Criar Conta'}
+                  {!loading && <ArrowRight size={16} />}
+                </Button>
+              )}
             </div>
 
             <div className="mt-6 text-center">
