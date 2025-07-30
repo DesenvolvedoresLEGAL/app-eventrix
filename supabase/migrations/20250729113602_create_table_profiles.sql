@@ -6,7 +6,7 @@
 
 BEGIN;
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id uuid NOT NULL,                                                     -- PK vindo de auth.users
+  id uuid NOT NULL DEFAULT gen_random_uuid(),                                                     -- PK vindo de auth.users
   first_name character varying(100) NOT NULL,                                 -- primeiro nome
   last_name character varying(100) NOT NULL,                                 -- ultimo nome
   full_name character varying(200) NOT NULL DEFAULT '',
