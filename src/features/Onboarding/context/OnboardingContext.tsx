@@ -183,7 +183,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const slug = generateSlug(formData.razaoSocial);
 
       const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + 30);
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
 
       const tenantData: TenantInsert = {
         slug,
