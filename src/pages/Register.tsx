@@ -4,7 +4,7 @@ import React from "react";
 
 const Teste = () => (
   <div className="min-h-screen gap-5 grid grid-cols-5 items-center justify-center bg-muted">
-      <div className="legal-gradient-bg h-full w-full md:w-1/2 text-white p-8 flex flex-col justify-between relative overflow-hidden col-span-2">
+      <div className="legal-gradient-bg h-full w-full text-white p-8 flex flex-col justify-between relative overflow-hidden col-span-2">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 tech-float"></div>
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
