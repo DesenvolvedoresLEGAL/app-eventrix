@@ -52,7 +52,7 @@ const Teste = () => (
         </div>
       </div>
 
-    <div className="p-10 w-full h-full col-span-3">
+    <div className="w-full h-full col-span-3">
       <EnterpriseOnboardWizardPage />
     </div>
   </div>
