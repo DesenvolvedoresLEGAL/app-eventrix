@@ -48,6 +48,11 @@ import HeatmapAI from "./pages/HeatmapAI";
 import DynamicPricing from "./pages/DynamicPricing";
 import LegalAI from "./pages/LegalAI";
 import Teste from './pages/Test';
+import UserRegistrationPage from './pages/UserRegistration';
+import TenantRegistrationPage from './pages/TenantRegistration';
+import PlanSelectionPage from './pages/PlanSelectionPage';
+import MagicLinkInvitePage from './pages/MagicLinkInvite';
+import TenantDashboardPage from './pages/TenantDashboardFeature';
 
 const queryClient = new QueryClient();
 
@@ -107,6 +112,11 @@ const App = () => (
           <Route path="/heatmap" element={<HeatmapAI />} />
           <Route path="/dynamic-pricing" element={<DynamicPricing />} />
           <Route path="/legal-ai" element={<LegalAI />} />
+          <Route path="/user-registration" element={<UserRegistrationPage />} />
+          <Route path="/tenant-registration" element={<TenantRegistrationPage />} />
+          <Route path="/plan-selection" element={<PlanSelectionPage />} />
+          <Route path="/magic-link" element={<MagicLinkInvitePage />} />
+          <Route path="/tenant/:tenantId/dashboard" element={<TenantDashboardPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
