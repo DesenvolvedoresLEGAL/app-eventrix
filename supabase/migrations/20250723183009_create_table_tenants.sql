@@ -7,7 +7,7 @@
 BEGIN;
 -- Main Tenants Table (Brazilian Companies Only)
 CREATE TABLE tenants (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     slug VARCHAR(50) NOT NULL UNIQUE,
     
     -- Brazilian Organization Data

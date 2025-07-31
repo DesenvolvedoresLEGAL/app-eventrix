@@ -3,7 +3,7 @@
 
 BEGIN;
 CREATE TABLE tenant_documents (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     document_type tenant_document_type NOT NULL,
     document_name VARCHAR(200) NOT NULL,

@@ -7,7 +7,7 @@
 BEGIN;
 -- Brazilian States (Estados Brasileiros)
 CREATE TABLE brazilian_states (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     code VARCHAR(2) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     region VARCHAR(20) NOT NULL,
