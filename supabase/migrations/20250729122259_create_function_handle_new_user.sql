@@ -13,7 +13,6 @@ BEGIN
     ) VALUES (
         NEW.id,
         COALESCE(NEW.email, ''),
-        COALESCE(NEW.raw_user_meta_data->>'email', ''),
         COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
         COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
         COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
