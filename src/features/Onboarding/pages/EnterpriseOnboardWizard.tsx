@@ -325,24 +325,29 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 </select>
               </div>
               <div>
-                  <label htmlFor="organizer-type" className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo de Organizador *
-                  </label>
-                  <select
-                    id="organizer-type"
-                    value={formData.organizerTypeId}
-                    onChange={(e) => updateFormData('organizerTypeId', e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                    required
-                  >
-                    <option value="">Selecione o tipo</option>
-                    {organizerTypes.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <label
+                  htmlFor="organizer-type"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Tipo de Organizador *
+                </label>
+                <select
+                  id="organizer-type"
+                  value={formData.organizerTypeId}
+                  onChange={(e) =>
+                    updateFormData("organizerTypeId", e.target.value)
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                  required
+                >
+                  <option value="">Selecione o tipo</option>
+                  {organizerTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div>
               <label
@@ -695,6 +700,26 @@ const EnterpriseOnboardWizard: React.FC = () => {
               </Button>
             </div>
           </form>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Já possui uma conta?{" "}
+              <a
+                href="/login"
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                Fazer login
+              </a>
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Quer conhecer nossos planos?{" "}
+              <a
+                href="/plans"
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                Ver planos
+              </a>
+            </p>
+          </div>
         </div>
 
         {/* Summary (visible in last step) */}
