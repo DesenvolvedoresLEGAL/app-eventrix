@@ -54,3 +54,7 @@ Contribuições são bem-vindas!
 
 ## Licença
 Este projeto está licenciado sob a [Licença MIT](LICENSE).
+
+## Documentação
+
+Consulte [docs/EVENTRIX.md](docs/EVENTRIX.md) para uma visão geral completa, instruções de instalação e guia de uso.
