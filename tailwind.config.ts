@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { Config } from "tailwindcss";
 import animatePlugin from "tailwindcss-animate";
 
