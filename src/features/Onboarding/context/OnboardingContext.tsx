@@ -153,7 +153,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const nextStep = () => {
-    if (currentStep < 5) {
+    if (currentStep < 4) {
       setCurrentStep(step => step + 1);
     }
   };
