@@ -47,6 +47,10 @@ import AIValidator from "./pages/AIValidator";
 import HeatmapAI from "./pages/HeatmapAI";
 import DynamicPricing from "./pages/DynamicPricing";
 import LegalAI from "./pages/LegalAI";
+import UserOnboarding from "./pages/UserOnboarding";
+import TenantOnboarding from "./pages/TenantOnboarding";
+import TenantDashboard from "./pages/TenantDashboard";
+import PlanSelectionPage from "./pages/PlanSelection";
 import Teste from './pages/Test';
 
 const queryClient = new QueryClient();
@@ -64,6 +68,9 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/data-test" element={<Teste />} />
           <Route path="/plans" element={<Plans />} />
+          <Route path="/onboarding/user" element={<UserOnboarding />} />
+          <Route path="/onboarding/tenant" element={<TenantOnboarding />} />
+          <Route path="/onboarding/plan" element={<PlanSelectionPage />} />
           <Route
             path="/dashboard"
             element={
@@ -72,6 +79,7 @@ const App = () => (
               </PrivateRoute>
             }
           />
+          <Route path="/tenant-dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/new" element={<NewEvent />} />
           <Route path="/exhibitors" element={<Exhibitors />} />

@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS "public"."events" (
 ALTER TABLE "public"."events" OWNER TO "postgres";
 COMMENT ON COLUMN "public"."events"."category" IS 'Categoria do evento';
 CREATE TABLE IF NOT EXISTS "public"."profiles" (
-    "uuid" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "uuid" "uuid" DEFAULT "extensions"."gen_random_uuid"() NOT NULL,
     "auth_user_id" "uuid" NOT NULL,
     "first_name" "text" NOT NULL,
     "last_name" "text" NOT NULL,

@@ -1,7 +1,10 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import supabase from '@/utils/supabase/client'
 import { Tables, TablesInsert } from '@/utils/supabase/types'
 import { signUp } from '@/services/authService'
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 // Supabase table type aliases
 export type BrazilianState = Tables<'brazilian_states'>;
@@ -20,23 +23,22 @@ export interface FormData {
   razaoSocial: string;
   nomeFantasia: string;
   cnpj: string;
-  inscricaoEstadual: string;
+  inscricaoEstadual?: string;
   cnaePrincipal: string;
   segmentoId: string;
   organizerTypeId: string;
   contactEmail: string;
-  phone: string;
-  whatsapp: string;
-  website: string;
+  phone?: string;
+  whatsapp?: string;
+  website?: string;
   logradouro: string;
-  numero: string;
-  complemento: string;
+  numero?: string;
+  complemento?: string;
   bairro: string;
   cep: string;
   estadoId: string;
   cidade: string;
 }
-
 interface OnboardingContextValue {
   currentStep: number;
   isSubmitting: boolean;
@@ -62,6 +64,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [defaultPlanId, setDefaultPlanId] = useState<string>();
   const [defaultStatusId, setDefaultStatusId] = useState<string>();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
@@ -120,10 +123,9 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           .order('price_monthly', { ascending: true });
         if (plansData) {
           setPlans(plansData);
-          const trialPlan = plansData.filter(p => p.code === 'trial' || p.code === 'free');
-          if (trialPlan) setDefaultPlanId(trialPlan[0].id);
+          const trialPlan = plansData.find(p => p.code === 'trial' || p.code === 'free');
+          if (trialPlan) setDefaultPlanId(trialPlan.id);
         }
-
         const { data: statusData } = await supabase
           .from('tenant_statuses')
           .select('id')
@@ -153,7 +155,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const nextStep = () => {
-    if (currentStep < 5) {
+    if (currentStep < 4) {
       setCurrentStep(step => step + 1);
     }
   };
@@ -167,8 +169,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const submit = async () => {
     setIsSubmitting(true);
     try {
-      console.log(`FORM DATA: ${JSON.stringify(formData)}`);
-
       const user = await signUp({
         email: formData.email,
         password: formData.password,
@@ -244,12 +244,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       if (tenantError) throw tenantError;
 
-      if (tenantResult) {
-        await supabase.from('tenants').insert([tenantData]);
-      }
-
-      alert('Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.');
-      window.location.href = '/login';
+      toast.success('Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.');
+      navigate('/login');
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('Erro ao realizar cadastro. Verifique os dados e tente novamente.');

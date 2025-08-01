@@ -7,7 +7,7 @@
 BEGIN;
 -- Plan Change History
 CREATE TABLE tenant_plan_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     from_plan_id UUID REFERENCES subscription_plans(id),
     to_plan_id UUID NOT NULL REFERENCES subscription_plans(id),
