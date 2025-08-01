@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ActivityFormProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activity?: any;
   onClose: () => void;
 }
