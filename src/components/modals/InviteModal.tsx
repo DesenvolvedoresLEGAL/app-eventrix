@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,7 +11,7 @@ const inviteSchema = z.object({
   email: z.string().email('Email inválido'),
 })
 
-interface InviteForm extends z.infer<typeof inviteSchema> {}
+type InviteForm = z.infer<typeof inviteSchema>;
 
 const InviteModal: React.FC = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm<InviteForm>({ resolver: zodResolver(inviteSchema) })
