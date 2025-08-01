@@ -51,7 +51,6 @@ import UserOnboarding from "./pages/UserOnboarding";
 import TenantOnboarding from "./pages/TenantOnboarding";
 import TenantDashboard from "./pages/TenantDashboard";
 import PlanSelectionPage from "./pages/PlanSelection";
-import AuthOnboarding from "./pages/AuthOnboarding";
 import Teste from './pages/Test';
 
 const queryClient = new QueryClient();
@@ -68,7 +67,6 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/data-test" element={<Teste />} />
-          <Route path="/auth-onboarding" element={<AuthOnboarding />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/onboarding/user" element={<UserOnboarding />} />
           <Route path="/onboarding/tenant" element={<TenantOnboarding />} />
