@@ -301,47 +301,49 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 className="w-full"
               />
             </div>
-            <div>
-              <label
-                htmlFor="segmento"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Segmento *
-              </label>
-              <select
-                id="segmento"
-                value={formData.segmentoId}
-                onChange={(e) => updateFormData("segmentoId", e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                required
-              >
-                <option value="">Selecione o segmento</option>
-                {segments.map((segment) => (
-                  <option key={segment.id} value={segment.id}>
-                    {segment.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {/* <div>
-                <label htmlFor="organizer-type" className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo de Organizador *
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="segmento"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Segmento *
                 </label>
                 <select
-                  id="organizer-type"
-                  value={formData.organizerTypeId}
-                  onChange={(e) => updateFormData('organizerTypeId', e.target.value)}
+                  id="segmento"
+                  value={formData.segmentoId}
+                  onChange={(e) => updateFormData("segmentoId", e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
                   required
                 >
-                  <option value="">Selecione o tipo</option>
-                  {organizerTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
+                  <option value="">Selecione o segmento</option>
+                  {segments.map((segment) => (
+                    <option key={segment.id} value={segment.id}>
+                      {segment.name}
                     </option>
                   ))}
                 </select>
-              </div> */}
+              </div>
+              <div>
+                  <label htmlFor="organizer-type" className="block text-sm font-medium text-gray-700 mb-1">
+                    Tipo de Organizador *
+                  </label>
+                  <select
+                    id="organizer-type"
+                    value={formData.organizerTypeId}
+                    onChange={(e) => updateFormData('organizerTypeId', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                    required
+                  >
+                    <option value="">Selecione o tipo</option>
+                    {organizerTypes.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+            </div>
             <div>
               <label
                 htmlFor="nome-fantasia"
