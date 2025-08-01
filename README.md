@@ -4,6 +4,8 @@
 
 **URL**: https://lovable.dev/projects/c1b9b1d7-08e2-410c-b3c8-d7b4307f86d4
 
+Para instruções detalhadas de uso do sistema, consulte o [Guia do Usuário](docs/guia_do_usuario_eventrix.md).
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
