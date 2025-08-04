@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import {
   OnboardingProvider,
   useOnboarding,
-} from "../context/OnboardingContext";
+} from "@/features/onboarding/context/OnboardingContext";
 
 interface StepIndicatorProps {
   step: number;
@@ -53,7 +53,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = React.memo(
             {title}
           </span>
         </div>
-        {step < 4 && (
+        {step < 3 && (
           <ChevronRight
             className={cn(
               "w-6 h-6 mx-6",
@@ -86,7 +86,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = React.useState("");
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       nextStep();
     } else {
       submit();
@@ -139,8 +139,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
         title: "Dados da Empresa",
         icon: <Building2 className="w-6 h-6" />,
       },
-      { number: 3, title: "Contato", icon: <Phone className="w-6 h-6" /> },
-      { number: 4, title: "Localização", icon: <MapPin className="w-6 h-6" /> },
+      { number: 3, title: "Localização", icon: <MapPin className="w-6 h-6" /> },
     ],
     []
   );
@@ -209,6 +208,24 @@ const EnterpriseOnboardWizard: React.FC = () => {
               <p className="text-xs text-gray-500 mt-1">
                 Este será seu email de acesso ao sistema
               </p>
+            </div>
+            <div>
+              <label
+                htmlFor="whatsapp"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                WhatsApp
+              </label>
+              <Input
+                type="text"
+                id="whatsapp"
+                value={formData.whatsapp}
+                onChange={(e) =>
+                  updateFormData("whatsapp", formatPhone(e.target.value))
+                }
+                placeholder="(00) 00000-0000"
+                className="w-full"
+              />
             </div>
             <div>
               <label
@@ -301,53 +318,27 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 className="w-full"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="segmento"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Segmento *
-                </label>
-                <select
-                  id="segmento"
-                  value={formData.segmentoId}
-                  onChange={(e) => updateFormData("segmentoId", e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                  required
-                >
-                  <option value="">Selecione o segmento</option>
-                  {segments.map((segment) => (
-                    <option key={segment.id} value={segment.id}>
-                      {segment.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="organizer-type"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Tipo de Organizador *
-                </label>
-                <select
-                  id="organizer-type"
-                  value={formData.organizerTypeId}
-                  onChange={(e) =>
-                    updateFormData("organizerTypeId", e.target.value)
-                  }
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                  required
-                >
-                  <option value="">Selecione o tipo</option>
-                  {organizerTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label
+                htmlFor="segmento"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Segmento principal *
+              </label>
+              <select
+                id="segmento"
+                value={formData.segmentoId}
+                onChange={(e) => updateFormData("segmentoId", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                required
+              >
+                <option value="">Selecione o segmento</option>
+                {segments.map((segment) => (
+                  <option key={segment.id} value={segment.id}>
+                    {segment.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label
@@ -365,52 +356,6 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 className="w-full"
               />
             </div>
-            <div>
-              <label
-                htmlFor="inscricao-estadual"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Inscrição Estadual
-              </label>
-              <Input
-                type="text"
-                id="inscricao-estadual"
-                value={formData.inscricaoEstadual}
-                onChange={(e) =>
-                  updateFormData("inscricaoEstadual", e.target.value)
-                }
-                placeholder="Número da IE (opcional)"
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="cnae-principal"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                CNAE Principal
-              </label>
-              <Input
-                type="text"
-                id="cnae-principal"
-                value={formData.cnaePrincipal}
-                onChange={(e) =>
-                  updateFormData("cnaePrincipal", e.target.value)
-                }
-                placeholder="0000-0/00"
-                maxLength={10}
-                className="w-full"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Código Nacional de Atividade Econômica
-              </p>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-4">
             <div>
               <label
                 htmlFor="contact-email"
@@ -446,44 +391,10 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 className="w-full"
               />
             </div>
-            <div>
-              <label
-                htmlFor="whatsapp"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                WhatsApp
-              </label>
-              <Input
-                type="text"
-                id="whatsapp"
-                value={formData.whatsapp}
-                onChange={(e) =>
-                  updateFormData("whatsapp", formatPhone(e.target.value))
-                }
-                placeholder="(00) 00000-0000"
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="website"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Website
-              </label>
-              <Input
-                type="url"
-                id="website"
-                value={formData.website}
-                onChange={(e) => updateFormData("website", e.target.value)}
-                placeholder="https://www.empresa.com.br"
-                className="w-full"
-              />
-            </div>
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div className="space-y-4">
             <div>
@@ -692,7 +603,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Processando...
                   </>
-                ) : currentStep === 4 ? (
+                ) : currentStep === 3 ? (
                   "Finalizar Cadastro"
                 ) : (
                   "Próximo"
@@ -723,7 +634,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
         </div>
 
         {/* Summary (visible in last step) */}
-        {currentStep === 4 && (
+        {currentStep === 3 && (
           <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-blue-900 mb-4">
               Resumo do Cadastro
