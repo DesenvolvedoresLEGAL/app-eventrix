@@ -74,7 +74,6 @@ const EnterpriseOnboardWizard: React.FC = () => {
     isSubmitting,
     states,
     segments,
-    organizerTypes,
     plans,
     formData,
     nextStep,
