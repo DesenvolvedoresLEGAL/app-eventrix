@@ -10,7 +10,6 @@ import { useCNPJ } from "@/hooks/use-cnpj";
 // Supabase table type aliases
 export type BrazilianState = Tables<"brazilian_states">;
 export type BusinessSegment = Tables<"business_segments">;
-export type OrganizerType = Tables<"organizer_types">;
 export type SubscriptionPlan = Tables<"subscription_plans">;
 export type TenantInsert = TablesInsert<"tenants">;
 export type ProfileInsert = TablesInsert<"profiles">;
@@ -27,7 +26,6 @@ export interface FormData {
   inscricaoEstadual?: string;
   cnaePrincipal: string;
   segmentoId: string;
-  organizerTypeId: string;
   contactEmail: string;
   phone?: string;
   whatsapp?: string;
@@ -45,7 +43,6 @@ interface OnboardingContextValue {
   isSubmitting: boolean;
   states: BrazilianState[];
   segments: BusinessSegment[];
-  organizerTypes: OrganizerType[];
   plans: SubscriptionPlan[];
   formData: FormData;
   nextStep: () => void;
@@ -65,7 +62,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [states, setStates] = useState<BrazilianState[]>([]);
   const [segments, setSegments] = useState<BusinessSegment[]>([]);
-  const [organizerTypes, setOrganizerTypes] = useState<OrganizerType[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [defaultPlanId, setDefaultPlanId] = useState<string>();
   const [defaultStatusId, setDefaultStatusId] = useState<string>();
@@ -84,7 +80,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
     inscricaoEstadual: "",
     cnaePrincipal: "",
     segmentoId: "",
-    organizerTypeId: "",
     contactEmail: "",
     phone: "",
     whatsapp: "",
@@ -114,13 +109,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
           .eq("is_active", true)
           .order("sort_order");
         if (segmentsData) setSegments(segmentsData);
-
-        const { data: organizerData } = await supabase
-          .from("organizer_types")
-          .select("*")
-          .eq("is_active", true)
-          .order("sort_order");
-        if (organizerData) setOrganizerTypes(organizerData);
 
         const { data: plansData } = await supabase
           .from("subscription_plans")
@@ -160,7 +148,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
           updateFormData("bairro", data.bairro);
           updateFormData("cidade", data.cidade);
           updateFormData("estadoId", states.find(s => s.code === data.uf).id);
-          updateFormData("cep", data.cep);
+          updateFormData("cep", data.cep.replace('.', ''));
           updateFormData("razaoSocial", data.razao_social);
           updateFormData("nomeFantasia", data.nome_fantasia);
           updateFormData("contactEmail", data.email_contato);
@@ -224,7 +212,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
         nome_fantasia: formData.nomeFantasia || null,
         inscricao_estadual: formData.inscricaoEstadual || null,
         cnae_principal: formData.cnaePrincipal || null,
-        organizer_type_id: formData.organizerTypeId,
         primary_segment_id: formData.segmentoId,
         email_domain: formData.contactEmail.split("@")[1] || null,
         status_id: defaultStatusId,
@@ -295,7 +282,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
         isSubmitting,
         states,
         segments,
-        organizerTypes,
         plans,
         formData,
         nextStep,
