@@ -8,6 +8,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/receita': {
+        target: 'https://receitaws.com.br',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/receita/, ''),
+      }
+    }
   },
   plugins: [
     react(),
