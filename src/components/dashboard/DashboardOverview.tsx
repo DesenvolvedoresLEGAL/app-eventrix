@@ -1,12 +1,60 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import KpiCard from '../ui-custom/KpiCard';
 import ChartCard from '../ui-custom/ChartCard';
 import { Calendar, DollarSign, Users, Star, Zap, TrendingUp, Activity } from 'lucide-react';
+import supabase from '@/utils/supabase/client';
 
 const DashboardOverview = () => {
-  // Sample user data - in a real app, this would come from user context/auth
-  const userName = "Admin LEGAL";
+  const [error, setError]       = useState<string | null>(null)
+  const [userName, setUserName] = useState<string>('');
+
+    useEffect(() => {
+    let isMounted = true
+
+    async function loadProfile() {
+      try {
+        // 1. Obter usuário atual
+        const {
+          data: { user },
+          error: authError
+        } = await supabase.auth.getUser()
+        if (authError || !user) {
+          throw new Error('Não foi possível identificar usuário autenticado.')
+        }
+
+        // 2. Buscar apenas o campo necessário
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (profileError) {
+          throw new Error('Erro ao consultar perfil do usuário.')
+        }
+        if (!profile) {
+          throw new Error('Perfil de usuário não encontrado.')
+        }
+
+        // 3. Atualizar estado somente se componente montado
+        if (isMounted) {
+          setUserName(profile.full_name)
+        }
+      } catch (err) {
+        console.error(err)
+        if (isMounted) {
+          setError(err.message ?? 'Erro desconhecido')
+        }
+      }
+    }
+
+    loadProfile()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Sample data for charts
   const eventTrendData = [
@@ -36,7 +84,7 @@ const DashboardOverview = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between relative z-10">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Bem-vindo, <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{userName}</span>
+              Bem-vindo, <span className="bg-gradient-to-r animate-in animate-accordion-up from-primary to-secondary bg-clip-text text-transparent">{userName}</span>
             </h1>
             <p className="text-muted-foreground text-lg mb-4">Gerencie seus eventos com tecnologia EVENTRIX</p>
             <div className="tech-badge tech-glow">
