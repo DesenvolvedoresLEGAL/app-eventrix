@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import {
   OnboardingProvider,
   useOnboarding,
-} from "@/features/onboarding/context/OnboardingContext";
+} from "@/features/Onboarding/context/OnboardingContext";
 
 interface StepIndicatorProps {
   step: number;
