@@ -5,7 +5,7 @@ import supabase from '@/utils/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
 
-interface Tenant {
+export interface Tenant {
   id: string
   slug: string
   razao_social: string
