@@ -13,7 +13,7 @@ import { OnboardingSteps } from '../components/OnboardingSteps'
 
 function InviteAcceptPageContent() {
   const [searchParams] = useSearchParams()
-  const { signInWithOtp } = useAuth()
+  const { sendMagicLink } = useAuth()
   const { state, dispatch } = useInviteOnboarding()
   
   const inviteToken = searchParams.get('invite_id')
@@ -33,10 +33,7 @@ function InviteAcceptPageContent() {
     // const handleMagicLinkAuth = async () => {
     //   if (inviteToken && state.invite) {
     //     try {
-    //       await signInWithOtp({ 
-    //         email: state.invite.email,
-    //         options: { shouldCreateUser: true }
-    //       })
+    //       await sendMagicLink(state.invite.email)
     //     } catch (error) {
     //       console.error('Erro na autenticação Magic Link:', error)
     //       dispatch({ type: 'SET_ERROR', payload: 'Erro na autenticação. Tente novamente.' })
@@ -44,7 +41,7 @@ function InviteAcceptPageContent() {
     //   }
     // }
     // handleMagicLinkAuth()
-  }, [inviteToken, state.invite, dispatch])
+  }, [inviteToken, state.invite, dispatch, sendMagicLink])
 
   const renderContent = () => {
     // Step 3: Success
@@ -66,10 +63,6 @@ function InviteAcceptPageContent() {
 
     // Step 2: Form to complete profile
     if (state.currentStep === 2 && state.invite && !state.error) {
-      // Auto-advance to step 2 when invite is valid
-      if (state.currentStep === 1) {
-        dispatch({ type: 'SET_CURRENT_STEP', payload: 2 })
-      }
       return <InviteAcceptForm />
     }
 
