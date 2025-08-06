@@ -14,18 +14,11 @@ const inviteSchema = z.object({
   email: z.string().email('Email inválido'),
 })
 
-type InviteForm = z.infer<typeof inviteSchema>;
+type InviteForm = z.infer<typeof inviteSchema>
 
-const INVITATIONS_TABLE = 'invitations' as unknown as keyof Database['public']['Tables']
+const INVITATIONS_TABLE: keyof Database['public']['Tables'] = 'invitations'
 
-interface InvitationInsert {
-  email: string
-  token: string
-  role: string
-  tenant_id: string
-  invited_by: string
-  expires_at: string
-}
+type InvitationInsert = Database['public']['Tables']['invitations']['Insert']
 
 const InviteModal: React.FC = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm<InviteForm>({ resolver: zodResolver(inviteSchema) })
@@ -76,7 +69,7 @@ const InviteModal: React.FC = () => {
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
       const { error: insertError } = await supabase
-        .from<InvitationInsert>(INVITATIONS_TABLE)
+        .from(INVITATIONS_TABLE)
         .insert({
           email,
           token,
@@ -84,7 +77,7 @@ const InviteModal: React.FC = () => {
           tenant_id: tenant.id,
           invited_by: profile.id,
           expires_at: expiresAt
-        })
+        } as InvitationInsert)
 
       if (insertError) throw insertError
 
