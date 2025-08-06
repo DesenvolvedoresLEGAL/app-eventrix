@@ -1,15 +1,15 @@
 
 export interface InviteData {
   id: string
-  email: string
   tenant_id: string
-  role: 'staff' | 'manager' | 'admin'
+  email: string
+  role: string
+  token: string
   status: 'pending' | 'accepted' | 'revoked' | 'expired'
   expires_at: string
-  invited_by: string
-  created_at: string
-  accepted_at?: string
-  revoked_at?: string
+  invited_by: string | null
+  created_at: string | null
+  accepted_at?: string | null
 }
 
 export interface TenantBranding {

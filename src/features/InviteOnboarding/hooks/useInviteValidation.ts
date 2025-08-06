@@ -2,6 +2,7 @@
 import { useEffect } from 'react'
 import { useInviteOnboarding } from '../context/InviteOnboardingContext'
 import { InviteData, TenantBranding } from '../types/invite.types'
+import supabase from '@/utils/supabase/client'
 
 export function useInviteValidation(token: string | null) {
   const { dispatch } = useInviteOnboarding()
@@ -14,53 +15,57 @@ export function useInviteValidation(token: string | null) {
       dispatch({ type: 'SET_ERROR', payload: null })
 
       try {
-        // TODO: Implementar consulta à tabela invites
-        // const { data: invite, error } = await supabase
-        //   .from('invites')
-        //   .select(`
-        //     *,
-        //     tenants (
-        //       id,
-        //       nome_fantasia,
-        //       razao_social,
-        //       logo_url,
-        //       primary_color,
-        //       secondary_color,
-        //       font_family
-        //     )
-        //   `)
-        //   .eq('id', token)
-        //   .eq('status', 'pending')
-        //   .gt('expires_at', new Date().toISOString())
-        //   .single()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const supabaseClient = supabase as any
+        const { data, error } = await supabaseClient
+          .from('invites')
+          .select(
+            `id, tenant_id, email, role, token, status, expires_at, invited_by, created_at, accepted_at,
+            tenants!inner(
+              id,
+              nome_fantasia,
+              razao_social,
+              logo_url,
+              primary_color,
+              secondary_color,
+              font_family
+            )`
+          )
+          .eq('token', token)
+          .eq('status', 'pending')
+          .gt('expires_at', new Date().toISOString())
+          .single()
 
-        // Simulação para desenvolvimento
-        const mockInvite: InviteData = {
-          id: token,
-          email: 'usuario@example.com',
-          tenant_id: 'tenant-123',
-          role: 'staff',
-          status: 'pending',
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          invited_by: 'owner-123',
-          created_at: new Date().toISOString(),
+        if (error || !data) {
+          throw error || new Error('Convite inválido ou expirado')
         }
 
-        const mockTenant: TenantBranding = {
-          id: 'tenant-123',
-          nome_fantasia: 'Eventrix Demo',
-          razao_social: 'Eventrix Tecnologia Ltda',
-          primary_color: '#4D2BFB',
-          secondary_color: '#03F9FF',
-          font_family: 'Neue Haas Unica',
+        const invite: InviteData = {
+          id: data.id,
+          tenant_id: data.tenant_id,
+          email: data.email,
+          role: data.role,
+          token: data.token,
+          status: data.status,
+          expires_at: data.expires_at,
+          invited_by: data.invited_by,
+          created_at: data.created_at,
+          accepted_at: data.accepted_at ?? null,
         }
 
-        // Simular delay da rede
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const tenantData = data.tenants
+        const tenant: TenantBranding = {
+          id: tenantData.id,
+          nome_fantasia: tenantData.nome_fantasia,
+          razao_social: tenantData.razao_social,
+          logo_url: tenantData.logo_url ?? undefined,
+          primary_color: tenantData.primary_color,
+          secondary_color: tenantData.secondary_color,
+          font_family: tenantData.font_family,
+        }
 
-        dispatch({ type: 'SET_INVITE', payload: mockInvite })
-        dispatch({ type: 'SET_TENANT', payload: mockTenant })
-
+        dispatch({ type: 'SET_INVITE', payload: invite })
+        dispatch({ type: 'SET_TENANT', payload: tenant })
       } catch (error) {
         console.error('Erro ao validar convite:', error)
         dispatch({ type: 'SET_ERROR', payload: 'Convite inválido ou expirado' })
