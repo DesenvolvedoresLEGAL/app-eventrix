@@ -2,6 +2,13 @@ import React, { useMemo } from "react";
 import { ChevronRight, Building2, User, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "src/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   OnboardingProvider,
@@ -416,20 +423,25 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 >
                   Estado *
                 </label>
-                <select
-                  id="estado"
+                <Select
                   value={formData.estadoId}
-                  onChange={(e) => updateFormData("estadoId", e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                  onValueChange={(value) => updateFormData("estadoId", value)}
                   disabled
                 >
-                  <option value="">Selecione o estado</option>
-                  {states.map((state) => (
-                    <option key={state.id} value={state.id}>
-                      {state.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger
+                    id="estado"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                  >
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state.id} value={state.id}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div>
