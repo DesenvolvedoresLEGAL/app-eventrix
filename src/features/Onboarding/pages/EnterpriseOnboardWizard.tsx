@@ -136,7 +136,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
     if (digits.length !== 14) return;
     try {
       const data = await fetchCompanyByCnpj(formData.cnpj);
-      updateFormData("razaoSocial", data.razao_social);
+      if (formData.razaoSocial.length === 0) updateFormData("razaoSocial", data.razao_social);
       updateFormData("nomeFantasia", data.nome_fantasia || "");
       updateFormData("cep", formatCEP(data.cep));
       updateFormData("logradouro", data.logradouro);
@@ -377,7 +377,23 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 type="text"
                 id="nome-fantasia"
                 value={formData.nomeFantasia}
-                readOnly
+                onChange={(e) => updateFormData("nomeFantasia", e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="website"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Website
+              </label>
+              <Input
+                type="text"
+                id="website"
+                value={formData.website}
+                onChange={(e) => updateFormData("website", e.target.value)}
+                placeholder="https://www.empresa.com"
                 className="w-full"
               />
             </div>
@@ -521,22 +537,6 @@ const EnterpriseOnboardWizard: React.FC = () => {
                   updateFormData("phone", formatPhone(e.target.value))
                 }
                 placeholder="(00) 0000-0000"
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="website"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Website
-              </label>
-              <Input
-                type="text"
-                id="website"
-                value={formData.website}
-                onChange={(e) => updateFormData("website", e.target.value)}
-                placeholder="https://www.empresa.com"
                 className="w-full"
               />
             </div>
