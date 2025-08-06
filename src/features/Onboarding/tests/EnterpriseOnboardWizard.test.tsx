@@ -3,58 +3,67 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import EnterpriseOnboardWizardPage from '@/features/Onboarding/pages/EnterpriseOnboardWizard';
 
-// Supabase mocks
-const mockSignUp = jest.fn().mockResolvedValue({ data: { user: { id: 'user-id' } }, error: null });
-const mockProfilesInsert = jest.fn().mockResolvedValue({ data: [], error: null });
-const mockTenantsInsert = jest.fn().mockReturnValue({
-  select: jest.fn().mockReturnValue({
-    single: jest.fn().mockResolvedValue({ data: { id: 'tenant-id' }, error: null }),
-  }),
+let mockSignUp: jest.Mock;
+let mockProfilesInsert: jest.Mock;
+let mockTenantsInsert: jest.Mock;
+let mockFrom: any;
+const supabaseMock: any = {};
+
+jest.mock('react', () => {
+  const React = jest.requireActual('react');
+  return { ...React, default: React };
 });
 
-const mockFrom = jest.fn((table: string) => {
-  switch (table) {
-    case 'profiles':
-      return { insert: mockProfilesInsert } as any;
-    case 'tenants':
-      return { insert: mockTenantsInsert } as any;
-    case 'brazilian_states':
-      return {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [{ id: 'state-1', code: 'SP', name: 'São Paulo' }] }),
-      } as any;
-    case 'business_segments':
-      return {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [{ id: 'segment-1', name: 'Segmento 1' }] }),
-      } as any;
-    case 'subscription_plans':
-      return {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [{ id: 'plan-1', code: 'trial', price_monthly: 0 }] }),
-      } as any;
-    case 'tenant_statuses':
-      return {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: { id: 'status-1' } }),
-      } as any;
-    default:
-      return { select: jest.fn(), eq: jest.fn(), order: jest.fn(), insert: jest.fn() } as any;
-  }
+// Mock supabase client module directly to avoid import.meta usage
+jest.mock('@/utils/supabase/client', () => {
+  mockSignUp = jest.fn().mockResolvedValue({ data: { user: { id: 'user-id' } }, error: null });
+  mockProfilesInsert = jest.fn().mockResolvedValue({ data: [], error: null });
+  mockTenantsInsert = jest.fn().mockReturnValue({
+    select: jest.fn().mockReturnValue({
+      single: jest.fn().mockResolvedValue({ data: { id: 'tenant-id' }, error: null }),
+    }),
+  });
+  mockFrom = jest.fn((table: string) => {
+    switch (table) {
+      case 'profiles':
+        return { insert: mockProfilesInsert } as any;
+      case 'tenants':
+        return { insert: mockTenantsInsert } as any;
+      case 'brazilian_states':
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [{ id: 'state-1', code: 'SP', name: 'São Paulo' }] }),
+        } as any;
+      case 'business_segments':
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [{ id: 'segment-1', name: 'Segmento 1' }] }),
+        } as any;
+      case 'subscription_plans':
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          order: jest.fn().mockResolvedValue({ data: [{ id: 'plan-1', code: 'trial', price_monthly: 0 }] }),
+        } as any;
+      case 'tenant_statuses':
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          single: jest.fn().mockResolvedValue({ data: { id: 'status-1' } }),
+        } as any;
+      default:
+        return { select: jest.fn(), eq: jest.fn(), order: jest.fn(), insert: jest.fn() } as any;
+    }
+  });
+  const client = { auth: { signUp: mockSignUp }, from: mockFrom };
+  Object.assign(supabaseMock, client);
+  return { __esModule: true, default: client };
 });
 
-const supabaseMock = { auth: { signUp: mockSignUp }, from: mockFrom } as any;
-
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: () => supabaseMock,
-}));
-
+// Mock signUp service to use supabase mock and insert profile data
 jest.mock('@/services/authService', () => ({
   signUp: jest.fn(async ({ email, password, fullName, firstName, lastName, whatsapp }) => {
     await supabaseMock.auth.signUp({ email, password });
@@ -90,7 +99,12 @@ jest.mock('@/hooks/use-cnpj', () => ({
   useCNPJ: () => ({ getCompanyByCNPJ: mockGetCompany }),
 }));
 
-jest.mock('sonner', () => ({ toast: { success: jest.fn() } }));
+const mockToastSuccess = jest.fn();
+jest.mock('sonner', () => ({ toast: { success: mockToastSuccess } }));
+
+// Import component after mocks are set up
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const EnterpriseOnboardWizardPage = require('@/features/Onboarding/pages/EnterpriseOnboardWizard').default;
 
 test('fluxo feliz: registra usuário e tenant', async () => {
   const user = userEvent.setup();
@@ -117,7 +131,7 @@ test('fluxo feliz: registra usuário e tenant', async () => {
   cnpjInput.blur();
 
   await waitFor(() => expect(mockGetCompany).toHaveBeenCalled());
-  await waitFor(() => expect(screen.getByLabelText(/Razão Social/i)).toHaveValue('Empresa Exemplo'));
+  await waitFor(() => expect((screen.getByLabelText(/Razão Social/i) as HTMLInputElement).value).toBe('Empresa Exemplo'));
 
   const contactEmail = screen.getByLabelText(/Email de Contato/i);
   await user.clear(contactEmail);
@@ -148,5 +162,7 @@ test('fluxo feliz: registra usuário e tenant', async () => {
       contact_email: 'contato@empresa.com',
     }),
   ]);
+
+  expect(mockToastSuccess).toHaveBeenCalled();
 });
 
