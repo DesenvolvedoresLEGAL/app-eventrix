@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { createContext, useContext, useReducer, ReactNode, useMemo, useCallback } from 'react'
 import { InviteOnboardingState, InviteOnboardingAction } from '../types/invite.types'
