@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "src/components/ui/select";
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   OnboardingProvider,
@@ -178,39 +178,41 @@ const EnterpriseOnboardWizard: React.FC = () => {
       case 1:
         return (
           <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="first-name"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Primeiro Nome *
-              </label>
-              <Input
-                type="text"
-                id="first-name"
-                value={formData.firstName}
-                onChange={(e) => updateFormData("firstName", e.target.value)}
-                required
-                placeholder="Fulano"
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="last-name"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Último Nome *
-              </label>
-              <Input
-                type="text"
-                id="last-name"
-                value={formData.lastName}
-                onChange={(e) => updateFormData("lastName", e.target.value)}
-                required
-                placeholder="De Tal"
-                className="w-full"
-              />
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label
+                  htmlFor="first-name"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Primeiro Nome *
+                </label>
+                <Input
+                  type="text"
+                  id="first-name"
+                  value={formData.firstName}
+                  onChange={(e) => updateFormData("firstName", e.target.value)}
+                  required
+                  placeholder="Fulano"
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="last-name"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Último Nome *
+                </label>
+                <Input
+                  type="text"
+                  id="last-name"
+                  value={formData.lastName}
+                  onChange={(e) => updateFormData("lastName", e.target.value)}
+                  required
+                  placeholder="De Tal"
+                  className="w-full"
+                />
+              </div>
             </div>
             <div>
               <label
