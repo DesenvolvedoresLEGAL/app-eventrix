@@ -148,12 +148,12 @@ const EnterpriseOnboardWizard: React.FC = () => {
     () => [
       {
         number: 1,
-        title: "Acesso e CNPJ",
+        title: "Dados de usuário",
         icon: <User className="w-6 h-6" />,
       },
       {
         number: 2,
-        title: "Complemento",
+        title: "Dados da empresa",
         icon: <Building2 className="w-6 h-6" />,
       },
     ],
@@ -227,19 +227,19 @@ const EnterpriseOnboardWizard: React.FC = () => {
             </div>
             <div>
               <label
-                htmlFor="cnpj"
+                htmlFor="whatsapp"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                CNPJ *
+                WhatsApp
               </label>
               <Input
                 type="text"
-                id="cnpj"
-                value={formData.cnpj}
-                onChange={(e) => updateFormData("cnpj", formatCNPJ(e.target.value))}
-                onBlur={handleCnpjBlur}
-                required
-                placeholder="00.000.000/0000-00"
+                id="whatsapp"
+                value={formData.whatsapp}
+                onChange={(e) =>
+                  updateFormData("whatsapp", formatPhone(e.target.value))
+                }
+                placeholder="(00) 00000-0000"
                 className="w-full"
               />
             </div>
@@ -314,6 +314,48 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 className="w-full"
               />
             </div>
+            <div>
+              <label
+                htmlFor="segmento"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Segmento principal *
+              </label>
+              <select
+                id="segmento"
+                value={formData.segmentoId}
+                onChange={(e) => updateFormData("segmentoId", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                required
+              >
+                <option value="">Selecione o segmento</option>
+                {segments.map((segment) => (
+                  <option key={segment.id} value={segment.id}>
+                    {segment.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="cnpj"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                CNPJ da Empresa *
+              </label>
+              <Input
+                type="text"
+                id="cnpj"
+                value={formData.cnpj}
+                onChange={(e) => updateFormData("cnpj", formatCNPJ(e.target.value))}
+                onBlur={handleCnpjBlur}
+                required
+                placeholder="00.000.000/0000-00"
+                className="w-full"
+              />
+            </div>
+
             <div>
               <label
                 htmlFor="nome-fantasia"
@@ -434,28 +476,6 @@ const EnterpriseOnboardWizard: React.FC = () => {
             </div>
             <div>
               <label
-                htmlFor="segmento"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Segmento principal *
-              </label>
-              <select
-                id="segmento"
-                value={formData.segmentoId}
-                onChange={(e) => updateFormData("segmentoId", e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                required
-              >
-                <option value="">Selecione o segmento</option>
-                {segments.map((segment) => (
-                  <option key={segment.id} value={segment.id}>
-                    {segment.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
                 htmlFor="contact-email"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
@@ -486,24 +506,6 @@ const EnterpriseOnboardWizard: React.FC = () => {
                   updateFormData("phone", formatPhone(e.target.value))
                 }
                 placeholder="(00) 0000-0000"
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="whatsapp"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                WhatsApp
-              </label>
-              <Input
-                type="text"
-                id="whatsapp"
-                value={formData.whatsapp}
-                onChange={(e) =>
-                  updateFormData("whatsapp", formatPhone(e.target.value))
-                }
-                placeholder="(00) 00000-0000"
                 className="w-full"
               />
             </div>
