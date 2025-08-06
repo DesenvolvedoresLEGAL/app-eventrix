@@ -147,12 +147,12 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
           updateFormData("numero", data.numero);
           updateFormData("bairro", data.bairro);
           updateFormData("cidade", data.cidade);
-          updateFormData("estadoId", states.find(s => s.code === data.uf).id);
+          updateFormData("estadoId", states.find(s => s.code.includes(data.uf)).id);
           updateFormData("cep", data.cep.replace('.', ''));
           updateFormData("razaoSocial", data.razao_social);
           updateFormData("nomeFantasia", data.nome_fantasia);
           updateFormData("contactEmail", data.email_contato);
-          updateFormData("phone", data.telefone);
+          updateFormData("phone", data.telefone.split('/')[0]);
         })
         .catch((err) => {
           console.error("Erro ao buscar dados do CNPJ:", err);
