@@ -60,7 +60,10 @@ interface InviteOnboardingContextValue {
   goToStep: (step: number) => void
   validateCurrentStep: () => boolean
   canProceed: boolean
-  updateFormData: (field: keyof InviteOnboardingState['formData'], value: any) => void
+  updateFormData: <K extends keyof InviteOnboardingState['formData']>(
+    field: K,
+    value: InviteOnboardingState['formData'][K]
+  ) => void
 }
 
 const InviteOnboardingContext = createContext<InviteOnboardingContextValue | null>(null)
@@ -105,24 +108,32 @@ export function InviteOnboardingProvider({ children }: { children: ReactNode }) 
     }
   }, [])
 
-  const updateFormData = useCallback((field: keyof InviteOnboardingState['formData'], value: any) => {
-    dispatch({
-      type: 'SET_FORM_DATA',
-      payload: { [field]: value }
-    })
-
-    // Auto-gerar nome completo
-    if (field === 'firstName' || field === 'lastName') {
-      const firstName = field === 'firstName' ? value : state.formData.firstName
-      const lastName = field === 'lastName' ? value : state.formData.lastName
-      const fullName = `${firstName} ${lastName}`.trim()
-      
+  const updateFormData = useCallback(
+    <K extends keyof InviteOnboardingState['formData']>(
+      field: K,
+      value: InviteOnboardingState['formData'][K]
+    ) => {
       dispatch({
         type: 'SET_FORM_DATA',
-        payload: { fullName }
+        payload: { [field]: value }
       })
-    }
-  }, [state.formData.firstName, state.formData.lastName])
+
+      // Auto-gerar nome completo
+      if (field === 'firstName' || field === 'lastName') {
+        const firstName =
+          field === 'firstName' ? (value as string) : state.formData.firstName
+        const lastName =
+          field === 'lastName' ? (value as string) : state.formData.lastName
+        const fullName = `${firstName} ${lastName}`.trim()
+
+        dispatch({
+          type: 'SET_FORM_DATA',
+          payload: { fullName }
+        })
+      }
+    },
+    [state.formData.firstName, state.formData.lastName]
+  )
 
   const contextValue = useMemo(() => ({
     state,
