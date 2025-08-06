@@ -136,7 +136,8 @@ const EnterpriseOnboardWizard: React.FC = () => {
     if (digits.length !== 14) return;
     try {
       const data = await fetchCompanyByCnpj(formData.cnpj);
-      if (formData.razaoSocial.length === 0) updateFormData("razaoSocial", data.razao_social);
+      if (formData.razaoSocial.length === 0)
+        updateFormData("razaoSocial", data.razao_social);
       updateFormData("nomeFantasia", data.nome_fantasia || "");
       updateFormData("cep", formatCEP(data.cep));
       updateFormData("logradouro", data.logradouro);
@@ -310,6 +311,52 @@ const EnterpriseOnboardWizard: React.FC = () => {
           <div className="space-y-4">
             <div>
               <label
+                htmlFor="cnpj"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                CNPJ da Empresa *
+              </label>
+              <Input
+                type="text"
+                id="cnpj"
+                value={formData.cnpj}
+                onChange={(e) =>
+                  updateFormData("cnpj", formatCNPJ(e.target.value))
+                }
+                onBlur={handleCnpjBlur}
+                required
+                placeholder="00.000.000/0000-00"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="segmento"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Segmento principal *
+              </label>
+              <Select
+                value={formData.segmentoId}
+                onValueChange={(value) => updateFormData("segmentoId", value)}
+              >
+                <SelectTrigger
+                  id="segmento"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                >
+                  <SelectValue placeholder="Selecione o segmento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {segments.map((segment) => (
+                    <SelectItem key={segment.id} value={segment.id}>
+                      {segment.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label
                 htmlFor="razao-social"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
@@ -324,48 +371,6 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 className="w-full"
               />
             </div>
-            <div>
-              <label
-                htmlFor="segmento"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Segmento principal *
-              </label>
-              <select
-                id="segmento"
-                value={formData.segmentoId}
-                onChange={(e) => updateFormData("segmentoId", e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                required
-              >
-                <option value="">Selecione o segmento</option>
-                {segments.map((segment) => (
-                  <option key={segment.id} value={segment.id}>
-                    {segment.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="cnpj"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                CNPJ da Empresa *
-              </label>
-              <Input
-                type="text"
-                id="cnpj"
-                value={formData.cnpj}
-                onChange={(e) => updateFormData("cnpj", formatCNPJ(e.target.value))}
-                onBlur={handleCnpjBlur}
-                required
-                placeholder="00.000.000/0000-00"
-                className="w-full"
-              />
-            </div>
-
             <div>
               <label
                 htmlFor="nome-fantasia"
