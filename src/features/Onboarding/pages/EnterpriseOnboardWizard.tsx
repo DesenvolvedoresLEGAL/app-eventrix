@@ -1,14 +1,5 @@
 import React, { useMemo } from "react";
-import {
-  ChevronRight,
-  Building2,
-  User,
-  MapPin,
-  Phone,
-  Check,
-  Loader2,
-  FileText,
-} from "lucide-react";
+import { ChevronRight, Building2, User, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -16,16 +7,18 @@ import {
   OnboardingProvider,
   useOnboarding,
 } from "@/features/Onboarding/context/OnboardingContext";
+import { useCNPJ } from "@/hooks/use-cnpj";
 
 interface StepIndicatorProps {
   step: number;
   currentStep: number;
   title: string;
   icon: React.ReactNode;
+  totalSteps: number;
 }
 
 const StepIndicator: React.FC<StepIndicatorProps> = React.memo(
-  ({ step, currentStep, title, icon }) => {
+  ({ step, currentStep, title, icon, totalSteps }) => {
     const isActive = currentStep === step;
     const isCompleted = currentStep > step;
 
@@ -53,7 +46,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = React.memo(
             {title}
           </span>
         </div>
-        {step < 3 && (
+        {step < totalSteps && (
           <ChevronRight
             className={cn(
               "w-6 h-6 mx-6",
@@ -74,18 +67,18 @@ const EnterpriseOnboardWizard: React.FC = () => {
     isSubmitting,
     states,
     segments,
-    plans,
     formData,
     nextStep,
     prevStep,
     updateFormData,
     submit,
   } = useOnboarding();
+  const { getCompanyByCNPJ: fetchCompanyByCnpj } = useCNPJ();
 
   const [confirmPassword, setConfirmPassword] = React.useState("");
 
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < 2) {
       nextStep();
     } else {
       submit();
@@ -130,15 +123,39 @@ const EnterpriseOnboardWizard: React.FC = () => {
     []
   );
 
+  const handleCnpjBlur = async () => {
+    const digits = formData.cnpj.replace(/\D/g, "");
+    if (digits.length !== 14) return;
+    try {
+      const data = await fetchCompanyByCnpj(formData.cnpj);
+      updateFormData("razaoSocial", data.razao_social);
+      updateFormData("nomeFantasia", data.nome_fantasia || "");
+      updateFormData("cep", formatCEP(data.cep));
+      updateFormData("logradouro", data.logradouro);
+      updateFormData("numero", data.numero);
+      updateFormData("bairro", data.bairro);
+      updateFormData("cidade", data.cidade);
+      const state = states.find((s) => s.code === data.uf);
+      if (state) updateFormData("estadoId", state.id);
+      updateFormData("contactEmail", data.email_contato);
+      updateFormData("phone", data.telefone.split("/")[0]);
+    } catch (error) {
+      console.error("Erro ao buscar dados do CNPJ:", error);
+    }
+  };
+
   const steps = useMemo(
     () => [
-      { number: 1, title: "Usuário", icon: <User className="w-6 h-6" /> },
+      {
+        number: 1,
+        title: "Acesso e CNPJ",
+        icon: <User className="w-6 h-6" />,
+      },
       {
         number: 2,
-        title: "Dados da Empresa",
+        title: "Complemento",
         icon: <Building2 className="w-6 h-6" />,
       },
-      { number: 3, title: "Localização", icon: <MapPin className="w-6 h-6" /> },
     ],
     []
   );
@@ -210,19 +227,19 @@ const EnterpriseOnboardWizard: React.FC = () => {
             </div>
             <div>
               <label
-                htmlFor="whatsapp"
+                htmlFor="cnpj"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                WhatsApp
+                CNPJ *
               </label>
               <Input
                 type="text"
-                id="whatsapp"
-                value={formData.whatsapp}
-                onChange={(e) =>
-                  updateFormData("whatsapp", formatPhone(e.target.value))
-                }
-                placeholder="(00) 00000-0000"
+                id="cnpj"
+                value={formData.cnpj}
+                onChange={(e) => updateFormData("cnpj", formatCNPJ(e.target.value))}
+                onBlur={handleCnpjBlur}
+                required
+                placeholder="00.000.000/0000-00"
                 className="w-full"
               />
             </div>
@@ -292,30 +309,128 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 type="text"
                 id="razao-social"
                 value={formData.razaoSocial}
-                onChange={(e) => updateFormData("razaoSocial", e.target.value)}
+                readOnly
                 required
-                placeholder="Nome oficial da empresa"
                 className="w-full"
               />
             </div>
             <div>
               <label
-                htmlFor="cnpj"
+                htmlFor="nome-fantasia"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                CNPJ *
+                Nome Fantasia
               </label>
               <Input
                 type="text"
-                id="cnpj"
-                value={formData.cnpj}
-                onChange={(e) =>
-                  updateFormData("cnpj", formatCNPJ(e.target.value))
-                }
-                required
-                placeholder="00.000.000/0000-00"
+                id="nome-fantasia"
+                value={formData.nomeFantasia}
+                readOnly
                 className="w-full"
               />
+            </div>
+            <div>
+              <label
+                htmlFor="cep"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                CEP *
+              </label>
+              <Input
+                type="text"
+                id="cep"
+                value={formData.cep}
+                readOnly
+                required
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="logradouro"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Logradouro *
+              </label>
+              <Input
+                type="text"
+                id="logradouro"
+                value={formData.logradouro}
+                readOnly
+                required
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="numero"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Número
+              </label>
+              <Input
+                type="text"
+                id="numero"
+                value={formData.numero}
+                readOnly
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="bairro"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Bairro *
+              </label>
+              <Input
+                type="text"
+                id="bairro"
+                value={formData.bairro}
+                readOnly
+                required
+                className="w-full"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="cidade"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Cidade *
+                </label>
+                <Input
+                  type="text"
+                  id="cidade"
+                  value={formData.cidade}
+                  readOnly
+                  required
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="estado"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Estado *
+                </label>
+                <select
+                  id="estado"
+                  value={formData.estadoId}
+                  onChange={(e) => updateFormData("estadoId", e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                  disabled
+                >
+                  <option value="">Selecione o estado</option>
+                  {states.map((state) => (
+                    <option key={state.id} value={state.id}>
+                      {state.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div>
               <label
@@ -338,22 +453,6 @@ const EnterpriseOnboardWizard: React.FC = () => {
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label
-                htmlFor="nome-fantasia"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Nome Fantasia
-              </label>
-              <Input
-                type="text"
-                id="nome-fantasia"
-                value={formData.nomeFantasia}
-                onChange={(e) => updateFormData("nomeFantasia", e.target.value)}
-                placeholder="Nome comercial (opcional)"
-                className="w-full"
-              />
             </div>
             <div>
               <label
@@ -390,141 +489,39 @@ const EnterpriseOnboardWizard: React.FC = () => {
                 className="w-full"
               />
             </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-4">
             <div>
               <label
-                htmlFor="cep"
+                htmlFor="whatsapp"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                CEP *
+                WhatsApp
               </label>
               <Input
                 type="text"
-                id="cep"
-                value={formData.cep}
+                id="whatsapp"
+                value={formData.whatsapp}
                 onChange={(e) =>
-                  updateFormData("cep", formatCEP(e.target.value))
+                  updateFormData("whatsapp", formatPhone(e.target.value))
                 }
-                required
-                placeholder="00000-000"
+                placeholder="(00) 00000-0000"
                 className="w-full"
               />
             </div>
             <div>
               <label
-                htmlFor="logradouro"
+                htmlFor="website"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Logradouro *
+                Website
               </label>
               <Input
                 type="text"
-                id="logradouro"
-                value={formData.logradouro}
-                onChange={(e) => updateFormData("logradouro", e.target.value)}
-                required
-                placeholder="Rua, Avenida, etc."
+                id="website"
+                value={formData.website}
+                onChange={(e) => updateFormData("website", e.target.value)}
+                placeholder="https://www.empresa.com"
                 className="w-full"
               />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-1">
-                <label
-                  htmlFor="numero"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Número
-                </label>
-                <Input
-                  type="text"
-                  id="numero"
-                  value={formData.numero}
-                  onChange={(e) => updateFormData("numero", e.target.value)}
-                  placeholder="123"
-                  className="w-full"
-                />
-              </div>
-              <div className="col-span-2">
-                <label
-                  htmlFor="complemento"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Complemento
-                </label>
-                <Input
-                  type="text"
-                  id="complemento"
-                  value={formData.complemento}
-                  onChange={(e) =>
-                    updateFormData("complemento", e.target.value)
-                  }
-                  placeholder="Sala, andar, bloco, etc."
-                  className="w-full"
-                />
-              </div>
-            </div>
-            <div>
-              <label
-                htmlFor="bairro"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Bairro *
-              </label>
-              <Input
-                type="text"
-                id="bairro"
-                value={formData.bairro}
-                onChange={(e) => updateFormData("bairro", e.target.value)}
-                required
-                placeholder="Nome do bairro"
-                className="w-full"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="cidade"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Cidade *
-                </label>
-                <Input
-                  type="text"
-                  id="cidade"
-                  value={formData.cidade}
-                  onChange={(e) => updateFormData("cidade", e.target.value)}
-                  required
-                  placeholder="Nome da cidade"
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="estado"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Estado *
-                </label>
-                <select
-                  id="estado"
-                  value={formData.estadoId}
-                  onChange={(e) => updateFormData("estadoId", e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                  required
-                >
-                  <option value="">Selecione o estado</option>
-                  {states.map((state) => (
-                    <option key={state.id} value={state.id}>
-                      {state.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
           </div>
         );
@@ -536,10 +533,15 @@ const EnterpriseOnboardWizard: React.FC = () => {
 
   const canProceedToNextStep = useMemo(() => {
     if (currentStep === 1) {
-      return passwordsMatch && formData.password.length >= 6;
+      const digits = formData.cnpj.replace(/\D/g, "");
+      return (
+        passwordsMatch &&
+        formData.password.length >= 6 &&
+        digits.length === 14
+      );
     }
     return true;
-  }, [currentStep, passwordsMatch, formData.password.length]);
+  }, [currentStep, passwordsMatch, formData.password.length, formData.cnpj]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -563,6 +565,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
               currentStep={currentStep}
               title={step.title}
               icon={step.icon}
+              totalSteps={steps.length}
             />
           ))}
         </div>
@@ -602,7 +605,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Processando...
                   </>
-                ) : currentStep === 3 ? (
+                ) : currentStep === 2 ? (
                   "Finalizar Cadastro"
                 ) : (
                   "Próximo"
@@ -631,50 +634,6 @@ const EnterpriseOnboardWizard: React.FC = () => {
             </p>
           </div>
         </div>
-
-        {/* Summary (visible in last step) */}
-        {currentStep === 3 && (
-          <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-4">
-              Resumo do Cadastro
-            </h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-600">Email:</p>
-                <p className="font-medium">{formData.email}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Razão Social:</p>
-                <p className="font-medium">{formData.razaoSocial}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">CNPJ:</p>
-                <p className="font-medium">{formData.cnpj}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Telefone:</p>
-                <p className="font-medium">
-                  {formData.phone || formData.whatsapp || "Não informado"}
-                </p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-gray-600">Endereço:</p>
-                <p className="font-medium">
-                  {formData.logradouro}
-                  {formData.numero ? `, ${formData.numero}` : ""} -{" "}
-                  {formData.bairro}, {formData.cidade}/
-                  {states.find((s) => s.id === formData.estadoId)?.code || ""}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 p-3 bg-green-100 border border-green-200 rounded">
-              <p className="text-green-800 text-sm">
-                ✓ Você terá 7 dias de teste grátis para experimentar todas as
-                funcionalidades da plataforma
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
