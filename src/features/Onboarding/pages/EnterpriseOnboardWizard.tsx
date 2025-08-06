@@ -83,6 +83,7 @@ const EnterpriseOnboardWizard: React.FC = () => {
   const { getCompanyByCNPJ: fetchCompanyByCnpj } = useCNPJ();
 
   const [confirmPassword, setConfirmPassword] = React.useState("");
+  const formRef = React.useRef<HTMLFormElement>(null);
 
   const handleNext = () => {
     if (currentStep < 2) {
@@ -549,15 +550,20 @@ const EnterpriseOnboardWizard: React.FC = () => {
 
   const canProceedToNextStep = useMemo(() => {
     if (currentStep === 1) {
-      const digits = formData.cnpj.replace(/\D/g, "");
       return (
         passwordsMatch &&
         formData.password.length >= 6 &&
-        digits.length === 14
+        formData.firstName.trim() !== "" &&
+        formData.lastName.trim() !== "" &&
+        formData.email.trim() !== ""
       );
     }
+    if (currentStep === 2) {
+      const digits = formData.cnpj.replace(/\D/g, "");
+      return digits.length === 14;
+    }
     return true;
-  }, [currentStep, passwordsMatch, formData.password.length, formData.cnpj]);
+  }, [currentStep, formData, passwordsMatch]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -596,7 +602,13 @@ const EnterpriseOnboardWizard: React.FC = () => {
           </div>
 
           <form
+            ref={formRef}
             onSubmit={(e) => {
+              if (!formRef.current?.checkValidity()) {
+                e.preventDefault();
+                formRef.current?.reportValidity();
+                return;
+              }
               e.preventDefault();
               handleNext();
             }}
