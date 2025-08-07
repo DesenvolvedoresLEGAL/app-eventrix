@@ -1,10 +1,10 @@
 
 import { UserPermissions } from '@/types/permissions'
-import { checkRouteAccess, UserRole, hasHigherOrEqualRole } from '@/shared/config/permissions'
+import { checkRouteAccess, UserRole, hasHigherOrEqualRole, ROLE_HIERARCHY, ROLE_PERMISSIONS } from '@/shared/config/permissions'
 
 /**
  * Verifica se o usuário tem permissão para acessar determinado recurso
- * Agora usa o sistema centralizado de permissões com verificação combinada
+ * Agora usa o sistema centralizado de permissões com verificação combinada e hierarquia
  * 
  * @param userPermissions - Objeto contendo role e permissions do usuário
  * @param requiredPermission - Permissão específica necessária (opcional)
@@ -36,27 +36,27 @@ export const hasPermission = (
 
   // Modo strict: ambos allowedRoles E requiredPermission devem ser atendidos
   if (strict && allowedRoles && requiredPermission) {
-    const hasRole = allowedRoles.includes(role)
-    const hasRequiredPermission = permissions.includes('*') || permissions.includes(requiredPermission)
+    const hasRole = checkRoleWithHierarchy(role, allowedRoles)
+    const hasRequiredPermission = checkPermissionWithInheritance(role, requiredPermission, permissions)
     return hasRole && hasRequiredPermission
   }
 
-  // Se há roles específicos permitidos, verifique se o role atual está incluído
+  // Se há roles específicos permitidos, verifique com hierarquia
   if (allowedRoles && allowedRoles.length > 0) {
-    const hasRole = allowedRoles.includes(role)
+    const hasRole = checkRoleWithHierarchy(role, allowedRoles)
     
     // Se também há permissão requerida (modo padrão - OR), verifica ambos
     if (requiredPermission && !strict) {
-      const hasRequiredPermission = permissions.includes('*') || permissions.includes(requiredPermission)
+      const hasRequiredPermission = checkPermissionWithInheritance(role, requiredPermission, permissions)
       return hasRole || hasRequiredPermission
     }
     
     return hasRole
   }
 
-  // Se há permissão específica requerida, verifique se o usuário a possui
+  // Se há permissão específica requerida, verifique com herança
   if (requiredPermission) {
-    return permissions.includes('*') || permissions.includes(requiredPermission)
+    return checkPermissionWithInheritance(role, requiredPermission, permissions)
   }
 
   // Se chegou até aqui sem especificar restrições, negue acesso por segurança
@@ -65,7 +65,56 @@ export const hasPermission = (
 }
 
 /**
+ * Verifica se o role atual ou algum role superior tem acesso
+ * Usa a hierarquia definida em ROLE_HIERARCHY
+ */
+const checkRoleWithHierarchy = (userRole: string, allowedRoles: string[]): boolean => {
+  // Verifica diretamente se o role está permitido
+  if (allowedRoles.includes(userRole)) {
+    return true
+  }
+
+  // Verifica se algum dos roles permitidos é inferior na hierarquia
+  // (role com nível menor = maior hierarquia)
+  for (const allowedRole of allowedRoles) {
+    if (hasHigherOrEqualRole(userRole as UserRole, allowedRole as UserRole)) {
+      return true
+    }
+  }
+
+  return false
+}
+
+/**
+ * Verifica permissão específica considerando herança via ROLE_HIERARCHY.inheritsFrom
+ */
+const checkPermissionWithInheritance = (
+  userRole: string, 
+  requiredPermission: string, 
+  userPermissions: string[]
+): boolean => {
+  // Primeiro verifica se o usuário tem a permissão diretamente
+  if (userPermissions.includes('*') || userPermissions.includes(requiredPermission)) {
+    return true
+  }
+
+  // Verifica se algum role herdado tem a permissão
+  const roleHierarchy = ROLE_HIERARCHY[userRole as UserRole]
+  if (roleHierarchy?.inheritsFrom) {
+    for (const inheritedRole of roleHierarchy.inheritsFrom) {
+      const inheritedPermissions = ROLE_PERMISSIONS[inheritedRole] || []
+      if (inheritedPermissions.includes('*') || inheritedPermissions.includes(requiredPermission)) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
+/**
  * Função auxiliar para verificação strict de permissões
+ * Agora também usa hierarquia
  */
 const hasPermissionStrict = (
   role: string,
@@ -73,10 +122,9 @@ const hasPermissionStrict = (
   requiredPermission?: string,
   allowedRoles?: string[]
 ): boolean => {
-  const hasRole = !allowedRoles || allowedRoles.includes(role)
+  const hasRole = !allowedRoles || checkRoleWithHierarchy(role, allowedRoles)
   const hasRequiredPermission = !requiredPermission || 
-    permissions.includes('*') || 
-    permissions.includes(requiredPermission)
+    checkPermissionWithInheritance(role, requiredPermission, permissions)
   
   return hasRole && hasRequiredPermission
 }
