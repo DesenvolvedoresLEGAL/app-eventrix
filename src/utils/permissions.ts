@@ -1,12 +1,10 @@
 
 import { UserPermissions } from '@/types/permissions'
+import { checkRouteAccess, UserRole, hasHigherOrEqualRole } from '@/shared/config/permissions'
 
 /**
  * Verifica se o usuário tem permissão para acessar determinado recurso
- * @param userPermissions - Objeto com role e permissions do usuário
- * @param requiredPermission - Permissão necessária para acessar o recurso
- * @param allowedRoles - Array de roles permitidos (opcional)
- * @returns boolean indicando se tem permissão
+ * Agora usa o sistema centralizado de permissões
  */
 export const hasPermission = (
   userPermissions: UserPermissions,
@@ -37,6 +35,22 @@ export const hasPermission = (
 
   // Por padrão, permita acesso se não há restrições específicas
   return true
+}
+
+/**
+ * Verifica se o usuário tem acesso a uma rota específica
+ * Usa a configuração centralizada de rotas
+ */
+export const hasRouteAccess = (route: string, userRole: string): boolean => {
+  const accessCheck = checkRouteAccess(route, userRole as UserRole)
+  return accessCheck.hasAccess
+}
+
+/**
+ * Verifica se um cargo é superior ou igual a outro
+ */
+export const canAccessRoleLevel = (userRole: string, requiredRole: string): boolean => {
+  return hasHigherOrEqualRole(userRole as UserRole, requiredRole as UserRole)
 }
 
 /**
