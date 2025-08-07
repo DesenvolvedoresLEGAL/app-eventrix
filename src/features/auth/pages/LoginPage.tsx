@@ -1,26 +1,32 @@
-
-import React, { useState, useCallback, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Zap, Eye, EyeOff, AlertCircle } from 'lucide-react'
-import { useAuth } from '@features/auth/context/AuthContext'
+import React, { useState, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { ArrowRight, Zap, Eye, EyeOff, AlertCircle, Mail } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 import { useToast } from '@/hooks/use-toast'
 
-const Login = () => {
+const LoginPage = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
-  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [isSigningIn, setIsSigningIn] = useState(false)
   
   const navigate = useNavigate()
-  const { signIn, resetPassword, loading, error, clearError, isAuthenticated } = useAuth()
+  const { signIn, error, clearError } = useAuth()
   const { toast } = useToast()
 
-  // Validação em tempo real
-  const validateForm = useCallback(() => {
+  // Limpar erros quando o usuário digita
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => clearError(), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error, clearError])
+
+  const validateForm = () => {
     const errors: Record<string, string> = {}
 
-    if (!email.trim()) {
+    if (!email) {
       errors.email = 'Email é obrigatório'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errors.email = 'Email inválido'
@@ -33,35 +39,15 @@ const Login = () => {
     }
 
     return errors
-  }, [email, password])
-
-  // Memoizar validação
-  const formErrors = useMemo(() => validateForm(), [validateForm])
-  const isFormValid = useMemo(() => Object.keys(formErrors).length === 0, [formErrors])
-
-  // Redirecionar usuários autenticados
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard', { replace: true })
-    }
-  }, [isAuthenticated, navigate])
-
-  // Limpar erros quando o usuário digita
-  React.useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => clearError(), 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [error, clearError])
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Validar formulário antes do submit
     const errors = validateForm()
     setValidationErrors(errors)
 
-    if (!isFormValid) {
+    if (Object.keys(errors).length > 0) {
       toast({
         title: "Formulário inválido",
         description: "Por favor, corrija os erros antes de continuar",
@@ -71,8 +57,10 @@ const Login = () => {
     }
 
     try {
+      setIsSigningIn(true)
       clearError()
-      await signIn(email.trim(), password)
+      
+      await signIn(email, password)
       
       toast({
         title: "Login realizado com sucesso!",
@@ -80,51 +68,19 @@ const Login = () => {
         variant: "default"
       })
 
-    } catch (err) {
-      // Erro já tratado no AuthContext
-      console.error('Login error:', err)
-    }
-  }
+      // Redirecionar para dashboard após 3 segundos
+      setTimeout(() => {
+        navigate('/dashboard')
+      }, 3000)
 
-  const handleForgotPassword = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    
-    if (!email.trim()) {
-      toast({
-        title: "Email necessário",
-        description: "Por favor, digite seu email antes de solicitar a redefinição de senha",
-        variant: "destructive"
-      })
-      return
-    }
-
-    const emailErrors = validateForm()
-    if (emailErrors.email) {
-      toast({
-        title: "Email inválido",
-        description: emailErrors.email,
-        variant: "destructive"
-      })
-      return
-    }
-
-    try {
-      setIsResettingPassword(true)
-      await resetPassword(email.trim())
-      
-      toast({
-        title: "Email enviado!",
-        description: "Verifique sua caixa de entrada para redefinir sua senha",
-        variant: "default"
-      })
     } catch (err) {
       toast({
-        title: "Erro ao enviar email",
-        description: "Não foi possível enviar o email de redefinição. Tente novamente.",
+        title: "Erro ao fazer login",
+        description: "Não foi possível realizar o login. Verifique suas credenciais e tente novamente.",
         variant: "destructive"
       })
     } finally {
-      setIsResettingPassword(false)
+      setIsSigningIn(false)
     }
   }
 
@@ -134,7 +90,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row tech-grid">
-      {/* Left side - Brand com identidade LEGAL */}
+      {/* Left side - Brand */}
       <div className="legal-gradient-bg w-full md:w-1/2 text-white p-8 flex flex-col justify-between relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 tech-float"></div>
         <div className="relative z-10">
@@ -148,48 +104,20 @@ const Login = () => {
           <p className="text-white/80 text-lg">Plataforma completa para gestão de eventos</p>
         </div>
         
-        <div className="hidden md:block relative z-10">
-          <h2 className="text-2xl font-bold mb-6">Tudo em uma só plataforma</h2>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="tech-badge bg-white/20 border-white/30 text-white">
-                <div className="w-2 h-2 bg-secondary rounded-full"></div>
-              </div>
-              <p className="text-white/90">Gerencie todo o ciclo de vida dos seus eventos</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="tech-badge bg-white/20 border-white/30 text-white">
-                <div className="w-2 h-2 bg-secondary rounded-full"></div>
-              </div>
-              <p className="text-white/90">Ferramentas avançadas de IA integradas</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="tech-badge bg-white/20 border-white/30 text-white">
-                <div className="w-2 h-2 bg-secondary rounded-full"></div>
-              </div>
-              <p className="text-white/90">Dados e insights em tempo real</p>
-            </div>
-          </div>
-        </div>
-        
         <div className="hidden md:block text-sm text-white/70 relative z-10">
           &copy; {new Date().getFullYear()} Eventrix™. Todos os direitos reservados.
         </div>
       </div>
       
-      {/* Right side - Login form com tech design aprimorado */}
+      {/* Right side - Login form */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
-          <div className="tech-card p-8 mb-8">
+          <div className="tech-card p-8">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-2">
-                Bem-vindo de <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">volta</span>
+                Acesse sua <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">conta</span>
               </h2>
-              <p className="text-muted-foreground">Entre na sua conta para acessar a plataforma</p>
-              <div className="tech-badge tech-glow mt-4">
-                <Zap size={10} />
-                <span>LEGAL Tech</span>
-              </div>
+              <p className="text-muted-foreground">Entre com seu email e senha</p>
             </div>
 
             {/* Error Alert */}
@@ -207,36 +135,29 @@ const Login = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold mb-2">Email</label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`tech-input w-full ${
-                    validationErrors.email ? 'border-destructive focus:ring-destructive/20' : ''
-                  }`}
-                  placeholder="seu@email.com"
-                  disabled={loading}
-                  autoComplete="email"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`tech-input w-full ${
+                      validationErrors.email ? 'border-destructive focus:ring-destructive/20' : ''
+                    }`}
+                    placeholder="seuemail@exemplo.com"
+                    disabled={isSigningIn}
+                    autoComplete="email"
+                    required
+                  />
+                  <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                </div>
                 {validationErrors.email && (
                   <p className="text-sm text-destructive mt-1">{validationErrors.email}</p>
                 )}
               </div>
-              
+
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="password" className="block text-sm font-semibold">Senha</label>
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    disabled={isResettingPassword}
-                    className="text-sm text-primary hover:text-primary/80 font-medium transition-colors disabled:opacity-50"
-                  >
-                    {isResettingPassword ? 'Enviando...' : 'Esqueceu?'}
-                  </button>
-                </div>
+                <label htmlFor="password" className="block text-sm font-semibold mb-2">Senha</label>
                 <div className="relative">
                   <input
                     id="password"
@@ -247,7 +168,7 @@ const Login = () => {
                       validationErrors.password ? 'border-destructive focus:ring-destructive/20' : ''
                     }`}
                     placeholder="********"
-                    disabled={loading}
+                    disabled={isSigningIn}
                     autoComplete="current-password"
                     required
                   />
@@ -255,7 +176,7 @@ const Login = () => {
                     type="button"
                     onClick={togglePasswordVisibility}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    disabled={loading}
+                    disabled={isSigningIn}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -267,10 +188,10 @@ const Login = () => {
               
               <button
                 type="submit"
-                disabled={loading || !isFormValid}
+                disabled={isSigningIn}
                 className="tech-button w-full py-3 font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
               >
-                {loading ? (
+                {isSigningIn ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Entrando...
@@ -286,10 +207,10 @@ const Login = () => {
             
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Ainda não tem uma conta? <a href="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">Criar conta</a>
+                Esqueceu sua senha? <Link to="/reset-password" className="text-primary hover:text-primary/80 font-medium transition-colors">Redefinir senha</Link>
               </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Quer conhecer nossos planos? <a href="/plans" className="text-primary hover:text-primary/80 font-medium transition-colors">Ver planos</a>
+              <p className="text-sm text-muted-foreground">
+                Não tem uma conta? <Link to="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">Criar conta</Link>
               </p>
             </div>
           </div>
@@ -299,4 +220,4 @@ const Login = () => {
   )
 }
 
-export default Login
+export default LoginPage

@@ -1,8 +1,9 @@
+
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from "react";
 import supabase from "@/utils/supabase/client";
 import { Tables, TablesInsert } from "@/utils/supabase/types";
-import { signUp } from "@features/auth/services/authService";
+import { signUp } from "@features/auth";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useCNPJ } from "@/hooks/use-cnpj";
