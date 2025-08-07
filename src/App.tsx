@@ -64,16 +64,24 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        {/* TODO(auth-guard): Wrap all non-public routes with PrivateRoute/RouteGuard */}
         <Routes>
-          <Route path="/" element={<Index />} />
+          {/* TODO(auth-guard): '/' is private; enforce auth via PrivateRoute */}
+          <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
+          {/* TODO(auth-guard): Public route */}
           <Route path="/login" element={<Login />} />
+          {/* TODO(auth-guard): Public route */}
           <Route path="/register" element={<Register />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/data-test" element={<Teste />} />
+          {/* TODO(auth-guard): Private route */}
+          <Route path="/reset-password" element={<PrivateRoute><ResetPassword /></PrivateRoute>} />
+          {/* TODO(auth-guard): Private route */}
+          <Route path="/data-test" element={<PrivateRoute><Teste /></PrivateRoute>} />
+          {/* TODO(auth-guard): Public route */}
           <Route path="/plans" element={<Plans />} />
-          <Route path="/onboarding/user" element={<UserOnboarding />} />
-          <Route path="/onboarding/tenant" element={<TenantOnboarding />} />
-          <Route path="/onboarding/plan" element={<PlanSelectionPage />} />
+          {/* TODO(auth-guard): Private routes (onboarding) */}
+          <Route path="/onboarding/user" element={<PrivateRoute><UserOnboarding /></PrivateRoute>} />
+          <Route path="/onboarding/tenant" element={<PrivateRoute><TenantOnboarding /></PrivateRoute>} />
+          <Route path="/onboarding/plan" element={<PrivateRoute><PlanSelectionPage /></PrivateRoute>} />
           
           {/* Dashboard - acessível para roles principais */}
           <Route
@@ -228,8 +236,8 @@ const App = () => (
             }
           />
           
-          {/* Marketing - permissões específicas */}
-          <Route path="/marketing" element={<Marketing />} />
+          {/* Marketing - torna rota principal privada (login requerido) */}
+          <Route path="/marketing" element={<PrivateRoute><Marketing /></PrivateRoute>} />
           <Route 
             path="/marketing/ads" 
             element={
@@ -272,7 +280,7 @@ const App = () => (
               </RoleBasedRoute>
             }
           />
-          <Route path="/communication/linkai" element={<CommunicationLinkAI />} />
+          <Route path="/communication/linkai" element={<PrivateRoute><CommunicationLinkAI /></PrivateRoute>} />
           <Route 
             path="/communication/notifications" 
             element={
@@ -299,8 +307,8 @@ const App = () => (
               </RoleBasedRoute>
             }
           />
-          <Route path="/analytics/nps" element={<AnalyticsNPS />} />
-          <Route path="/analytics/heatmap" element={<AnalyticsHeatmap />} />
+          <Route path="/analytics/nps" element={<PrivateRoute><AnalyticsNPS /></PrivateRoute>} />
+          <Route path="/analytics/heatmap" element={<PrivateRoute><AnalyticsHeatmap /></PrivateRoute>} />
           <Route 
             path="/analytics/engagement" 
             element={
@@ -362,9 +370,9 @@ const App = () => (
             }
           />
           
-          {/* Página de acesso negado */}
-          <Route path="/access-denied" element={<AccessDenied />} />
-          <Route path="*" element={<NotFound />} />
+          {/* Página de acesso negado - privada */}
+          <Route path="/access-denied" element={<PrivateRoute><AccessDenied /></PrivateRoute>} />
+          <Route path="*" element={<PrivateRoute><NotFound /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
