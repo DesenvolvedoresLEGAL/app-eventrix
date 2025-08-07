@@ -1,6 +1,9 @@
 import { UserPermissions } from '@/types/permissions'
 import { checkRouteAccess, UserRole, hasHigherOrEqualRole, ROLE_HIERARCHY, ROLE_PERMISSIONS } from '@/shared/config/permissions'
 
+// Callback global para notificar mudanças nas permissões
+let permissionChangeCallback: (() => void) | null = null
+
 /**
  * Verifica se o usuário tem permissão para acessar determinado recurso
  * Agora usa o sistema centralizado de permissões com verificação combinada e hierarquia
@@ -154,9 +157,41 @@ export const canAccessRoleLevel = (userRole: string, requiredRole: string): bool
 }
 
 /**
+ * Registra callback para ser chamado quando permissões forem atualizadas
+ */
+export const setPermissionChangeCallback = (callback: (() => void) | null): void => {
+  permissionChangeCallback = callback
+}
+
+/**
+ * Função de refresh para revalidar permissões
+ * Integrada com AuthContext para recarregar dados do usuário
+ */
+export const refreshPermissions = async (authRefreshFn?: () => Promise<void>): Promise<void> => {
+  try {
+    console.log('Refreshing permissions...')
+    
+    // Se uma função de refresh do auth foi fornecida, executá-la
+    if (authRefreshFn) {
+      await authRefreshFn()
+    }
+    
+    // Notificar componentes sobre a mudança nas permissões
+    if (permissionChangeCallback) {
+      permissionChangeCallback()
+    }
+    
+    console.log('Permissions refreshed successfully')
+  } catch (error) {
+    console.error('Error refreshing permissions:', error)
+    throw error
+  }
+}
+
+/**
  * Função de refresh para revalidar permissões (placeholder para implementação futura)
  */
-export const refreshPermissions = async (): Promise<void> => {
+export const refreshPermissionsOld = async (): Promise<void> => {
   // TODO: Implementar lógica de refresh das permissões
   console.log('Refreshing permissions...')
 }
