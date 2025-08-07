@@ -1,4 +1,3 @@
-
 import { UserPermissions } from '@/types/permissions'
 import { checkRouteAccess, UserRole, hasHigherOrEqualRole, ROLE_HIERARCHY, ROLE_PERMISSIONS } from '@/shared/config/permissions'
 
@@ -22,6 +21,15 @@ export const hasPermission = (
 
   // Se não há role definido, negue acesso
   if (!role) {
+    return false
+  }
+
+  // Verificar se pelo menos uma restrição foi definida
+  if (!requiredPermission && (!allowedRoles || allowedRoles.length === 0)) {
+    // Em desenvolvimento, exibir warning
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('hasPermission called without restrictions - denying access by default. Please specify allowedRoles or requiredPermission for security.')
+    }
     return false
   }
 
