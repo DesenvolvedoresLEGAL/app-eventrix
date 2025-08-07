@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -5,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
+import RoleBasedRoute from "./components/RoleBasedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -72,50 +74,295 @@ const App = () => (
           <Route path="/onboarding/user" element={<UserOnboarding />} />
           <Route path="/onboarding/tenant" element={<TenantOnboarding />} />
           <Route path="/onboarding/plan" element={<PlanSelectionPage />} />
+          
+          {/* Dashboard - acessível para roles principais */}
           <Route
             path="/dashboard"
             element={
-              <PrivateRoute>
+              <RoleBasedRoute allowedRoles={['owner', 'developer', 'event_manager', 'coordinator', 'viewer']}>
                 <Dashboard />
-              </PrivateRoute>
+              </RoleBasedRoute>
             }
           />
+          
+          {/* Tenant Dashboard - mantém PrivateRoute simples */}
           <Route path="/tenant-dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/events/new" element={<NewEvent />} />
-          <Route path="/exhibitors" element={<Exhibitors />} />
-          <Route path="/visitors" element={<Visitors />} />
-          <Route path="/staff" element={<Staff />} />
-          <Route path="/suppliers" element={<Suppliers />} />
-          <Route path="/permissions" element={<Permissions />} />
-          <Route path="/lectures" element={<Lectures />} />
-          <Route path="/tracks" element={<Tracks />} />
-          <Route path="/activities" element={<Activities />} />
-          <Route path="/venues" element={<Venues />} />
-          <Route path="/checklist" element={<Checklist />} />
-          <Route path="/team-tasks" element={<TeamTasks />} />
-          <Route path="/registration" element={<Registration />} />
-          <Route path="/checkin" element={<CheckIn />} />
-          <Route path="/access-history" element={<AccessHistory />} />
+          
+          {/* Eventos - diferentes permissões por rota */}
+          <Route 
+            path="/events" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Events />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/events/new" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager']} requiredPermission="manage_events">
+                <NewEvent />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* Usuários e Participantes */}
+          <Route 
+            path="/exhibitors" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Exhibitors />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/visitors" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Visitors />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/suppliers" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Suppliers />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* Rotas Administrativas - acesso restrito */}
+          <Route 
+            path="/staff" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Staff />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/permissions" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer']} requiredPermission="manage_permissions">
+                <Permissions />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* Programação e Agenda */}
+          <Route 
+            path="/lectures" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Lectures />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/tracks" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Tracks />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/activities" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Activities />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/venues" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Venues />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* Tarefas */}
+          <Route 
+            path="/checklist" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Checklist />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/team-tasks" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <TeamTasks />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* Credenciamento */}
+          <Route 
+            path="/registration" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']}>
+                <Registration />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/checkin" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'event_manager', 'coordinator', 'viewer']} requiredPermission="manage_checkin">
+                <CheckIn />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/access-history" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer']} requiredPermission="view_access_history">
+                <AccessHistory />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* Marketing - permissões específicas */}
           <Route path="/marketing" element={<Marketing />} />
-          <Route path="/marketing/ads" element={<MarketingAds />} />
-          <Route path="/marketing/content" element={<MarketingContent />} />
-          <Route path="/marketing/email" element={<MarketingEmail />} />
-          <Route path="/marketing/pages" element={<MarketingPages />} />
-          <Route path="/communication/humangpt" element={<CommunicationHumanGPT />} />
+          <Route 
+            path="/marketing/ads" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner']}>
+                <MarketingAds />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/marketing/content" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'content_editor']} requiredPermission="manage_content">
+                <MarketingContent />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/marketing/email" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'content_editor']} requiredPermission="manage_emails">
+                <MarketingEmail />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/marketing/pages" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'content_editor']} requiredPermission="manage_marketing_pages">
+                <MarketingPages />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* Comunicação */}
+          <Route 
+            path="/communication/humangpt" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner']}>
+                <CommunicationHumanGPT />
+              </RoleBasedRoute>
+            }
+          />
           <Route path="/communication/linkai" element={<CommunicationLinkAI />} />
-          <Route path="/communication/notifications" element={<CommunicationNotifications />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/reports" element={<Reports />} />
+          <Route 
+            path="/communication/notifications" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner']}>
+                <CommunicationNotifications />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* Analytics e Relatórios - acesso financeiro */}
+          <Route 
+            path="/analytics" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer', 'finance', 'viewer']} requiredPermission="view_analytics">
+                <Analytics />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/reports" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer', 'finance', 'viewer']} requiredPermission="view_reports">
+                <Reports />
+              </RoleBasedRoute>
+            }
+          />
           <Route path="/analytics/nps" element={<AnalyticsNPS />} />
           <Route path="/analytics/heatmap" element={<AnalyticsHeatmap />} />
-          <Route path="/analytics/engagement" element={<AnalyticsEngagement />} />
-          <Route path="/integrations" element={<Marketplace />} />
-          <Route path="/api-management" element={<APIManagement />} />
-          <Route path="/ai-validator" element={<AIValidator />} />
-          <Route path="/heatmap" element={<HeatmapAI />} />
-          <Route path="/dynamic-pricing" element={<DynamicPricing />} />
-          <Route path="/legal-ai" element={<LegalAI />} />
+          <Route 
+            path="/analytics/engagement" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer', 'finance', 'viewer']} requiredPermission="view_analytics">
+                <AnalyticsEngagement />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* Integrações - acesso técnico */}
+          <Route 
+            path="/integrations" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer']} requiredPermission="manage_integrations">
+                <Marketplace />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/api-management" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer']} requiredPermission="manage_apis">
+                <APIManagement />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* IA e Ferramentas Avançadas - acesso técnico/financeiro */}
+          <Route 
+            path="/ai-validator" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer']} requiredPermission="manage_ai_tools">
+                <AIValidator />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/heatmap" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer']} requiredPermission="manage_ai_tools">
+                <HeatmapAI />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/dynamic-pricing" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer', 'finance']} requiredPermission="manage_dynamic_pricing">
+                <DynamicPricing />
+              </RoleBasedRoute>
+            }
+          />
+          <Route 
+            path="/legal-ai" 
+            element={
+              <RoleBasedRoute allowedRoles={['owner', 'developer']} requiredPermission="manage_ai_tools">
+                <LegalAI />
+              </RoleBasedRoute>
+            }
+          />
+          
+          {/* Página de acesso negado */}
           <Route path="/access-denied" element={<AccessDenied />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
