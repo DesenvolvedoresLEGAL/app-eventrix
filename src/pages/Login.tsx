@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ArrowRight, Zap, Eye, EyeOff, AlertCircle } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '../context/AuthContext'
 import { useToast } from '@/hooks/use-toast'
 
 const Login = () => {
@@ -45,10 +45,10 @@ const Login = () => {
       const params = new URLSearchParams(location.search)
       const raw = params.get('redirectTo')
       // Lazy import to avoid circular deps
-      import('@/auth/redirect').then(({ sanitizeRedirect }) => {
+      import('../auth/redirect').then(({ sanitizeRedirect }) => {
         const safe = sanitizeRedirect(raw)
         navigate(safe || '/dashboard', { replace: true })
-      })
+      }).catch(console.error);
     }
   }, [isAuthenticated, navigate, location.search])
 
@@ -204,7 +204,7 @@ const Login = () => {
                 <AlertCircle size={16} className="text-destructive mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
                   <p className="text-sm text-destructive font-medium">
-                    {error.message}
+                    {typeof error === 'string' ? error : (error as unknown as Error).message}
                   </p>
                 </div>
               </div>
