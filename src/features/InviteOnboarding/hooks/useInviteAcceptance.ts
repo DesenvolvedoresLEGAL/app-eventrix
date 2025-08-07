@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useInviteOnboarding } from '../context/InviteOnboardingContext'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/hooks/use-toast'
+import supabase from '@/utils/supabase/client'
 
 export function useInviteAcceptance() {
   const { state, dispatch } = useInviteOnboarding()
@@ -18,42 +19,42 @@ export function useInviteAcceptance() {
     dispatch({ type: 'SET_ERROR', payload: null })
 
     try {
-      // TODO: Implementar upsert em profiles e update em invites
-      // const { error: profileError } = await supabase
-      //   .from('profiles')
-      //   .upsert({
-      //     id: user.id,
-      //     email: state.invite.email,
-      //     first_name: state.formData.firstName,
-      //     last_name: state.formData.lastName,
-      //     full_name: state.formData.fullName,
-      //     tenant_id: state.invite.tenant_id,
-      //     role: state.invite.role,
-      //     is_active: true,
-      //     updated_at: new Date().toISOString(),
-      //   })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const supabaseClient = supabase as any
+      const { error: profileError } = await supabaseClient
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: state.invite.email,
+          first_name: state.formData.firstName,
+          last_name: state.formData.lastName,
+          full_name: state.formData.fullName,
+          tenant_id: state.invite.tenant_id,
+          role: state.invite.role,
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        })
 
-      // const { error: inviteError } = await supabase
-      //   .from('invites')
-      //   .update({
-      //     status: 'accepted',
-      //     accepted_at: new Date().toISOString(),
-      //   })
-      //   .eq('id', state.invite.id)
+      if (profileError) throw profileError
 
-      // Simular processo de aceitação
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      const { error: inviteError } = await supabaseClient
+        .from('invites')
+        .update({
+          status: 'accepted',
+          accepted_at: new Date().toISOString(),
+        })
+        .eq('token', state.invite.token)
+
+      if (inviteError) throw inviteError
 
       toast({
         title: "Bem-vindo ao Eventrix!",
         description: `Sua conta foi criada com sucesso em ${state.tenant.nome_fantasia}`,
-        variant: "default"
+        variant: "default",
       })
 
-      // Avançar para step de sucesso
       dispatch({ type: 'SET_CURRENT_STEP', payload: 3 })
 
-      // Redirecionar após 2 segundos
       setTimeout(() => {
         navigate('/dashboard')
       }, 2000)
@@ -64,7 +65,7 @@ export function useInviteAcceptance() {
       toast({
         title: "Erro ao aceitar convite",
         description: "Não foi possível processar seu convite. Tente novamente.",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       dispatch({ type: 'SET_ACCEPTING', payload: false })
