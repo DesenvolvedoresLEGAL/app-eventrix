@@ -6,6 +6,7 @@ export interface RoleBasedRouteProps {
   allowedRoles?: string[]
   requiredPermission?: string
   fallbackPath?: string
+  strict?: boolean // Nova propriedade para modo strict
 }
 
 export interface UserPermissions {

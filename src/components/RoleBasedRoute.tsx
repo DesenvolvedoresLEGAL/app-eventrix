@@ -20,7 +20,8 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   children, 
   allowedRoles,
   requiredPermission,
-  fallbackPath = '/access-denied'
+  fallbackPath = '/access-denied',
+  strict = false
 }) => {
   const { user, session, loading, isAuthenticated } = useAuth()
   const userPermissions = useRolePermissions()
@@ -35,8 +36,8 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
     return <Navigate to="/login" replace />
   }
 
-  // Verificar permissões
-  const hasAccess = hasPermission(userPermissions, requiredPermission, allowedRoles)
+  // Verificar permissões usando a nova função melhorada
+  const hasAccess = hasPermission(userPermissions, requiredPermission, allowedRoles, strict)
 
   // Se não tem permissão, redirecionar para página de acesso negado
   if (!hasAccess) {

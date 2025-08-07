@@ -4,12 +4,19 @@ import { checkRouteAccess, UserRole, hasHigherOrEqualRole } from '@/shared/confi
 
 /**
  * Verifica se o usuário tem permissão para acessar determinado recurso
- * Agora usa o sistema centralizado de permissões
+ * Agora usa o sistema centralizado de permissões com verificação combinada
+ * 
+ * @param userPermissions - Objeto contendo role e permissions do usuário
+ * @param requiredPermission - Permissão específica necessária (opcional)
+ * @param allowedRoles - Lista de roles permitidos (opcional)
+ * @param strict - Se true, ambos allowedRoles E requiredPermission devem ser atendidos quando ambos são fornecidos
+ * @returns boolean indicando se o usuário tem acesso
  */
 export const hasPermission = (
   userPermissions: UserPermissions,
   requiredPermission?: string,
-  allowedRoles?: string[]
+  allowedRoles?: string[],
+  strict: boolean = false
 ): boolean => {
   const { role, permissions } = userPermissions
 
@@ -18,14 +25,33 @@ export const hasPermission = (
     return false
   }
 
-  // Owner tem acesso total
+  // Owner tem acesso total (exceto se strict mode e há restrições específicas)
   if (role === 'owner') {
+    // Em modo strict, owner ainda precisa atender critérios específicos se definidos
+    if (strict && (requiredPermission || allowedRoles)) {
+      return hasPermissionStrict(role, permissions, requiredPermission, allowedRoles)
+    }
     return true
+  }
+
+  // Modo strict: ambos allowedRoles E requiredPermission devem ser atendidos
+  if (strict && allowedRoles && requiredPermission) {
+    const hasRole = allowedRoles.includes(role)
+    const hasRequiredPermission = permissions.includes('*') || permissions.includes(requiredPermission)
+    return hasRole && hasRequiredPermission
   }
 
   // Se há roles específicos permitidos, verifique se o role atual está incluído
   if (allowedRoles && allowedRoles.length > 0) {
-    return allowedRoles.includes(role)
+    const hasRole = allowedRoles.includes(role)
+    
+    // Se também há permissão requerida (modo padrão - OR), verifica ambos
+    if (requiredPermission && !strict) {
+      const hasRequiredPermission = permissions.includes('*') || permissions.includes(requiredPermission)
+      return hasRole || hasRequiredPermission
+    }
+    
+    return hasRole
   }
 
   // Se há permissão específica requerida, verifique se o usuário a possui
@@ -33,8 +59,26 @@ export const hasPermission = (
     return permissions.includes('*') || permissions.includes(requiredPermission)
   }
 
-  // Por padrão, permita acesso se não há restrições específicas
-  return true
+  // Se chegou até aqui sem especificar restrições, negue acesso por segurança
+  console.warn('hasPermission called without restrictions - denying access by default')
+  return false
+}
+
+/**
+ * Função auxiliar para verificação strict de permissões
+ */
+const hasPermissionStrict = (
+  role: string,
+  permissions: string[],
+  requiredPermission?: string,
+  allowedRoles?: string[]
+): boolean => {
+  const hasRole = !allowedRoles || allowedRoles.includes(role)
+  const hasRequiredPermission = !requiredPermission || 
+    permissions.includes('*') || 
+    permissions.includes(requiredPermission)
+  
+  return hasRole && hasRequiredPermission
 }
 
 /**

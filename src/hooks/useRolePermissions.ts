@@ -6,6 +6,7 @@ import { UserPermissions, DEFAULT_PERMISSIONS } from '@/types/permissions'
 export const useRolePermissions = (): UserPermissions => {
   const { userRole, loading } = useAuth()
 
+  // Memoizar permissões baseadas no código do role
   const permissions = useMemo(() => {
     if (!userRole?.code) {
       return []
@@ -15,6 +16,7 @@ export const useRolePermissions = (): UserPermissions => {
     return rolePermissions
   }, [userRole?.code])
 
+  // Memoizar objeto completo de permissões do usuário
   const userPermissions = useMemo(() => ({
     role: userRole?.code || '',
     permissions,
