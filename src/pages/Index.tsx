@@ -7,7 +7,9 @@ const Index = () => {
   
   useEffect(() => {
     // Redirect to login page
-    navigate('/login');
+    setInterval(() => {
+      navigate('/login');
+    }, 2000);
   }, [navigate]);
   
   return (
