@@ -1,8 +1,12 @@
+import { useMemo } from 'react'
 import { UserPermissions } from '@/types/permissions'
 import { checkRouteAccess, UserRole, hasHigherOrEqualRole, ROLE_HIERARCHY, ROLE_PERMISSIONS } from '@/shared/config/permissions'
 
 // Callback global para notificar mudanças nas permissões
 let permissionChangeCallback: (() => void) | null = null
+
+// Cache para permissões efetivas
+const effectivePermissionsCache = new Map<UserRole, string[]>()
 
 /**
  * Verifica se o usuário tem permissão para acessar determinado recurso
@@ -138,6 +142,106 @@ const hasPermissionStrict = (
     checkPermissionWithInheritance(role, requiredPermission, permissions)
   
   return hasRole && hasRequiredPermission
+}
+
+/**
+ * Verifica se o usuário tem pelo menos uma das permissões especificadas
+ * @param userPermissions - Objeto contendo role e permissions do usuário
+ * @param permissions - Array de permissões para verificar
+ * @returns boolean indicando se o usuário tem pelo menos uma das permissões
+ */
+export const hasAnyPermission = (
+  userPermissions: UserPermissions,
+  permissions: string[]
+): boolean => {
+  if (!permissions || permissions.length === 0) {
+    return false
+  }
+
+  // Usar memoização para evitar recálculos desnecessários
+  return useMemo(() => {
+    return permissions.some(permission => 
+      hasPermission(userPermissions, permission)
+    )
+  }, [userPermissions.role, userPermissions.permissions, permissions])
+}
+
+/**
+ * Verifica se o usuário tem todas as permissões especificadas
+ * @param userPermissions - Objeto contendo role e permissions do usuário
+ * @param permissions - Array de permissões para verificar
+ * @returns boolean indicando se o usuário tem todas as permissões
+ */
+export const hasAllPermissions = (
+  userPermissions: UserPermissions,
+  permissions: string[]
+): boolean => {
+  if (!permissions || permissions.length === 0) {
+    return true
+  }
+
+  // Usar memoização para evitar recálculos desnecessários
+  return useMemo(() => {
+    return permissions.every(permission => 
+      hasPermission(userPermissions, permission)
+    )
+  }, [userPermissions.role, userPermissions.permissions, permissions])
+}
+
+/**
+ * Obtém todas as permissões efetivas de um cargo, incluindo herança
+ * @param role - Cargo do usuário
+ * @returns Array com todas as permissões efetivas (diretas + herdadas)
+ */
+export const getEffectivePermissions = (role: UserRole): string[] => {
+  // Verificar cache primeiro
+  if (effectivePermissionsCache.has(role)) {
+    return effectivePermissionsCache.get(role)!
+  }
+
+  const effectivePermissions = new Set<string>()
+  
+  // Adicionar permissões diretas do cargo
+  const directPermissions = ROLE_PERMISSIONS[role] || []
+  directPermissions.forEach(permission => effectivePermissions.add(permission))
+  
+  // Se tem permissão '*', retorna apenas ela (acesso total)
+  if (directPermissions.includes('*')) {
+    const result = ['*']
+    effectivePermissionsCache.set(role, result)
+    return result
+  }
+  
+  // Adicionar permissões herdadas
+  const roleHierarchy = ROLE_HIERARCHY[role]
+  if (roleHierarchy?.inheritsFrom) {
+    for (const inheritedRole of roleHierarchy.inheritsFrom) {
+      const inheritedPermissions = getEffectivePermissions(inheritedRole)
+      
+      // Se um cargo herdado tem '*', adicionar todas as suas permissões
+      if (inheritedPermissions.includes('*')) {
+        effectivePermissions.add('*')
+        break // Não precisa continuar se já tem acesso total
+      } else {
+        inheritedPermissions.forEach(permission => effectivePermissions.add(permission))
+      }
+    }
+  }
+  
+  const result = Array.from(effectivePermissions).sort()
+  
+  // Cache do resultado
+  effectivePermissionsCache.set(role, result)
+  
+  return result
+}
+
+/**
+ * Limpa o cache de permissões efetivas
+ * Útil quando há mudanças na configuração de permissões
+ */
+export const clearEffectivePermissionsCache = (): void => {
+  effectivePermissionsCache.clear()
 }
 
 /**
