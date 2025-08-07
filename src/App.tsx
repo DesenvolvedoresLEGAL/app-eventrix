@@ -52,6 +52,7 @@ import TenantOnboarding from "./pages/TenantOnboarding";
 import TenantDashboard from "./pages/TenantDashboard";
 import PlanSelectionPage from "./pages/PlanSelection";
 import Teste from './pages/Test';
+import AccessDenied from "./pages/AccessDenied";
 
 const queryClient = new QueryClient();
 
@@ -115,6 +116,7 @@ const App = () => (
           <Route path="/heatmap" element={<HeatmapAI />} />
           <Route path="/dynamic-pricing" element={<DynamicPricing />} />
           <Route path="/legal-ai" element={<LegalAI />} />
+          <Route path="/access-denied" element={<AccessDenied />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
