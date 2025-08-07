@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@features/auth';
+import { useAuth } from '@/context/AuthContext';
 
 interface SidebarFooterProps {
   isCollapsed: boolean;

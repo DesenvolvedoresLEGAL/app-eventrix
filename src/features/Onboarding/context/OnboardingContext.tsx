@@ -1,9 +1,8 @@
-
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from "react";
 import supabase from "@/utils/supabase/client";
 import { Tables, TablesInsert } from "@/utils/supabase/types";
-import { signUp } from "@features/auth";
+import { signUp } from "@/services/authService";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useCNPJ } from "@/hooks/use-cnpj";
@@ -39,7 +38,6 @@ export interface FormData {
   estadoId: string;
   cidade: string;
 }
-
 interface OnboardingContextValue {
   currentStep: number;
   isSubmitting: boolean;

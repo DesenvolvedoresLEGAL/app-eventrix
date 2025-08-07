@@ -1,4 +1,3 @@
-
 import EnterpriseOnboardWizardPage from "@/features/Onboarding/pages/EnterpriseOnboardWizard";
 import { Zap } from "lucide-react";
 import React from "react";

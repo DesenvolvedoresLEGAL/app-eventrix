@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import type { Tenant } from '@features/auth'
+import type { Tenant } from '@/context/AuthContext'
 
 // Esquema básico para cadastro de tenant
 const tenantSchema = z.object({

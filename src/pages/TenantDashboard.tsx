@@ -1,6 +1,6 @@
 import React from 'react'
 import DashboardLayout from '@/components/layout/Dashboard'
-import { useAuth } from '@features/auth'
+import { useAuth } from '@/context/AuthContext'
 import InviteModal from '@/components/modals/InviteModal'
 
 const TenantDashboard: React.FC = () => {
