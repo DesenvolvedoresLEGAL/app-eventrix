@@ -67,7 +67,7 @@ const App = () => (
         {/* TODO(auth-guard): Wrap all non-public routes with PrivateRoute/RouteGuard */}
         <Routes>
           {/* TODO(auth-guard): '/' is private; enforce auth via PrivateRoute */}
-          <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
+          <Route path="/" element={<Index />} />
           {/* TODO(auth-guard): Public route */}
           <Route path="/login" element={<Login />} />
           {/* TODO(auth-guard): Public route */}
