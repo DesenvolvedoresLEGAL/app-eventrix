@@ -1,9 +1,10 @@
+
 /* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import supabase from '@/utils/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
-import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
+import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@features/auth/services/authService'
 
 export interface Tenant {
   id: string

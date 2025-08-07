@@ -1,3 +1,4 @@
+
 import supabase from '@/utils/supabase/client'
 
 export interface SignUpData {
