@@ -1,7 +1,7 @@
 
 /* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import supabase from '@/utils/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
@@ -69,75 +69,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [tenant, setTenant] = useState<Tenant | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<AuthError | null>(null)
-  const bootIdRef = useRef(0)
 
   const clearError = useCallback(() => {
     setError(null)
   }, [])
 
   const loadProfile = useCallback(async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        role:user_roles (
-          id,
-          code,
-          description
-        )
-      `)
-      .eq('id', userId)
-      .single()
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          role:user_roles (
+            id,
+            code,
+            description
+          )
+        `)
+        .eq('id', userId)
+        .single()
 
-    if (error) {
-      console.error('Erro ao carregar profile:', { error, code: (error as any)?.code, details: (error as any)?.details, hint: (error as any)?.hint })
-      throw new Error('Não foi possível carregar os dados do perfil.')
+      if (error) {
+        console.warn('Erro ao carregar profile:', error)
+        return null
+      }
+
+      return data as Profile
+    } catch (err) {
+      console.warn('Erro ao carregar profile:', err)
+      return null
     }
-
-    return data as Profile
   }, [])
 
   const loadTenant = useCallback(async (userEmail: string) => {
-    const { data, error } = await supabase
-      .from('tenants')
-      .select(`
-        id,
-        slug,
-        razao_social,
-        nome_fantasia,
-        contact_email,
-        cnpj,
-        status_id,
-        plan_id,
-        trial_ends_at,
-        features_enabled,
-        onboarding_completed
-      `)
-      .eq('contact_email', userEmail)
-      .is('deleted_at', null)
-      .maybeSingle()
+    try {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select(`
+          id,
+          slug,
+          razao_social,
+          nome_fantasia,
+          contact_email,
+          cnpj,
+          status_id,
+          plan_id,
+          trial_ends_at,
+          features_enabled,
+          onboarding_completed
+        `)
+        .eq('contact_email', userEmail)
+        .eq('deleted_at', null)
+        .single()
 
-    if (error) {
-      console.error('Erro ao carregar tenant:', { error, code: (error as any)?.code, details: (error as any)?.details, hint: (error as any)?.hint })
-      throw new Error('Não foi possível carregar os dados do tenant.')
+      if (error) {
+        console.warn('Erro ao carregar tenant:', error)
+        return null
+      }
+
+      return data as Tenant
+    } catch (err) {
+      console.warn('Erro ao carregar tenant:', err)
+      return null
     }
-
-    return (data as Tenant) ?? null
   }, [])
 
   const refreshTenant = useCallback(async () => {
-    if (!user?.email) {
-      setTenant(null)
-      return
-    }
+    if (!user?.email) return
 
-    try {
-      const tenantData = await loadTenant(user.email)
-      setTenant(tenantData)
-    } catch (err: any) {
-      console.error('Erro ao atualizar tenant:', { err, code: err?.code, details: err?.details, hint: err?.hint })
-      setError({ message: 'Falha ao atualizar dados do tenant', type: 'tenant' })
-    }
+    const tenantData = await loadTenant(user.email)
+    setTenant(tenantData)
   }, [user?.email, loadTenant])
 
   const enhancedSignIn = useCallback(async (email: string, password: string) => {
@@ -177,61 +178,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Gerenciar estado de autenticação
   useEffect(() => {
     let mounted = true
-    setLoading(true)
 
-    // Configurar listener de mudanças de auth e centralizar bootstrapping
+    // Configurar listener de mudanças de auth PRIMEIRO
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         if (!mounted) return
 
         console.log('Auth state changed:', event, currentSession?.user?.email)
 
-        // Incrementa bootId para evitar condições de corrida entre eventos
-        const localBootId = ++bootIdRef.current
-
-        // Atualiza estados síncronos
         setSession(currentSession)
         setUser(currentSession?.user ?? null)
 
         if (currentSession?.user) {
-          // Inicia carregamento para bootstrap desta sessão
-          setLoading(true)
-          // Buscar dados adicionais de forma assíncrona e não bloquear o callback
+          // Carregar dados adicionais de forma assíncrona
           setTimeout(async () => {
-            if (!mounted || localBootId !== bootIdRef.current) return
-            try {
-              const [profileData, tenantData] = await Promise.all([
-                loadProfile(currentSession.user.id),
-                currentSession.user.email ? loadTenant(currentSession.user.email) : Promise.resolve(null)
-              ])
+            if (!mounted) return
 
-              if (mounted && localBootId === bootIdRef.current) {
-                setProfile(profileData)
-                setTenant(tenantData)
-              }
-            } catch (err: any) {
-              if (!mounted || localBootId !== bootIdRef.current) return
-              console.error('Erro ao carregar dados complementares:', { err, code: err?.code, details: err?.details, hint: err?.hint })
-              setProfile(null)
-              setTenant(null)
-              setError({ message: 'Falha ao carregar dados do usuário', type: 'auth' })
-            } finally {
-              if (mounted && localBootId === bootIdRef.current) setLoading(false)
+            const [profileData, tenantData] = await Promise.all([
+              loadProfile(currentSession.user.id),
+              loadTenant(currentSession.user.email!)
+            ])
+
+            if (mounted) {
+              setProfile(profileData)
+              setTenant(tenantData)
             }
           }, 0)
         } else {
-          // Sem sessão: limpa dados e finaliza carregamento
           setProfile(null)
           setTenant(null)
-          setLoading(false)
         }
 
         if (event === 'SIGNED_OUT') {
           setProfile(null)
           setTenant(null)
         }
+
+        setLoading(false)
       }
     )
+
+    // DEPOIS verificar sessão existente
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      if (!mounted) return
+      
+      setSession(currentSession)
+      setUser(currentSession?.user ?? null)
+      
+      if (!currentSession) {
+        setLoading(false)
+      }
+    })
 
     return () => {
       mounted = false

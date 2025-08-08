@@ -4,17 +4,15 @@ import React from "react";
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const Register = () => {
-  // Adicionado 'loading' para evitar redirecionamento prematuro
-  const { isAuthenticated, loading } = useAuth();
+const Teste = () => {
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    // A verificação agora aguarda o fim do carregamento
-    if (!loading && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, loading, navigate]); // Adicionado 'loading' à dependência
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="min-h-screen gap-5 grid grid-cols-5 items-center justify-center bg-muted">
@@ -73,4 +71,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Teste;
