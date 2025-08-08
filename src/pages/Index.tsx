@@ -6,6 +6,7 @@ const Index = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
+    localStorage.clear();
     // Redirect to login page
     setInterval(() => {
       navigate('/login');

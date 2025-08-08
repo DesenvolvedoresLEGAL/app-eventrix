@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { ArrowRight, Zap, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/hooks/use-toast'
@@ -14,6 +14,7 @@ const Login = () => {
   const navigate = useNavigate()
   const { signIn, resetPassword, loading, error, clearError, isAuthenticated } = useAuth()
   const { toast } = useToast()
+  const location = useLocation()
 
   // Validação em tempo real
   const validateForm = useCallback(() => {
@@ -41,9 +42,15 @@ const Login = () => {
   // Redirecionar usuários autenticados
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true })
+      const params = new URLSearchParams(location.search)
+      const raw = params.get('redirectTo')
+      // Lazy import to avoid circular deps
+      import('@/auth/redirect').then(({ sanitizeRedirect }) => {
+        const safe = sanitizeRedirect(raw)
+        navigate(safe || '/dashboard', { replace: true })
+      })
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate, location.search])
 
   // Limpar erros quando o usuário digita
   React.useEffect(() => {
