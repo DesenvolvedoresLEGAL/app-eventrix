@@ -1,7 +1,7 @@
 
 /* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import supabase from '@/utils/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
@@ -69,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [tenant, setTenant] = useState<Tenant | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<AuthError | null>(null)
+  const bootIdRef = useRef(0)
 
   const clearError = useCallback(() => {
     setError(null)
@@ -89,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .single()
 
     if (error) {
-      console.error('Erro ao carregar profile:', error)
+      console.error('Erro ao carregar profile:', { error, code: (error as any)?.code, details: (error as any)?.details, hint: (error as any)?.hint })
       throw new Error('Não foi possível carregar os dados do perfil.')
     }
 
@@ -113,11 +114,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         onboarding_completed
       `)
       .eq('contact_email', userEmail)
-      .eq('deleted_at', null)
+      .is('deleted_at', null)
       .maybeSingle()
 
     if (error) {
-      console.error('Erro ao carregar tenant:', error)
+      console.error('Erro ao carregar tenant:', { error, code: (error as any)?.code, details: (error as any)?.details, hint: (error as any)?.hint })
       throw new Error('Não foi possível carregar os dados do tenant.')
     }
 
@@ -125,10 +126,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const refreshTenant = useCallback(async () => {
-    if (!user?.email) return
+    if (!user?.email) {
+      setTenant(null)
+      return
+    }
 
-    const tenantData = await loadTenant(user.email)
-    setTenant(tenantData)
+    try {
+      const tenantData = await loadTenant(user.email)
+      setTenant(tenantData)
+    } catch (err: any) {
+      console.error('Erro ao atualizar tenant:', { err, code: err?.code, details: err?.details, hint: err?.hint })
+      setError({ message: 'Falha ao atualizar dados do tenant', type: 'tenant' })
+    }
   }, [user?.email, loadTenant])
 
   const enhancedSignIn = useCallback(async (email: string, password: string) => {
@@ -177,32 +186,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         console.log('Auth state changed:', event, currentSession?.user?.email)
 
+        // Incrementa bootId para evitar condições de corrida entre eventos
+        const localBootId = ++bootIdRef.current
+
         // Atualiza estados síncronos
         setSession(currentSession)
         setUser(currentSession?.user ?? null)
 
         if (currentSession?.user) {
+          // Inicia carregamento para bootstrap desta sessão
+          setLoading(true)
           // Buscar dados adicionais de forma assíncrona e não bloquear o callback
           setTimeout(async () => {
-            if (!mounted) return
+            if (!mounted || localBootId !== bootIdRef.current) return
             try {
               const [profileData, tenantData] = await Promise.all([
                 loadProfile(currentSession.user.id),
                 currentSession.user.email ? loadTenant(currentSession.user.email) : Promise.resolve(null)
               ])
 
-              if (mounted) {
+              if (mounted && localBootId === bootIdRef.current) {
                 setProfile(profileData)
                 setTenant(tenantData)
               }
-            } catch (err) {
-              if (!mounted) return
-              console.error('Erro ao carregar dados complementares:', err)
+            } catch (err: any) {
+              if (!mounted || localBootId !== bootIdRef.current) return
+              console.error('Erro ao carregar dados complementares:', { err, code: err?.code, details: err?.details, hint: err?.hint })
               setProfile(null)
               setTenant(null)
               setError({ message: 'Falha ao carregar dados do usuário', type: 'auth' })
             } finally {
-              if (mounted) setLoading(false)
+              if (mounted && localBootId === bootIdRef.current) setLoading(false)
             }
           }, 0)
         } else {
