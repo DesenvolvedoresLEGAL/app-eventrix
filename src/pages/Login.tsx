@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { ArrowRight, Zap, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/hooks/use-toast'
+import { useEntryAuthCleanup } from '@/hooks/useEntryAuthCleanup'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -15,6 +16,7 @@ const Login = () => {
   const { signIn, resetPassword, loading, error, clearError, isAuthenticated } = useAuth()
   const { toast } = useToast()
   const location = useLocation()
+  useEntryAuthCleanup()
 
   // Validação em tempo real
   const validateForm = useCallback(() => {
