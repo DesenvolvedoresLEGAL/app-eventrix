@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useRolePermissions } from '@/hooks/useRolePermissions'
 import { hasPermission } from '@/utils/permissions'
@@ -25,16 +25,15 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
 }) => {
   const { user, session, loading, isAuthenticated } = useAuth()
   const userPermissions = useRolePermissions()
-  const { pathname } = useLocation()
 
   // Primeiro, verificar autenticação
   if (loading || userPermissions.isFetching) {
     return <LoadingScreen />
   }
 
-  // Se não está autenticado, redirecionar para login com redirectTo
+  // Se não está autenticado, redirecionar para login
   if (!isAuthenticated || !user || !session) {
-    return <Navigate to={`/login?redirectTo=${encodeURIComponent(pathname)}`} replace />
+    return <Navigate to="/login" replace />
   }
 
   // Verificar permissões usando a nova função melhorada
