@@ -38,17 +38,7 @@ const RoleBasedRoute: React.FC<ExtendedRoleBasedRouteProps> = ({
   const { loading, isAuthenticated, userRole } = useAuth()
   const userPermissions = useRolePermissions()
 
-  if (loading) {
-    // Não executa mais nenhuma lógica enquanto carrega
-    return <FullPageSpinner />
-  }
-
-  // 2) Só depois do carregamento, verificar autenticação
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-
-  // 3) Autorização por último (com userRole disponível)
+  // 3) Calcular permissões e autorização ANTES de quaisquer returns (mantém ordem dos hooks)
   const permissionList = useMemo(() => {
     if (requiredPermissions && requiredPermissions.length > 0) return requiredPermissions
     if (requiredPermission) return [requiredPermission]
@@ -64,6 +54,17 @@ const RoleBasedRoute: React.FC<ExtendedRoleBasedRouteProps> = ({
       hasPermission(userPermissions, perm, allowedRoles, strict)
     )
   }, [permissionList, userPermissions, allowedRoles, strict])
+
+  // 1) SEMPRE verificar carregamento primeiro
+  if (loading) {
+    // Não executa mais nenhuma lógica enquanto carrega
+    return <FullPageSpinner />
+  }
+
+  // 2) Só depois do carregamento, verificar autenticação
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
 
   // Condição de não autorizado: userRole ausente (mesmo após loading) OU sem permissão
   if (!userRole || !isAuthorized) {
