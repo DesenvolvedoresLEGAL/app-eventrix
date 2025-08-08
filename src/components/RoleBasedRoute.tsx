@@ -1,52 +1,79 @@
 
-import React from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import React, { useMemo } from 'react'
+import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useRolePermissions } from '@/hooks/useRolePermissions'
 import { hasPermission } from '@/utils/permissions'
 import { RoleBasedRouteProps } from '@/types/permissions'
 
-const LoadingScreen = () => (
+// Spinner de tela cheia para estados de carregamento
+const FullPageSpinner: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
     <div className="text-center">
       <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-      <h2 className="text-xl font-semibold text-foreground mb-2">Verificando permissões...</h2>
+      <h2 className="text-xl font-semibold text-foreground mb-2">Carregando...</h2>
       <p className="text-muted-foreground">Aguarde um momento</p>
     </div>
   </div>
 )
 
-const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({ 
-  children, 
+// Estendemos as props para aceitar requiredPermissions (lista) mantendo compatibilidade
+// com a API anterior (requiredPermission singular)
+type ExtendedRoleBasedRouteProps = RoleBasedRouteProps & {
+  requiredPermissions?: string[]
+}
+
+const RoleBasedRoute: React.FC<ExtendedRoleBasedRouteProps> = ({
+  children,
   allowedRoles,
+  // novo array de permissões (tem precedência se fornecido)
+  requiredPermissions,
+  // compatibilidade com a prop anterior singular
   requiredPermission,
-  fallbackPath = '/access-denied',
-  strict = false
+  // UX melhor ao redirecionar quando não autorizado
+  fallbackPath = '/dashboard',
+  strict = false,
 }) => {
-  const { user, session, loading, isAuthenticated } = useAuth()
+  // 1) SEMPRE verificar carregamento primeiro
+  const { loading, isAuthenticated, userRole } = useAuth()
   const userPermissions = useRolePermissions()
-  const { pathname } = useLocation()
 
-  // Primeiro, verificar autenticação
-  if (loading || userPermissions.isFetching) {
-    return <LoadingScreen />
+  if (loading) {
+    // Não executa mais nenhuma lógica enquanto carrega
+    return <FullPageSpinner />
   }
 
-  // Se não está autenticado, redirecionar para login com redirectTo
-  if (!isAuthenticated || !user || !session) {
-    return <Navigate to={`/login?redirectTo=${encodeURIComponent(pathname)}`} replace />
+  // 2) Só depois do carregamento, verificar autenticação
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
   }
 
-  // Verificar permissões usando a nova função melhorada
-  const hasAccess = hasPermission(userPermissions, requiredPermission, allowedRoles, strict)
+  // 3) Autorização por último (com userRole disponível)
+  const permissionList = useMemo(() => {
+    if (requiredPermissions && requiredPermissions.length > 0) return requiredPermissions
+    if (requiredPermission) return [requiredPermission]
+    return [] // nenhuma permissão específica exigida
+  }, [requiredPermissions, requiredPermission])
 
-  // Se não tem permissão, redirecionar para página de acesso negado
-  if (!hasAccess) {
+  const isAuthorized = useMemo(() => {
+    // Se nenhuma permissão foi exigida explicitamente, considerar autorizado
+    if (permissionList.length === 0) return true
+
+    // Precisa ter pelo menos uma das permissões
+    return permissionList.some((perm) =>
+      hasPermission(userPermissions, perm, allowedRoles, strict)
+    )
+  }, [permissionList, userPermissions, allowedRoles, strict])
+
+  // Condição de não autorizado: userRole ausente (mesmo após loading) OU sem permissão
+  if (!userRole || !isAuthorized) {
     return <Navigate to={fallbackPath} replace />
   }
 
-  // Se chegou até aqui, tem acesso - renderizar o componente
-  return children
+  // 4) Renderizar conteúdo protegido
+  // Preferimos Outlet para rotas aninhadas; mantemos compatibilidade com children
+  return children ?? <Outlet />
 }
 
 export default RoleBasedRoute
+
