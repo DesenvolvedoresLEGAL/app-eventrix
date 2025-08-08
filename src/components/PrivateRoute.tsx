@@ -7,7 +7,7 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  // TODO(auth-guard): In future, swap to RouteGuard handling public/private + permissions
+  // PrivateRoute agora é apenas um wrapper do RoleBasedRoute sem restrições de role
   return (
     <RoleBasedRoute>
       {children}
