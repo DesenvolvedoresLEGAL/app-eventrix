@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react'
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useRolePermissions } from '@/hooks/useRolePermissions'
 import { hasPermission } from '@/utils/permissions'
@@ -37,7 +37,7 @@ const RoleBasedRoute: React.FC<ExtendedRoleBasedRouteProps> = ({
   // 1) SEMPRE verificar carregamento primeiro
   const { loading, isAuthenticated, userRole } = useAuth()
   const userPermissions = useRolePermissions()
-
+  const location = useLocation()
   // 3) Calcular permissões e autorização ANTES de quaisquer returns (mantém ordem dos hooks)
   const permissionList = useMemo(() => {
     if (requiredPermissions && requiredPermissions.length > 0) return requiredPermissions
@@ -55,6 +55,12 @@ const RoleBasedRoute: React.FC<ExtendedRoleBasedRouteProps> = ({
     )
   }, [permissionList, userPermissions, allowedRoles, strict])
 
+  // Evita loop de redirecionamento quando fallbackPath === rota atual
+  const safeFallbackPath = useMemo(() => {
+    const target = fallbackPath || '/access-denied'
+    return location.pathname === target ? '/access-denied' : target
+  }, [location.pathname, fallbackPath])
+
   // 1) SEMPRE verificar carregamento primeiro
   if (loading) {
     // Não executa mais nenhuma lógica enquanto carrega
@@ -68,7 +74,7 @@ const RoleBasedRoute: React.FC<ExtendedRoleBasedRouteProps> = ({
 
   // Condição de não autorizado: userRole ausente (mesmo após loading) OU sem permissão
   if (!userRole || !isAuthorized) {
-    return <Navigate to={fallbackPath} replace />
+    return <Navigate to={safeFallbackPath} replace />
   }
 
   // 4) Renderizar conteúdo protegido
