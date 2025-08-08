@@ -1,244 +1,125 @@
-import React, { Suspense, lazy } from 'react'
-import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom'
-import PrivateRoute from '@/components/PrivateRoute'
-import RoleBasedRoute from '@/components/RoleBasedRoute'
+import React from 'react';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import PrivateRoute from "./components/PrivateRoute";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ResetPassword from "./pages/ResetPassword";
+import Plans from "./pages/Plans";
+import Dashboard from "./pages/Dashboard";
+import Events from "./pages/Events";
+import NewEvent from "./pages/NewEvent";
+import Exhibitors from "./pages/Exhibitors";
+import Visitors from "./pages/Visitors";
+import Staff from "./pages/Staff";
+import Suppliers from "./pages/Suppliers";
+import Permissions from "./pages/Permissions";
+import Lectures from "./pages/Lectures";
+import Tracks from "./pages/Tracks";
+import Activities from "./pages/Activities";
+import Venues from "./pages/Venues";
+import Checklist from "./pages/Checklist";
+import TeamTasks from "./pages/TeamTasks";
+import Registration from "./pages/Registration";
+import CheckIn from "./pages/CheckIn";
+import AccessHistory from "./pages/AccessHistory";
+import Marketing from "./pages/Marketing";
+import MarketingAds from "./pages/MarketingAds";
+import MarketingContent from "./pages/MarketingContent";
+import MarketingEmail from "./pages/MarketingEmail";
+import MarketingPages from "./pages/MarketingPages";
+import CommunicationHumanGPT from "./pages/CommunicationHumanGPT";
+import CommunicationLinkAI from "./pages/CommunicationLinkAI";
+import CommunicationNotifications from "./pages/CommunicationNotifications";
+import Analytics from "./pages/Analytics";
+import Reports from "./pages/Reports";
+import AnalyticsNPS from "./pages/AnalyticsNPS";
+import AnalyticsHeatmap from "./pages/AnalyticsHeatmap";
+import AnalyticsEngagement from "./pages/AnalyticsEngagement";
+import Marketplace from "./pages/Marketplace";
+import APIManagement from "./pages/APIManagement";
+import AIValidator from "./pages/AIValidator";
+import HeatmapAI from "./pages/HeatmapAI";
+import DynamicPricing from "./pages/DynamicPricing";
+import LegalAI from "./pages/LegalAI";
+import UserOnboarding from "./pages/UserOnboarding";
+import TenantOnboarding from "./pages/TenantOnboarding";
+import TenantDashboard from "./pages/TenantDashboard";
+import PlanSelectionPage from "./pages/PlanSelection";
+import Teste from './pages/Test';
 
-// Fallback de carregamento para lazy routes
-const FullPageSpinner: React.FC = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="text-center">
-      <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-      <h2 className="text-xl font-semibold text-foreground mb-2">Carregando...</h2>
-      <p className="text-muted-foreground">Aguarde um momento</p>
-    </div>
-  </div>
-)
+const queryClient = new QueryClient();
 
-// Páginas públicas (lazy)
-const IndexPage = lazy(() => import('@/pages/Index'))
-const LoginPage = lazy(() => import('@/pages/Login'))
-const RegisterPage = lazy(() => import('@/pages/Register'))
-const ResetPasswordPage = lazy(() => import('@/pages/ResetPassword'))
-const PlansPage = lazy(() => import('@/pages/Plans'))
-const TenantOnboardingPage = lazy(() => import('@/pages/TenantOnboarding'))
-const UserOnboardingPage = lazy(() => import('@/pages/UserOnboarding'))
-const InviteAcceptPage = lazy(() => import('@/features/InviteOnboarding/pages/InviteAcceptPage'))
-const AccessDeniedPage = lazy(() => import('@/pages/AccessDenied'))
-const NotFoundPage = lazy(() => import('@/pages/NotFound'))
-
-// Páginas privadas (lazy)
-const DashboardPage = lazy(() => import('@/pages/Dashboard'))
-const EventsPage = lazy(() => import('@/pages/Events'))
-const NewEventPage = lazy(() => import('@/pages/NewEvent'))
-const StaffPage = lazy(() => import('@/pages/Staff'))
-const SuppliersPage = lazy(() => import('@/pages/Suppliers'))
-const VisitorsPage = lazy(() => import('@/pages/Visitors'))
-const FinancePage = lazy(() => import('@/pages/Finance'))
-const MarketingPage = lazy(() => import('@/pages/Marketing'))
-const SettingsPage = lazy(() => import('@/pages/Settings'))
-const PermissionsPage = lazy(() => import('@/pages/Permissions'))
-
-// Outras páginas privadas (lazy) comuns no projeto
-const ActivitiesPage = lazy(() => import('@/pages/Activities'))
-const AnalyticsPage = lazy(() => import('@/pages/Analytics'))
-const AnalyticsEngagementPage = lazy(() => import('@/pages/AnalyticsEngagement'))
-const AnalyticsNPSPage = lazy(() => import('@/pages/AnalyticsNPS'))
-const CheckInPage = lazy(() => import('@/pages/CheckIn'))
-const ChecklistPage = lazy(() => import('@/pages/Checklist'))
-const IntegrationsPage = lazy(() => import('@/pages/Integrations'))
-const LecturesPage = lazy(() => import('@/pages/Lectures'))
-const LiveOpsPage = lazy(() => import('@/pages/LiveOps'))
-const ReportsPage = lazy(() => import('@/pages/Reports'))
-const TeamTasksPage = lazy(() => import('@/pages/TeamTasks'))
-const TracksPage = lazy(() => import('@/pages/Tracks'))
-const VenuesPage = lazy(() => import('@/pages/Venues'))
-const APIManagementPage = lazy(() => import('@/pages/APIManagement'))
-const AIValidatorPage = lazy(() => import('@/pages/AIValidator'))
-const DynamicPricingPage = lazy(() => import('@/pages/DynamicPricing'))
-const LegalAIPage = lazy(() => import('@/pages/LegalAI'))
-const HeatmapPage = lazy(() => import('@/pages/Heatmap'))
-const HeatmapAIPage = lazy(() => import('@/pages/HeatmapAI'))
-const AccessHistoryPage = lazy(() => import('@/pages/AccessHistory'))
-const RegistrationPage = lazy(() => import('@/pages/Registration'))
-const CommunicationHumanGPTPage = lazy(() => import('@/pages/CommunicationHumanGPT'))
-const CommunicationLinkAIPage = lazy(() => import('@/pages/CommunicationLinkAI'))
-const CommunicationNotificationsPage = lazy(() => import('@/pages/CommunicationNotifications'))
-const ExhibitorsPage = lazy(() => import('@/pages/Exhibitors'))
-const PlanSelectionPage = lazy(() => import('@/pages/PlanSelection'))
-const MarketplacePage = lazy(() => import('@/pages/Marketplace'))
-const TenantDashboardPage = lazy(() => import('@/pages/TenantDashboard'))
-const MarketingAdsPage = lazy(() => import('@/pages/MarketingAds'))
-const MarketingContentPage = lazy(() => import('@/pages/MarketingContent'))
-const MarketingEmailPage = lazy(() => import('@/pages/MarketingEmail'))
-const MarketingPagesPage = lazy(() => import('@/pages/MarketingPages'))
-
-// Observação: Nosso sistema atual usa RoleBasedRoute com requiredPermission (singular) e/ou allowedRoles.
-// Como o enum Permission não existe neste projeto, mapeamos usando strings e allowedRoles conforme a config centralizada.
-
-const App: React.FC = () => {
-  return (
-    <BrowserRouter>
-      <Suspense fallback={<FullPageSpinner />}> 
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
         <Routes>
-          {/* Rotas públicas */}
-          <Route path="/" element={<IndexPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/plans" element={<PlansPage />} />
-          <Route path="/onboarding/tenant" element={<TenantOnboardingPage />} />
-          <Route path="/onboarding/user" element={<UserOnboardingPage />} />
-          <Route path="/invite/accept" element={<InviteAcceptPage />} />
-          <Route path="/unauthorized" element={<AccessDeniedPage />} />
-          <Route path="/access-denied" element={<AccessDeniedPage />} />
-
-          {/* Rotas privadas: layout autenticado via PrivateRoute */}
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/data-test" element={<Teste />} />
+          <Route path="/plans" element={<Plans />} />
+          <Route path="/onboarding/user" element={<UserOnboarding />} />
+          <Route path="/onboarding/tenant" element={<TenantOnboarding />} />
+          <Route path="/onboarding/plan" element={<PlanSelectionPage />} />
           <Route
+            path="/dashboard"
             element={
               <PrivateRoute>
-                <Outlet />
+                <Dashboard />
               </PrivateRoute>
             }
-          >
-            {/* Dashboard */}
-            <Route
-              path="/dashboard"
-              element={
-                <RoleBasedRoute requiredPermission="view_dashboard">
-                  <DashboardPage />
-                </RoleBasedRoute>
-              }
-            />
-
-            {/* Eventos */}
-            <Route
-              path="/events"
-              element={
-                <RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "developer", "viewer"]}>
-                  <EventsPage />
-                </RoleBasedRoute>
-              }
-            />
-            <Route
-              path="/events/new"
-              element={
-                <RoleBasedRoute requiredPermission="manage_events" allowedRoles={["owner", "event_manager"]}>
-                  <NewEventPage />
-                </RoleBasedRoute>
-              }
-            />
-
-            {/* Pessoas e parceiros */}
-            <Route
-              path="/staff"
-              element={
-                <RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}>
-                  <StaffPage />
-                </RoleBasedRoute>
-              }
-            />
-            <Route
-              path="/suppliers"
-              element={
-                <RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}>
-                  <SuppliersPage />
-                </RoleBasedRoute>
-              }
-            />
-            <Route
-              path="/visitors"
-              element={
-                <RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}>
-                  <VisitorsPage />
-                </RoleBasedRoute>
-              }
-            />
-
-            {/* Finanças e marketing */}
-            <Route
-              path="/finance"
-              element={
-                <RoleBasedRoute allowedRoles={["owner", "developer", "finance"]}>
-                  <FinancePage />
-                </RoleBasedRoute>
-              }
-            />
-            <Route
-              path="/marketing"
-              element={
-                <RoleBasedRoute allowedRoles={["owner", "content_editor"]}>
-                  <MarketingPage />
-                </RoleBasedRoute>
-              }
-            />
-
-            {/* Configurações e permissões */}
-            <Route
-              path="/settings"
-              element={
-                <RoleBasedRoute requiredPermission="manage_settings" allowedRoles={["owner", "developer"]}>
-                  <SettingsPage />
-                </RoleBasedRoute>
-              }
-            />
-            <Route
-              path="/permissions"
-              element={
-                <RoleBasedRoute requiredPermission="manage_permissions" allowedRoles={["owner", "developer"]}>
-                  <PermissionsPage />
-                </RoleBasedRoute>
-              }
-            />
-
-            {/* Outras áreas da aplicação */}
-            <Route path="/activities" element={<RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}><ActivitiesPage /></RoleBasedRoute>} />
-            <Route path="/lectures" element={<RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}><LecturesPage /></RoleBasedRoute>} />
-            <Route path="/venues" element={<RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}><VenuesPage /></RoleBasedRoute>} />
-            <Route path="/tracks" element={<RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}><TracksPage /></RoleBasedRoute>} />
-            <Route path="/checklist" element={<RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}><ChecklistPage /></RoleBasedRoute>} />
-            <Route path="/team-tasks" element={<RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}><TeamTasksPage /></RoleBasedRoute>} />
-            <Route path="/checkin" element={<RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}><CheckInPage /></RoleBasedRoute>} />
-            <Route path="/registration" element={<RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}><RegistrationPage /></RoleBasedRoute>} />
-            <Route path="/access-history" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><AccessHistoryPage /></RoleBasedRoute>} />
-
-            {/* Analytics e relatórios */}
-            <Route path="/analytics" element={<RoleBasedRoute allowedRoles={["owner", "developer", "finance", "viewer"]}><AnalyticsPage /></RoleBasedRoute>} />
-            <Route path="/analytics/engagement" element={<RoleBasedRoute allowedRoles={["owner", "developer", "finance", "viewer"]}><AnalyticsEngagementPage /></RoleBasedRoute>} />
-            <Route path="/analytics/nps" element={<RoleBasedRoute allowedRoles={["owner", "developer", "finance", "viewer"]}><AnalyticsNPSPage /></RoleBasedRoute>} />
-            <Route path="/reports" element={<RoleBasedRoute allowedRoles={["owner", "developer", "finance", "viewer"]}><ReportsPage /></RoleBasedRoute>} />
-
-            {/* Integrações / APIs */}
-            <Route path="/integrations" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><IntegrationsPage /></RoleBasedRoute>} />
-            <Route path="/api-management" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><APIManagementPage /></RoleBasedRoute>} />
-
-            {/* IA e recursos avançados */}
-            <Route path="/ai-validator" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><AIValidatorPage /></RoleBasedRoute>} />
-            <Route path="/dynamic-pricing" element={<RoleBasedRoute allowedRoles={["owner", "developer", "finance"]}><DynamicPricingPage /></RoleBasedRoute>} />
-            <Route path="/legal-ai" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><LegalAIPage /></RoleBasedRoute>} />
-            <Route path="/heatmap" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><HeatmapPage /></RoleBasedRoute>} />
-            <Route path="/heatmap-ai" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><HeatmapAIPage /></RoleBasedRoute>} />
-
-            {/* Comunicação */}
-            <Route path="/communication/humangpt" element={<RoleBasedRoute allowedRoles={["owner"]}><CommunicationHumanGPTPage /></RoleBasedRoute>} />
-            <Route path="/communication/linkai" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><CommunicationLinkAIPage /></RoleBasedRoute>} />
-            <Route path="/communication/notifications" element={<RoleBasedRoute allowedRoles={["owner"]}><CommunicationNotificationsPage /></RoleBasedRoute>} />
-
-            {/* Outras */}
-            <Route path="/exhibitors" element={<RoleBasedRoute allowedRoles={["owner", "event_manager", "coordinator", "viewer"]}><ExhibitorsPage /></RoleBasedRoute>} />
-            <Route path="/plan-selection" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><PlanSelectionPage /></RoleBasedRoute>} />
-            <Route path="/marketplace" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><MarketplacePage /></RoleBasedRoute>} />
-            <Route path="/tenant-dashboard" element={<RoleBasedRoute allowedRoles={["owner", "developer"]}><TenantDashboardPage /></RoleBasedRoute>} />
-
-            {/* Redirecionamento padrão da área autenticada */}
-            <Route index element={<Navigate to="/dashboard" replace />} />
-          </Route>
-
-          {/* Fallback 404 */}
-          <Route path="*" element={<NotFoundPage />} />
+          />
+          <Route path="/tenant-dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/new" element={<NewEvent />} />
+          <Route path="/exhibitors" element={<Exhibitors />} />
+          <Route path="/visitors" element={<Visitors />} />
+          <Route path="/staff" element={<Staff />} />
+          <Route path="/suppliers" element={<Suppliers />} />
+          <Route path="/permissions" element={<Permissions />} />
+          <Route path="/lectures" element={<Lectures />} />
+          <Route path="/tracks" element={<Tracks />} />
+          <Route path="/activities" element={<Activities />} />
+          <Route path="/venues" element={<Venues />} />
+          <Route path="/checklist" element={<Checklist />} />
+          <Route path="/team-tasks" element={<TeamTasks />} />
+          <Route path="/registration" element={<Registration />} />
+          <Route path="/checkin" element={<CheckIn />} />
+          <Route path="/access-history" element={<AccessHistory />} />
+          <Route path="/marketing" element={<Marketing />} />
+          <Route path="/marketing/ads" element={<MarketingAds />} />
+          <Route path="/marketing/content" element={<MarketingContent />} />
+          <Route path="/marketing/email" element={<MarketingEmail />} />
+          <Route path="/marketing/pages" element={<MarketingPages />} />
+          <Route path="/communication/humangpt" element={<CommunicationHumanGPT />} />
+          <Route path="/communication/linkai" element={<CommunicationLinkAI />} />
+          <Route path="/communication/notifications" element={<CommunicationNotifications />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/analytics/nps" element={<AnalyticsNPS />} />
+          <Route path="/analytics/heatmap" element={<AnalyticsHeatmap />} />
+          <Route path="/analytics/engagement" element={<AnalyticsEngagement />} />
+          <Route path="/integrations" element={<Marketplace />} />
+          <Route path="/api-management" element={<APIManagement />} />
+          <Route path="/ai-validator" element={<AIValidator />} />
+          <Route path="/heatmap" element={<HeatmapAI />} />
+          <Route path="/dynamic-pricing" element={<DynamicPricing />} />
+          <Route path="/legal-ai" element={<LegalAI />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
-      </Suspense>
-    </BrowserRouter>
-  )
-}
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
-export default App
+export default App;

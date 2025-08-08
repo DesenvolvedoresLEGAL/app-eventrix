@@ -1,4 +1,3 @@
-
 /* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
@@ -20,12 +19,6 @@ export interface Tenant {
   onboarding_completed: boolean
 }
 
-interface UserRole {
-  id: string
-  code: string
-  description: string | null
-}
-
 interface Profile {
   id: string
   first_name: string
@@ -33,7 +26,6 @@ interface Profile {
   full_name: string
   email: string
   whatsapp_number: string | null
-  role: UserRole
 }
 
 interface AuthError {
@@ -46,7 +38,6 @@ interface AuthContextValue {
   session: Session | null
   profile: Profile | null
   tenant: Tenant | null
-  userRole: UserRole | null
   loading: boolean
   error: AuthError | null
   isAuthenticated: boolean
@@ -78,14 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          role:user_roles (
-            id,
-            code,
-            description
-          )
-        `)
+        .select('*')
         .eq('id', userId)
         .single()
 
@@ -238,14 +222,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isAuthenticated = useMemo(() => !!user && !!session, [user, session])
 
-  const userRole = useMemo(() => profile?.role || null, [profile?.role])
-
   const value = useMemo(() => ({
     user,
     session,
     profile,
     tenant,
-    userRole,
     loading,
     error,
     isAuthenticated,
@@ -262,7 +243,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     profile,
     tenant,
-    userRole,
     loading,
     error,
     isAuthenticated,

@@ -1,10 +1,8 @@
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useRolePermissions } from '@/hooks/useRolePermissions';
-import { hasPermission } from '@/utils/permissions';
 
 interface SidebarGroupProps {
   icon: React.ReactNode;
@@ -14,7 +12,6 @@ interface SidebarGroupProps {
   isOpen: boolean;
   onToggle: () => void;
   priority?: 'high' | 'medium' | 'low';
-  requiredPermission?: string;
 }
 
 const SidebarGroup: React.FC<SidebarGroupProps> = ({ 
@@ -24,21 +21,8 @@ const SidebarGroup: React.FC<SidebarGroupProps> = ({
   isCollapsed, 
   isOpen, 
   onToggle, 
-  priority = 'medium',
-  requiredPermission
+  priority = 'medium' 
 }) => {
-  const userPermissions = useRolePermissions();
-
-  const hasAccess = useMemo(() => {
-    if (!requiredPermission) return true;
-    return hasPermission(userPermissions, requiredPermission);
-  }, [userPermissions, requiredPermission]);
-
-  // Se não tem permissão, não renderiza o grupo
-  if (!hasAccess) {
-    return null;
-  }
-
   if (isCollapsed) {
     return (
       <div className="space-y-1">

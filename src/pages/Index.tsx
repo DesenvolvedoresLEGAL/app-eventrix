@@ -1,19 +1,15 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useEntryAuthCleanup } from '@/hooks/useEntryAuthCleanup';
 
 const Index = () => {
   const navigate = useNavigate();
   
-  // Limpeza de sessão/token ao entrar
-  useEntryAuthCleanup();
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigate('/login', { replace: true });
+    // Redirect to login page
+    setInterval(() => {
+      navigate('/login');
     }, 2000);
-    return () => clearTimeout(timer);
   }, [navigate]);
   
   return (
