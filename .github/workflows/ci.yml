@@ -1,0 +1,50 @@
+name: CI
+
+# Dispara a pipeline em pushes e pull requests para a branch main
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ${{ matrix.os }}
+    # Executa em paralelo nos sistemas listados
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+      fail-fast: true
+    env:
+      # Variáveis sensíveis devem ser definidas em GitHub Secrets
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configura o Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm # cache das dependências para acelerar builds
+
+      - name: Instala dependências
+        run: npm ci
+
+      - name: Executa linter
+        run: npm run lint
+
+      - name: Executa testes unitários
+        run: npm test -- --coverage
+
+      - name: Build do projeto
+        run: npm run build
+
+      - name: Publica artefatos de build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}
+          path: dist
