@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import PrivateRoute from "./components/PrivateRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -71,15 +70,8 @@ const App = () => (
           <Route path="/onboarding/user" element={<UserOnboarding />} />
           <Route path="/onboarding/tenant" element={<TenantOnboarding />} />
           <Route path="/onboarding/plan" element={<PlanSelectionPage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route path="/tenant-dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/tenant-dashboard" element={<TenantDashboard />} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/new" element={<NewEvent />} />
           <Route path="/exhibitors" element={<Exhibitors />} />
