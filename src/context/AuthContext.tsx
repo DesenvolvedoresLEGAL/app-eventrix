@@ -7,7 +7,6 @@ import { Tables } from '@/utils/supabase/types'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
 import { Permission, hasPermission, canAccessRoute, getAllowedRoutes, getRolePermissions } from '@/utils/permissions'
 import { useRBACValidator } from '@/utils/rbacValidator'
-import { usePerformance } from '@/hooks/usePerformance'
 
 // Interfaces baseadas nos tipos do Supabase
 export type UserRole = Tables<'user_roles'>
@@ -58,9 +57,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profileCache, setProfileCache] = useState<Map<string, Profile>>(new Map())
   const [roleCache, setRoleCache] = useState<Map<string, UserRole>>(new Map())
   const [tenantCache, setTenantCache] = useState<Map<string, Tenant>>(new Map())
-
-  // Performance hooks - não usar useAuth aqui para evitar dependência circular
-  const { startTimer } = usePerformance()
 
   // Validação RBAC em desenvolvimento
   useRBACValidator()
@@ -162,19 +158,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user?.email, profile?.tenant_id, loadTenant])
 
   const enhancedSignIn = useCallback(async (email: string, password: string) => {
-    const stopTotalTimer = startTimer('totalLoginTime');
-    const stopAuthTimer = startTimer('authLoadTime');
-    
     try {
       setLoading(true)
       setError(null)
 
       const user = await signIn(email, password)
-      stopAuthTimer();
       
       // O user e session serão atualizados pelo onAuthStateChange
       // Não precisamos fazer nada aqui, apenas aguardar
-      stopTotalTimer();
 
     } catch (err) {
       const errorMessage = (err as Error).message
@@ -198,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setLoading(false)
     }
-  }, [startTimer])
+  }, [])
 
   // Gerenciar estado de autenticação com otimizações
   useEffect(() => {

@@ -1,11 +1,9 @@
-import { useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from './usePermissions';
-import { useAuth } from '@/context/AuthContext';
 import { getFirstAccessibleRoute } from '@/utils/navigationUtils';
 import { debugUserPermissions } from '@/utils/rbacValidator';
 import { useErrorHandler } from './useErrorHandler';
-import { usePerformance } from './usePerformance';
 
 export interface SmartNavigationReturn {
   /** Primeira rota acessível para o usuário */
@@ -29,48 +27,25 @@ export interface SmartNavigationReturn {
  * Encontra automaticamente a primeira rota acessível e fornece função de redirecionamento
  */
 export const useSmartNavigation = (): SmartNavigationReturn => {
-  const { hasPermission, isLoading, userRole } = usePermissions();
-  const { userPermissions } = useAuth();
+  const { hasPermission, isLoading } = usePermissions();
   const navigate = useNavigate();
   const { error, handleError, clearError, retry, setRetryHandler } = useErrorHandler({
     maxRetries: 2,
     showToast: false, // Não mostrar toast para erros de navegação
   });
-  const { startTimer, cacheRoute, getCachedRoute, prefetchRoute } = usePerformance();
 
-  // Memoizar a primeira rota acessível com cache e performance
+  // Memoizar a primeira rota acessível para evitar recálculos desnecessários
   const firstAccessibleRoute = useMemo(() => {
     if (isLoading) return null;
     
-    const stopTimer = startTimer('routeCalculationTime');
-    
     try {
-      // Verificar cache primeiro se temos dados de usuário
-      if (userRole?.code && userPermissions.length > 0) {
-        const cached = getCachedRoute(userRole.code, userPermissions);
-        if (cached) {
-          stopTimer();
-          return cached;
-        }
-      }
-      
-      // Calcular rota se não está em cache
-      const route = getFirstAccessibleRoute(hasPermission);
-      
-      // Cachear resultado se temos dados válidos
-      if (route && userRole?.code && userPermissions.length > 0) {
-        cacheRoute(userRole.code, userPermissions, route);
-      }
-      
-      stopTimer();
-      return route;
+      return getFirstAccessibleRoute(hasPermission);
     } catch (err) {
-      stopTimer();
       console.error('Erro ao calcular primeira rota acessível:', err);
       handleError(err as Error);
       return null;
     }
-  }, [hasPermission, isLoading, userRole, userPermissions, startTimer, getCachedRoute, cacheRoute, handleError]);
+  }, [hasPermission, isLoading, handleError]);
 
   // Verificar se o usuário não tem acesso a nenhuma rota
   const hasNoAccess = useMemo(() => {
@@ -95,17 +70,8 @@ export const useSmartNavigation = (): SmartNavigationReturn => {
     setRetryHandler(recalculateRoute);
   }, [setRetryHandler, recalculateRoute]);
 
-  // Prefetch da primeira rota identificada
-  useEffect(() => {
-    if (firstAccessibleRoute?.route && !isLoading) {
-      prefetchRoute(firstAccessibleRoute.route);
-    }
-  }, [firstAccessibleRoute, isLoading, prefetchRoute]);
-
-  // Função memoizada para redirecionamento com tratamento de erro e performance
+  // Função memoizada para redirecionamento com tratamento de erro
   const redirectToFirstAccessible = useCallback(() => {
-    const stopTimer = startTimer('redirectTime');
-    
     try {
       if (firstAccessibleRoute) {
         // Debug no desenvolvimento
@@ -113,9 +79,7 @@ export const useSmartNavigation = (): SmartNavigationReturn => {
           debugUserPermissions(null, firstAccessibleRoute.route);
           console.log('🚀 Redirecionando para primeira rota acessível:', firstAccessibleRoute);
         }
-        
         navigate(firstAccessibleRoute.route, { replace: true });
-        stopTimer();
       } else if (!isLoading) {
         if (process.env.NODE_ENV === 'development') {
           console.warn('⚠️ Nenhuma rota acessível encontrada para o usuário');
@@ -123,10 +87,8 @@ export const useSmartNavigation = (): SmartNavigationReturn => {
         
         // Se não há rota acessível, redirecionar para unauthorized
         navigate('/unauthorized', { replace: true });
-        stopTimer();
       }
     } catch (err) {
-      stopTimer();
       console.error('Erro durante redirecionamento:', err);
       handleError('Falha ao redirecionar para página permitida');
       
@@ -139,7 +101,7 @@ export const useSmartNavigation = (): SmartNavigationReturn => {
         window.location.href = '/unauthorized';
       }
     }
-  }, [firstAccessibleRoute, navigate, isLoading, handleError, startTimer]);
+  }, [firstAccessibleRoute, navigate, isLoading, handleError]);
 
   return {
     firstAccessibleRoute,
