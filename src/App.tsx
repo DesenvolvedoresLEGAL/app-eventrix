@@ -56,6 +56,7 @@ import { AuthProvider } from './context/AuthContext';
 import RoleBasedRoute from './components/RoleBasedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Permission } from './utils/permissions';
+import { DebugPanel } from './components/DebugPanel';
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
     <ErrorBoundary>
       <AuthProvider>
         <TooltipProvider>
+          <DebugPanel />
         <Toaster />
         <Sonner />
         <BrowserRouter>
