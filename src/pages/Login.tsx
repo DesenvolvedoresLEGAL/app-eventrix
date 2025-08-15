@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Zap, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/hooks/use-toast'
+import { useSmartNavigation } from '@/hooks/useSmartNavigation'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -14,6 +15,7 @@ const Login = () => {
   const _navigate = useNavigate()
   const { signIn, resetPassword, loading, error, clearError, isAuthenticated } = useAuth()
   const { toast } = useToast()
+  const { firstAccessibleRoute, redirectToFirstAccessible, isLoading: isLoadingNavigation, hasNoAccess } = useSmartNavigation()
 
   // Validação em tempo real
   const validateForm = useCallback(() => {
@@ -38,12 +40,16 @@ const Login = () => {
   const formErrors = useMemo(() => validateForm(), [validateForm])
   const isFormValid = useMemo(() => Object.keys(formErrors).length === 0, [formErrors])
 
-  // Redirecionar usuários autenticados
+  // Redirecionar usuários autenticados para sua primeira rota acessível
   React.useEffect(() => {
-    if (isAuthenticated) {
-      _navigate('/dashboard', { replace: true })
+    if (isAuthenticated && !isLoadingNavigation) {
+      if (hasNoAccess) {
+        _navigate('/unauthorized', { replace: true })
+      } else {
+        redirectToFirstAccessible()
+      }
     }
-  }, [isAuthenticated, _navigate])
+  }, [isAuthenticated, isLoadingNavigation, hasNoAccess, redirectToFirstAccessible, _navigate])
 
   // Limpar erros quando o usuário digita
   React.useEffect(() => {
@@ -73,12 +79,17 @@ const Login = () => {
       clearError()
       await signIn(email.trim(), password)
       
+      const destinationText = firstAccessibleRoute 
+        ? `Redirecionando para ${firstAccessibleRoute.displayName}...`
+        : "Redirecionando..."
+      
       toast({
         title: "Login realizado com sucesso!",
-        description: "Redirecionando para o dashboard...",
+        description: destinationText,
         variant: "default"
       })
-      _navigate('/dashboard');
+      
+      // Navegação será tratada pelo useEffect
     } catch (err) {
       // Erro já tratado no AuthContext
       console.error('Login error:', err)
@@ -269,10 +280,13 @@ const Login = () => {
                 disabled={loading || !isFormValid}
                 className="tech-button w-full py-3 font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
               >
-                {loading ? (
+                {loading || (isAuthenticated && isLoadingNavigation) ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Entrando...
+                    {isAuthenticated && isLoadingNavigation 
+                      ? `Redirecionando${firstAccessibleRoute ? ` para ${firstAccessibleRoute.displayName}` : ''}...`
+                      : 'Entrando...'
+                    }
                   </>
                 ) : (
                   <>
