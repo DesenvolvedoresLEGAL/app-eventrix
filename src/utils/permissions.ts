@@ -1,3 +1,5 @@
+import React from 'react';
+
 export enum Permission {
   // Dashboard & Core
   DASHBOARD_VIEW = 'dashboard.view',
@@ -338,4 +340,139 @@ export const getAllowedRoutes = (userRole: { code: string } | null): string[] =>
   return Object.entries(routePermissionMap)
     .filter(([, permission]) => userPermissions.includes(permission))
     .map(([route]) => route);
+};
+
+// Menu filtering utilities for RBAC integration
+export interface MenuItem {
+  icon: React.ReactNode;
+  label: string;
+  to: string;
+  badge?: string;
+  highlighted?: boolean;
+}
+
+export interface MenuGroup {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  priority: 'high' | 'medium' | 'low';
+  items: MenuItem[];
+}
+
+// Route to permission mapping for sidebar filtering
+const sidebarRoutePermissionMap: Record<string, Permission> = {
+  // Dashboard
+  '/dashboard': Permission.DASHBOARD_VIEW,
+  
+  // Events
+  '/events': Permission.EVENTS_VIEW,
+  '/events/new': Permission.EVENTS_CREATE,
+  
+  // Users
+  '/exhibitors': Permission.EXHIBITORS_VIEW,
+  '/suppliers': Permission.SUPPLIERS_VIEW,
+  '/permissions': Permission.SETTINGS_PERMISSIONS_MANAGE,
+  '/staff': Permission.STAFF_VIEW,
+  '/visitors': Permission.VISITORS_VIEW,
+  
+  // Agenda
+  '/activities': Permission.ACTIVITIES_VIEW,
+  '/lectures': Permission.LECTURES_VIEW,
+  '/venues': Permission.VENUES_VIEW,
+  '/tracks': Permission.TRACKS_VIEW,
+  
+  // Tasks
+  '/checklist': Permission.CHECKLIST_VIEW,
+  '/team-tasks': Permission.TEAM_TASKS_VIEW,
+  '/supplier-tasks': Permission.TEAM_TASKS_VIEW,
+  
+  // Credentialing
+  '/checkin': Permission.CHECKIN_VIEW,
+  '/registration': Permission.REGISTRATION_VIEW,
+  '/access-history': Permission.ACCESS_HISTORY_VIEW,
+  
+  // Marketing
+  '/marketing/ads': Permission.MARKETING_ADS_VIEW,
+  '/marketing/content': Permission.MARKETING_CONTENT_VIEW,
+  '/marketing/email': Permission.MARKETING_EMAIL_VIEW,
+  '/marketing/pages': Permission.MARKETING_PAGES_VIEW,
+  
+  // Communication
+  '/communication/humangpt': Permission.COMMUNICATION_NOTIFICATIONS_VIEW,
+  '/communication/notifications': Permission.COMMUNICATION_NOTIFICATIONS_VIEW,
+  
+  // Analytics
+  '/analytics': Permission.ANALYTICS_VIEW,
+  '/analytics/engagement': Permission.ANALYTICS_ENGAGEMENT_VIEW,
+  '/reports': Permission.REPORTS_VIEW,
+  
+  // Integrations
+  '/api-management': Permission.API_MANAGEMENT_VIEW,
+  '/integrations': Permission.INTEGRATIONS_VIEW,
+  
+  // Legal AI
+  '/ai-validator': Permission.DASHBOARD_VIEW,
+  '/heatmap': Permission.ANALYTICS_VIEW,
+  '/dynamic-pricing': Permission.DASHBOARD_VIEW,
+  '/legal-ai': Permission.DASHBOARD_VIEW,
+  
+  // Settings
+  '/settings/organizer': Permission.SETTINGS_ORGANIZER_MANAGE,
+  '/settings/branding': Permission.SETTINGS_BRANDING_MANAGE,
+  '/settings/privacy': Permission.SETTINGS_PRIVACY_MANAGE,
+  '/settings/permissions': Permission.SETTINGS_PERMISSIONS_MANAGE,
+  
+  // Support
+  '/help/chat': Permission.DASHBOARD_VIEW,
+  '/help/faq': Permission.DASHBOARD_VIEW,
+  '/help/tutorial': Permission.DASHBOARD_VIEW,
+};
+
+/**
+ * Filter menu items based on user permissions
+ */
+export const filterMenuItemsByPermissions = (
+  items: MenuItem[],
+  userRole: { code: string } | null
+): MenuItem[] => {
+  if (!userRole) return [];
+  
+  return items.filter(item => {
+    const requiredPermission = sidebarRoutePermissionMap[item.to];
+    return requiredPermission ? hasPermission(userRole, requiredPermission) : true;
+  });
+};
+
+/**
+ * Filter menu groups and their items based on user permissions
+ */
+export const filterMenuGroupsByPermissions = (
+  groups: MenuGroup[],
+  userRole: { code: string } | null
+): MenuGroup[] => {
+  if (!userRole) return [];
+  
+  return groups
+    .map(group => ({
+      ...group,
+      items: filterMenuItemsByPermissions(group.items, userRole)
+    }))
+    .filter(group => group.items.length > 0); // Remove empty groups
+};
+
+/**
+ * Check if dashboard item should be visible
+ */
+export const canAccessDashboard = (userRole: { code: string } | null): boolean => {
+  return hasPermission(userRole, Permission.DASHBOARD_VIEW);
+};
+
+/**
+ * Filter events items based on permissions
+ */
+export const filterEventsItems = (
+  items: MenuItem[],
+  userRole: { code: string } | null
+): MenuItem[] => {
+  return filterMenuItemsByPermissions(items, userRole);
 };
