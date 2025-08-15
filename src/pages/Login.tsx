@@ -11,7 +11,7 @@ const Login = () => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [isResettingPassword, setIsResettingPassword] = useState(false)
   
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
   const { signIn, resetPassword, loading, error, clearError, isAuthenticated } = useAuth()
   const { toast } = useToast()
 
@@ -41,9 +41,9 @@ const Login = () => {
   // Redirecionar usuários autenticados
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true })
+      _navigate('/dashboard', { replace: true })
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, _navigate])
 
   // Limpar erros quando o usuário digita
   React.useEffect(() => {
@@ -78,7 +78,7 @@ const Login = () => {
         description: "Redirecionando para o dashboard...",
         variant: "default"
       })
-
+      _navigate('/dashboard');
     } catch (err) {
       // Erro já tratado no AuthContext
       console.error('Login error:', err)
