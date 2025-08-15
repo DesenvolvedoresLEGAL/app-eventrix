@@ -6,6 +6,7 @@ import { User, Session } from '@supabase/supabase-js'
 import { Tables } from '@/utils/supabase/types'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
 import { Permission, hasPermission, canAccessRoute, getAllowedRoutes, getRolePermissions } from '@/utils/permissions'
+import { useRBACValidator } from '@/utils/rbacValidator'
 
 // Interfaces baseadas nos tipos do Supabase
 export type UserRole = Tables<'user_roles'>
@@ -51,6 +52,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<UserRole | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<AuthError | null>(null)
+
+  // Validação RBAC em desenvolvimento
+  useRBACValidator()
 
   const clearError = useCallback(() => {
     setError(null)

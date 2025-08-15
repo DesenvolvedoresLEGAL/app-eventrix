@@ -2,6 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from './usePermissions';
 import { getFirstAccessibleRoute } from '@/utils/navigationUtils';
+import { debugUserPermissions } from '@/utils/rbacValidator';
 
 export interface SmartNavigationReturn {
   /** Primeira rota acessível para o usuário */
@@ -37,7 +38,14 @@ export const useSmartNavigation = (): SmartNavigationReturn => {
   // Função memoizada para redirecionamento
   const redirectToFirstAccessible = useCallback(() => {
     if (firstAccessibleRoute) {
+      // Debug no desenvolvimento
+      if (process.env.NODE_ENV === 'development') {
+        debugUserPermissions(null, firstAccessibleRoute.route);
+        console.log('🚀 Redirecionando para primeira rota acessível:', firstAccessibleRoute);
+      }
       navigate(firstAccessibleRoute.route, { replace: true });
+    } else if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ Nenhuma rota acessível encontrada para o usuário');
     }
   }, [firstAccessibleRoute, navigate]);
 

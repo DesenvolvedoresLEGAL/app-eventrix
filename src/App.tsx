@@ -345,7 +345,7 @@ const App = () => (
             <Route 
               path="/ai-validator" 
               element={
-                <RoleBasedRoute requiredPermission={Permission.DASHBOARD_VIEW}>
+                <RoleBasedRoute requiredPermission={Permission.AI_VALIDATOR_VIEW}>
                   <AIValidator />
                 </RoleBasedRoute>
               } 
@@ -361,7 +361,7 @@ const App = () => (
             <Route 
               path="/dynamic-pricing" 
               element={
-                <RoleBasedRoute requiredPermission={Permission.DASHBOARD_VIEW}>
+                <RoleBasedRoute requiredPermission={Permission.DYNAMIC_PRICING_VIEW}>
                   <DynamicPricing />
                 </RoleBasedRoute>
               } 
@@ -369,7 +369,7 @@ const App = () => (
             <Route 
               path="/legal-ai" 
               element={
-                <RoleBasedRoute requiredPermission={Permission.DASHBOARD_VIEW}>
+                <RoleBasedRoute requiredPermission={Permission.LEGAL_AI_VIEW}>
                   <LegalAI />
                 </RoleBasedRoute>
               } 

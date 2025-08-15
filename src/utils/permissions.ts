@@ -411,10 +411,10 @@ const sidebarRoutePermissionMap: Record<string, Permission> = {
   '/integrations': Permission.INTEGRATIONS_VIEW,
   
   // Legal AI
-  '/ai-validator': Permission.DASHBOARD_VIEW,
-  '/heatmap': Permission.ANALYTICS_VIEW,
-  '/dynamic-pricing': Permission.DASHBOARD_VIEW,
-  '/legal-ai': Permission.DASHBOARD_VIEW,
+  '/ai-validator': Permission.AI_VALIDATOR_VIEW,
+  '/heatmap': Permission.HEATMAP_VIEW,
+  '/dynamic-pricing': Permission.DYNAMIC_PRICING_VIEW,
+  '/legal-ai': Permission.LEGAL_AI_VIEW,
   
   // Settings
   '/settings/organizer': Permission.SETTINGS_ORGANIZER_MANAGE,
