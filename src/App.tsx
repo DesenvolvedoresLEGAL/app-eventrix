@@ -51,66 +51,69 @@ import TenantOnboarding from "./pages/TenantOnboarding";
 import TenantDashboard from "./pages/TenantDashboard";
 import PlanSelectionPage from "./pages/PlanSelection";
 import Teste from './pages/Test';
+import { AuthProvider } from './context/AuthContext';
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/data-test" element={<Teste />} />
-          <Route path="/plans" element={<Plans />} />
-          <Route path="/onboarding/user" element={<UserOnboarding />} />
-          <Route path="/onboarding/tenant" element={<TenantOnboarding />} />
-          <Route path="/onboarding/plan" element={<PlanSelectionPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/tenant-dashboard" element={<TenantDashboard />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/events/new" element={<NewEvent />} />
-          <Route path="/exhibitors" element={<Exhibitors />} />
-          <Route path="/visitors" element={<Visitors />} />
-          <Route path="/staff" element={<Staff />} />
-          <Route path="/suppliers" element={<Suppliers />} />
-          <Route path="/permissions" element={<Permissions />} />
-          <Route path="/lectures" element={<Lectures />} />
-          <Route path="/tracks" element={<Tracks />} />
-          <Route path="/activities" element={<Activities />} />
-          <Route path="/venues" element={<Venues />} />
-          <Route path="/checklist" element={<Checklist />} />
-          <Route path="/team-tasks" element={<TeamTasks />} />
-          <Route path="/registration" element={<Registration />} />
-          <Route path="/checkin" element={<CheckIn />} />
-          <Route path="/access-history" element={<AccessHistory />} />
-          <Route path="/marketing" element={<Marketing />} />
-          <Route path="/marketing/ads" element={<MarketingAds />} />
-          <Route path="/marketing/content" element={<MarketingContent />} />
-          <Route path="/marketing/email" element={<MarketingEmail />} />
-          <Route path="/marketing/pages" element={<MarketingPages />} />
-          <Route path="/communication/humangpt" element={<CommunicationHumanGPT />} />
-          <Route path="/communication/linkai" element={<CommunicationLinkAI />} />
-          <Route path="/communication/notifications" element={<CommunicationNotifications />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/analytics/nps" element={<AnalyticsNPS />} />
-          <Route path="/analytics/heatmap" element={<AnalyticsHeatmap />} />
-          <Route path="/analytics/engagement" element={<AnalyticsEngagement />} />
-          <Route path="/integrations" element={<Marketplace />} />
-          <Route path="/api-management" element={<APIManagement />} />
-          <Route path="/ai-validator" element={<AIValidator />} />
-          <Route path="/heatmap" element={<HeatmapAI />} />
-          <Route path="/dynamic-pricing" element={<DynamicPricing />} />
-          <Route path="/legal-ai" element={<LegalAI />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/data-test" element={<Teste />} />
+            <Route path="/plans" element={<Plans />} />
+            <Route path="/onboarding/user" element={<UserOnboarding />} />
+            <Route path="/onboarding/tenant" element={<TenantOnboarding />} />
+            <Route path="/onboarding/plan" element={<PlanSelectionPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/tenant-dashboard" element={<TenantDashboard />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/events/new" element={<NewEvent />} />
+            <Route path="/exhibitors" element={<Exhibitors />} />
+            <Route path="/visitors" element={<Visitors />} />
+            <Route path="/staff" element={<Staff />} />
+            <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/permissions" element={<Permissions />} />
+            <Route path="/lectures" element={<Lectures />} />
+            <Route path="/tracks" element={<Tracks />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/venues" element={<Venues />} />
+            <Route path="/checklist" element={<Checklist />} />
+            <Route path="/team-tasks" element={<TeamTasks />} />
+            <Route path="/registration" element={<Registration />} />
+            <Route path="/checkin" element={<CheckIn />} />
+            <Route path="/access-history" element={<AccessHistory />} />
+            <Route path="/marketing" element={<Marketing />} />
+            <Route path="/marketing/ads" element={<MarketingAds />} />
+            <Route path="/marketing/content" element={<MarketingContent />} />
+            <Route path="/marketing/email" element={<MarketingEmail />} />
+            <Route path="/marketing/pages" element={<MarketingPages />} />
+            <Route path="/communication/humangpt" element={<CommunicationHumanGPT />} />
+            <Route path="/communication/linkai" element={<CommunicationLinkAI />} />
+            <Route path="/communication/notifications" element={<CommunicationNotifications />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/analytics/nps" element={<AnalyticsNPS />} />
+            <Route path="/analytics/heatmap" element={<AnalyticsHeatmap />} />
+            <Route path="/analytics/engagement" element={<AnalyticsEngagement />} />
+            <Route path="/integrations" element={<Marketplace />} />
+            <Route path="/api-management" element={<APIManagement />} />
+            <Route path="/ai-validator" element={<AIValidator />} />
+            <Route path="/heatmap" element={<HeatmapAI />} />
+            <Route path="/dynamic-pricing" element={<DynamicPricing />} />
+            <Route path="/legal-ai" element={<LegalAI />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
