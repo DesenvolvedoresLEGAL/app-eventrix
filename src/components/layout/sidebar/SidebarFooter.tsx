@@ -2,18 +2,23 @@
 import React from 'react';
 import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/context/AuthContext';
+import { signOut } from '@/services/authService';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface SidebarFooterProps {
   isCollapsed: boolean;
 }
 
 const SidebarFooter: React.FC<SidebarFooterProps> = ({ isCollapsed }) => {
-  const { signOut } = useAuth();
+
+  const _navigate = useNavigate();
+  const _location = useLocation();
 
   const handleSignOut = async () => {
     try {
       await signOut();
+      localStorage.clear();
+      _navigate(`${_location.pathname.split('/')[0]}/`)
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }
