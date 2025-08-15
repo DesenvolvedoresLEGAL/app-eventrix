@@ -3,32 +3,15 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import supabase from '@/utils/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
+import { Tables } from '@/utils/supabase/types'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
 
-export interface Tenant {
-  id: string
-  slug: string
-  razao_social: string
-  nome_fantasia: string
-  contact_email: string
-  cnpj: string
-  status_id: string
-  plan_id: string
-  trial_ends_at: string | null
-  features_enabled: Record<string, any>
-  onboarding_completed: boolean
-}
+// Interfaces baseadas nos tipos do Supabase
+export type UserRole = Tables<'user_roles'>
+export type Profile = Tables<'profiles'>
+export type Tenant = Tables<'tenants'>
 
-interface Profile {
-  id: string
-  first_name: string
-  last_name: string
-  full_name: string
-  email: string
-  whatsapp_number: string | null
-  tenant_id: string
-}
-
+// Interfaces de erro mantidas
 interface AuthError {
   message: string
   type: 'auth' | 'network' | 'validation' | 'tenant'
@@ -39,6 +22,8 @@ interface AuthContextValue {
   session: Session | null
   profile: Profile | null
   tenant: Tenant | null
+  userRole: UserRole | null
+  userPermissions: string[]
   loading: boolean
   error: AuthError | null
   isAuthenticated: boolean
@@ -59,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [tenant, setTenant] = useState<Tenant | null>(null)
+  const [userRole, setUserRole] = useState<UserRole | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<AuthError | null>(null)
 
@@ -86,23 +72,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [])
 
+  const loadUserRole = useCallback(async (roleId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('id', roleId)
+        .single()
+
+      if (error) {
+        console.warn('Erro ao carregar role:', error)
+        return null
+      }
+
+      return data as UserRole
+    } catch (err) {
+      console.warn('Erro ao carregar role:', err)
+      return null
+    }
+  }, [])
+
   const loadTenant = useCallback(async (userTenantId: string) => {
     try {
       const { data, error } = await supabase
         .from('tenants')
-        .select(`
-          id,
-          slug,
-          razao_social,
-          nome_fantasia,
-          contact_email,
-          cnpj,
-          status_id,
-          plan_id,
-          trial_ends_at,
-          features_enabled,
-          onboarding_completed
-        `)
+        .select('*')
         .eq('id', userTenantId)
         .is('deleted_at', null)
         .single()
@@ -120,11 +114,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const refreshTenant = useCallback(async () => {
-    if (!user?.email) return
+    if (!user?.email || !profile?.tenant_id) return
 
     const tenantData = await loadTenant(profile.tenant_id);
     setTenant(tenantData)
-  }, [user?.email, loadTenant])
+  }, [user?.email, profile?.tenant_id, loadTenant])
 
   const enhancedSignIn = useCallback(async (email: string, password: string) => {
     try {
@@ -180,21 +174,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (!mounted) return
 
             const profileData = await loadProfile(currentSession.user.id);
-            const tenantData = await loadTenant(profileData.tenant_id);
+            if (!profileData) {
+              if (mounted) {
+                setProfile(null)
+                setTenant(null)
+                setUserRole(null)
+              }
+              return
+            }
+
+            const tenantData = profileData.tenant_id ? await loadTenant(profileData.tenant_id) : null;
+            const roleData = profileData.role ? await loadUserRole(profileData.role) : null;
 
             if (mounted) {
               setProfile(profileData);
               setTenant(tenantData)
+              setUserRole(roleData)
             }
           }, 0)
         } else {
           setProfile(null)
           setTenant(null)
+          setUserRole(null)
         }
 
         if (event === 'SIGNED_OUT') {
           setProfile(null)
           setTenant(null)
+          setUserRole(null)
         }
 
         setLoading(false)
@@ -217,15 +224,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false
       subscription.unsubscribe()
     }
-  }, [loadProfile, loadTenant])
+  }, [loadProfile, loadTenant, loadUserRole])
 
   const isAuthenticated = useMemo(() => !!user && !!session, [user, session])
+
+  const userPermissions = useMemo(() => {
+    // Implementação de permissões será feita na próxima etapa
+    return []
+  }, [userRole])
 
   const value = useMemo(() => ({
     user,
     session,
     profile,
     tenant,
+    userRole,
+    userPermissions,
     loading,
     error,
     isAuthenticated,
@@ -242,6 +256,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     profile,
     tenant,
+    userRole,
+    userPermissions,
     loading,
     error,
     isAuthenticated,
