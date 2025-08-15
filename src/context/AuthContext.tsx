@@ -5,6 +5,7 @@ import supabase from '@/utils/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
 import { Tables } from '@/utils/supabase/types'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
+import { Permission, hasPermission, canAccessRoute, getAllowedRoutes, getRolePermissions } from '@/utils/permissions'
 
 // Interfaces baseadas nos tipos do Supabase
 export type UserRole = Tables<'user_roles'>
@@ -23,7 +24,7 @@ interface AuthContextValue {
   profile: Profile | null
   tenant: Tenant | null
   userRole: UserRole | null
-  userPermissions: string[]
+  userPermissions: Permission[]
   loading: boolean
   error: AuthError | null
   isAuthenticated: boolean
@@ -35,6 +36,9 @@ interface AuthContextValue {
   updatePassword: typeof updatePassword
   clearError: () => void
   refreshTenant: () => Promise<void>
+  hasPermission: (permission: Permission) => boolean
+  canAccessRoute: (route: string) => boolean
+  getAllowedRoutes: () => string[]
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -229,8 +233,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuthenticated = useMemo(() => !!user && !!session, [user, session])
 
   const userPermissions = useMemo(() => {
-    // Implementação de permissões será feita na próxima etapa
-    return []
+    if (!userRole?.code) return []
+    return getRolePermissions(userRole.code)
+  }, [userRole])
+
+  const hasPermissionCheck = useCallback((permission: Permission) => {
+    return hasPermission(userRole, permission)
+  }, [userRole])
+
+  const canAccessRouteCheck = useCallback((route: string) => {
+    return canAccessRoute(userRole, route)
+  }, [userRole])
+
+  const getAllowedRoutesCheck = useCallback(() => {
+    return getAllowedRoutes(userRole)
   }, [userRole])
 
   const value = useMemo(() => ({
@@ -250,7 +266,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPassword,
     updatePassword,
     clearError,
-    refreshTenant
+    refreshTenant,
+    hasPermission: hasPermissionCheck,
+    canAccessRoute: canAccessRouteCheck,
+    getAllowedRoutes: getAllowedRoutesCheck
   }), [
     user,
     session,
@@ -263,7 +282,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated,
     enhancedSignIn,
     clearError,
-    refreshTenant
+    refreshTenant,
+    hasPermissionCheck,
+    canAccessRouteCheck,
+    getAllowedRoutesCheck
   ])
 
   return (
