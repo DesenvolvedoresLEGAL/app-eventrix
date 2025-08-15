@@ -32,9 +32,49 @@ const DEBUG_ROLES = [
 ];
 
 export const DebugPanel: React.FC = () => {
-  const { user, userRole, userPermissions, loading } = useAuth();
-  const { hasPermission, canAccessRoute, getAllowedRoutes } = usePermissions();
-  const { firstAccessibleRoute, isLoading: navLoading } = useSmartNavigation();
+  // Verificar se estamos em desenvolvimento primeiro
+  if (process.env.NODE_ENV !== 'development') {
+    return null;
+  }
+
+  // Verificações de contexto para evitar erros
+  let authData;
+  let permissionsData;
+  let navigationData;
+  
+  try {
+    authData = useAuth();
+  } catch (error) {
+    console.warn('DebugPanel: useAuth não disponível');
+    authData = { user: null, userRole: null, userPermissions: [], loading: true };
+  }
+
+  try {
+    permissionsData = usePermissions();
+  } catch (error) {
+    console.warn('DebugPanel: usePermissions não disponível');
+    permissionsData = { 
+      hasPermission: () => false, 
+      canAccessRoute: () => false, 
+      getAllowedRoutes: () => [],
+      userRole: null,
+      isLoading: true 
+    };
+  }
+
+  try {
+    navigationData = useSmartNavigation();
+  } catch (error) {
+    console.warn('DebugPanel: useSmartNavigation não disponível');
+    navigationData = { 
+      firstAccessibleRoute: null, 
+      isLoading: true 
+    };
+  }
+
+  const { user, userRole, userPermissions, loading } = authData;
+  const { hasPermission, canAccessRoute, getAllowedRoutes } = permissionsData;
+  const { firstAccessibleRoute, isLoading: navLoading } = navigationData;
   const { metrics, clearMetrics, clearCache } = usePerformance();
   
   const [debugLogs, setDebugLogs] = useState<DebugLog[]>([]);
@@ -174,6 +214,9 @@ export const DebugPanel: React.FC = () => {
     return null; // Não mostrar em produção
   }
 
+  // Se não temos dados de auth/navigation, mostrar painel simplificado
+  const isContextMissing = !authData || !permissionsData || !navigationData;
+
   return (
     <div className="fixed bottom-4 right-4 w-96 z-50">
       <Card className="shadow-lg">
@@ -183,9 +226,17 @@ export const DebugPanel: React.FC = () => {
               <Bug className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Debug Panel</CardTitle>
             </div>
-            <Badge variant="secondary">DEV</Badge>
+            <div className="flex gap-1">
+              <Badge variant="secondary">DEV</Badge>
+              {isContextMissing && <Badge variant="destructive">LIMITED</Badge>}
+            </div>
           </div>
-          <CardDescription>Sistema de debug e performance</CardDescription>
+          <CardDescription>
+            {isContextMissing 
+              ? "Sistema de debug (contextos limitados)" 
+              : "Sistema de debug e performance"
+            }
+          </CardDescription>
         </CardHeader>
         
         <CardContent className="p-0">
@@ -198,7 +249,15 @@ export const DebugPanel: React.FC = () => {
             </TabsList>
             
             <TabsContent value="overview" className="p-4 space-y-4">
-              <div className="space-y-2">
+              {isContextMissing ? (
+                <div className="text-center text-muted-foreground py-8">
+                  <Bug className="h-8 w-8 mx-auto mb-2" />
+                  <p>Contextos não disponíveis</p>
+                  <p className="text-xs">Aguarde carregamento completo</p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
                 <h4 className="font-medium">Usuário Atual</h4>
                 <div className="text-sm space-y-1">
                   <div>Email: <Badge variant="outline">{currentUserInfo.email}</Badge></div>
@@ -213,30 +272,38 @@ export const DebugPanel: React.FC = () => {
               
               <Separator />
               
-              <div className="flex gap-2">
-                <Button size="sm" onClick={runPerformanceTest} className="flex-1">
-                  <Clock className="h-4 w-4 mr-1" />
-                  Teste Perf
-                </Button>
-                <Button size="sm" variant="outline" onClick={exportLogs}>
-                  <Download className="h-4 w-4 mr-1" />
-                  Export
-                </Button>
-                <Button size="sm" variant="outline" onClick={clearLogs}>
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Limpar
-                </Button>
-              </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={runPerformanceTest} className="flex-1">
+                      <Clock className="h-4 w-4 mr-1" />
+                      Teste Perf
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={exportLogs}>
+                      <Download className="h-4 w-4 mr-1" />
+                      Export
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={clearLogs}>
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Limpar
+                    </Button>
+                  </div>
+                </>
+              )}
             </TabsContent>
             
             <TabsContent value="simulation" className="p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">Simular Roles</h4>
-                <Switch 
-                  checked={simulationMode} 
-                  onCheckedChange={setSimulationMode}
-                />
-              </div>
+              {isContextMissing ? (
+                <div className="text-center text-muted-foreground py-8">
+                  <p>Simulação indisponível</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Simular Roles</h4>
+                    <Switch 
+                      checked={simulationMode} 
+                      onCheckedChange={setSimulationMode}
+                    />
+                  </div>
               
               <ScrollArea className="h-48">
                 <div className="space-y-2">
@@ -257,6 +324,8 @@ export const DebugPanel: React.FC = () => {
                   ))}
                 </div>
               </ScrollArea>
+                </>
+              )}
             </TabsContent>
             
             <TabsContent value="performance" className="p-4 space-y-4">

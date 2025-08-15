@@ -65,10 +65,10 @@ const App = () => (
     <ErrorBoundary>
       <AuthProvider>
         <TooltipProvider>
-          <DebugPanel />
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <DebugPanel />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
