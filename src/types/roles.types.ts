@@ -70,4 +70,9 @@ export interface AuditLogEntry {
   changes: Record<string, any>;
   timestamp: string;
   ipAddress?: string;
+  userAgent?: string;
+  user?: {
+    fullName: string;
+    email: string;
+  };
 }
