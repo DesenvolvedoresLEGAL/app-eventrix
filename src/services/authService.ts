@@ -1,4 +1,6 @@
 import supabase from '@/utils/supabase/client'
+import { useLocation, useNavigate } from 'react-router-dom'
+
 
 export interface SignUpData {
   email: string
@@ -80,6 +82,6 @@ export async function updatePassword(password: string) {
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
 }
