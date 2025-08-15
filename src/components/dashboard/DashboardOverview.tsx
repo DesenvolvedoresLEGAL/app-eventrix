@@ -16,9 +16,9 @@ const DashboardOverview = () => {
       try {
         // 1. Obter usuário atual
         const {
-          data: { user },
+          data: {user},
           error: authError
-        } = await supabase.auth.getUser()
+        } = await supabase.auth.getUser();
         if (authError || !user) {
           throw new Error('Não foi possível identificar usuário autenticado.')
         }
