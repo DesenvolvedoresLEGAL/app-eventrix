@@ -1,3 +1,4 @@
+import React from 'react';
 import { Permission } from './permissions';
 
 // Tipos para validação de consistência
@@ -148,34 +149,38 @@ export const validateRouteConsistency = (config: RoutePermissionConfig): Validat
  */
 export const useRBACValidator = () => {
   if (process.env.NODE_ENV === 'development') {
-    const logInconsistencies = () => {
-      console.group('🔒 RBAC Validation Results');
-      
-      // Aqui você pode adicionar validações específicas
-      console.log('Validando consistência de permissões...');
-      
-      // Exemplo de validação para dynamic-pricing
-      const dynamicPricingConfig: RoutePermissionConfig = {
-        route: '/dynamic-pricing',
-        appTsxPermission: Permission.DYNAMIC_PRICING_VIEW,
-        navigationUtilsPermission: Permission.DYNAMIC_PRICING_VIEW,
-        permissionsTsPermission: Permission.DYNAMIC_PRICING_VIEW,
-        sidebarPermission: Permission.DYNAMIC_PRICING_VIEW
+    // Usar useEffect para evitar execução em cada render
+    React.useEffect(() => {
+      const logInconsistencies = () => {
+        console.group('🔒 RBAC Validation Results');
+        
+        // Aqui você pode adicionar validações específicas
+        console.log('Validando consistência de permissões...');
+        
+        // Exemplo de validação para dynamic-pricing
+        const dynamicPricingConfig: RoutePermissionConfig = {
+          route: '/dynamic-pricing',
+          appTsxPermission: Permission.DYNAMIC_PRICING_VIEW,
+          navigationUtilsPermission: Permission.DYNAMIC_PRICING_VIEW,
+          permissionsTsPermission: Permission.DYNAMIC_PRICING_VIEW,
+          sidebarPermission: Permission.DYNAMIC_PRICING_VIEW
+        };
+
+        const result = validateRouteConsistency(dynamicPricingConfig);
+        
+        if (!result.isValid) {
+          console.error('❌ Inconsistências encontradas:', result.inconsistencies);
+        } else {
+          console.log('✅ Todas as permissões estão consistentes');
+        }
+        
+        console.groupEnd();
       };
 
-      const result = validateRouteConsistency(dynamicPricingConfig);
-      
-      if (!result.isValid) {
-        console.error('❌ Inconsistências encontradas:', result.inconsistencies);
-      } else {
-        console.log('✅ Todas as permissões estão consistentes');
-      }
-      
-      console.groupEnd();
-    };
-
-    // Executar validação no desenvolvimento
-    setTimeout(logInconsistencies, 1000);
+      // Executar validação apenas uma vez quando o componente montar
+      const timer = setTimeout(logInconsistencies, 1000);
+      return () => clearTimeout(timer);
+    }, []); // Array de dependências vazio para executar apenas uma vez
   }
 
   return {

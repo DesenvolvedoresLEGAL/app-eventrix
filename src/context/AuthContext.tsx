@@ -5,7 +5,7 @@ import supabase from '@/utils/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
 import { Tables } from '@/utils/supabase/types'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
-import { Permission, hasPermission, canAccessRoute, getAllowedRoutes, getRolePermissions } from '@/utils/permissions'
+import { Permission, hasPermission, canAccessRoute, getAllowedRoutes } from '@/utils/permissions'
 import { useRBACValidator } from '@/utils/rbacValidator'
 
 // Interfaces baseadas nos tipos do Supabase
@@ -25,7 +25,6 @@ interface AuthContextValue {
   profile: Profile | null
   tenant: Tenant | null
   userRole: UserRole | null
-  userPermissions: Permission[]
   loading: boolean
   error: AuthError | null
   isAuthenticated: boolean
@@ -301,12 +300,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isAuthenticated = useMemo(() => !!user && !!session, [user, session])
 
-  // Memoizar permissões do usuário para evitar recálculos
-  const userPermissions = useMemo(() => {
-    if (!userRole?.code) return []
-    return getRolePermissions(userRole.code)
-  }, [userRole?.code])
-
   // Memoizar checadores de permissão para performance
   const hasPermissionCheck = useCallback((permission: Permission) => {
     return hasPermission(userRole, permission)
@@ -326,7 +319,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile,
     tenant,
     userRole,
-    userPermissions,
     loading,
     error,
     isAuthenticated,
@@ -347,7 +339,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile,
     tenant,
     userRole,
-    userPermissions,
     loading,
     error,
     isAuthenticated,
