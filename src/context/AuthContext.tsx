@@ -52,6 +52,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<UserRole | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<AuthError | null>(null)
+  
+  // Cache para otimizar carregamento de dados
+  const [profileCache, setProfileCache] = useState<Map<string, Profile>>(new Map())
+  const [roleCache, setRoleCache] = useState<Map<string, UserRole>>(new Map())
+  const [tenantCache, setTenantCache] = useState<Map<string, Tenant>>(new Map())
 
   // Validação RBAC em desenvolvimento
   useRBACValidator()
@@ -60,7 +65,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null)
   }, [])
 
-  const loadProfile = useCallback(async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    // Verificar cache primeiro
+    if (profileCache.has(userId)) {
+      return profileCache.get(userId)!
+    }
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -73,14 +83,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null
       }
 
-      return data as Profile
+      const profileData = data as Profile
+      // Adicionar ao cache
+      setProfileCache(prev => new Map(prev).set(userId, profileData))
+      return profileData
     } catch (err) {
       console.warn('Erro ao carregar profile:', err)
       return null
     }
-  }, [])
+  }, [profileCache])
 
-  const loadUserRole = useCallback(async (roleId: string) => {
+  const loadUserRole = useCallback(async (roleId: string): Promise<UserRole | null> => {
+    // Verificar cache primeiro
+    if (roleCache.has(roleId)) {
+      return roleCache.get(roleId)!
+    }
+
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -93,14 +111,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null
       }
 
-      return data as UserRole
+      const roleData = data as UserRole
+      // Adicionar ao cache
+      setRoleCache(prev => new Map(prev).set(roleId, roleData))
+      return roleData
     } catch (err) {
       console.warn('Erro ao carregar role:', err)
       return null
     }
-  }, [])
+  }, [roleCache])
 
-  const loadTenant = useCallback(async (userTenantId: string) => {
+  const loadTenant = useCallback(async (userTenantId: string): Promise<Tenant | null> => {
+    // Verificar cache primeiro
+    if (tenantCache.has(userTenantId)) {
+      return tenantCache.get(userTenantId)!
+    }
+
     try {
       const { data, error } = await supabase
         .from('tenants')
@@ -114,12 +140,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null
       }
 
-      return data as Tenant
+      const tenantData = data as Tenant
+      // Adicionar ao cache
+      setTenantCache(prev => new Map(prev).set(userTenantId, tenantData))
+      return tenantData
     } catch (err) {
       console.warn('Erro ao carregar tenant:', err)
       return null
     }
-  }, [])
+  }, [tenantCache])
 
   const refreshTenant = useCallback(async () => {
     if (!user?.email || !profile?.tenant_id) return
@@ -162,9 +191,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [])
 
-  // Gerenciar estado de autenticação
+  // Gerenciar estado de autenticação com otimizações
   useEffect(() => {
     let mounted = true
+    let loadingTimeout: NodeJS.Timeout
+
+    // Configurar timeout para loading state
+    const setLoadingWithTimeout = (isLoading: boolean) => {
+      if (loadingTimeout) clearTimeout(loadingTimeout)
+      
+      if (isLoading) {
+        setLoading(true)
+      } else {
+        // Dar um pequeno delay para evitar flickers na UI
+        loadingTimeout = setTimeout(() => {
+          if (mounted) setLoading(false)
+        }, 100)
+      }
+    }
 
     // Configurar listener de mudanças de auth PRIMEIRO
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -177,42 +221,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(currentSession?.user ?? null)
 
         if (currentSession?.user) {
-          // Carregar dados adicionais de forma assíncrona
+          setLoadingWithTimeout(true)
+          
+          // Carregar dados adicionais de forma otimizada e paralela
           setTimeout(async () => {
             if (!mounted) return
 
-            const profileData = await loadProfile(currentSession.user.id);
-            if (!profileData) {
-              if (mounted) {
-                setProfile(null)
-                setTenant(null)
-                setUserRole(null)
+            try {
+              // Carregar profile, tenant e role em paralelo quando possível
+              const profileData = await loadProfile(currentSession.user.id);
+              
+              if (!profileData) {
+                if (mounted) {
+                  setProfile(null)
+                  setTenant(null)
+                  setUserRole(null)
+                  setLoadingWithTimeout(false)
+                }
+                return
               }
-              return
-            }
 
-            const tenantData = profileData.tenant_id ? await loadTenant(profileData.tenant_id) : null;
-            const roleData = profileData.role ? await loadUserRole(profileData.role) : null;
+              // Carregar tenant e role em paralelo se os IDs estão disponíveis
+              const [tenantData, roleData] = await Promise.all([
+                profileData.tenant_id ? loadTenant(profileData.tenant_id) : Promise.resolve(null),
+                profileData.role ? loadUserRole(profileData.role) : Promise.resolve(null)
+              ])
 
-            if (mounted) {
-              setProfile(profileData);
-              setTenant(tenantData)
-              setUserRole(roleData)
+              if (mounted) {
+                setProfile(profileData);
+                setTenant(tenantData)
+                setUserRole(roleData)
+                setLoadingWithTimeout(false)
+              }
+            } catch (error) {
+              console.error('Erro ao carregar dados do usuário:', error)
+              if (mounted) {
+                setLoadingWithTimeout(false)
+              }
             }
           }, 0)
         } else {
           setProfile(null)
           setTenant(null)
           setUserRole(null)
+          setLoadingWithTimeout(false)
         }
 
         if (event === 'SIGNED_OUT') {
           setProfile(null)
           setTenant(null)
           setUserRole(null)
+          // Limpar caches ao fazer logout
+          setProfileCache(new Map())
+          setRoleCache(new Map())
+          setTenantCache(new Map())
+          setLoadingWithTimeout(false)
         }
-
-        setLoading(false)
       }
     )
 
@@ -224,23 +288,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(currentSession?.user ?? null)
       
       if (!currentSession) {
-        setLoading(false)
+        setLoadingWithTimeout(false)
       }
     })
 
     return () => {
       mounted = false
+      if (loadingTimeout) clearTimeout(loadingTimeout)
       subscription.unsubscribe()
     }
   }, [loadProfile, loadTenant, loadUserRole])
 
   const isAuthenticated = useMemo(() => !!user && !!session, [user, session])
 
+  // Memoizar permissões do usuário para evitar recálculos
   const userPermissions = useMemo(() => {
     if (!userRole?.code) return []
     return getRolePermissions(userRole.code)
-  }, [userRole])
+  }, [userRole?.code])
 
+  // Memoizar checadores de permissão para performance
   const hasPermissionCheck = useCallback((permission: Permission) => {
     return hasPermission(userRole, permission)
   }, [userRole])
