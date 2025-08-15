@@ -54,14 +54,16 @@ import Teste from './pages/Test';
 import Unauthorized from './pages/Unauthorized';
 import { AuthProvider } from './context/AuthContext';
 import RoleBasedRoute from './components/RoleBasedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import { Permission } from './utils/permissions';
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -379,6 +381,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
+    </ErrorBoundary>
   </QueryClientProvider>
 );
 

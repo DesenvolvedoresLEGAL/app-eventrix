@@ -27,10 +27,14 @@ const iconMap = {
 
 const Unauthorized: React.FC = () => {
   const navigate = useNavigate();
-  const { firstAccessibleRoute, redirectToFirstAccessible, isLoading, hasNoAccess } = useSmartNavigation();
+  const { firstAccessibleRoute, redirectToFirstAccessible, isLoading, hasNoAccess, error, clearError, retry } = useSmartNavigation();
 
   const handleGoBack = () => {
     navigate(-1);
+  };
+
+  const handleRetryNavigation = async () => {
+    await retry();
   };
 
   // Obter ícone dinâmico baseado na rota
@@ -47,9 +51,14 @@ const Unauthorized: React.FC = () => {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
             <ShieldX className="h-6 w-6 text-destructive" />
           </div>
-          <CardTitle className="text-2xl font-bold">Acesso Negado</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            {error ? 'Erro de Navegação' : 'Acesso Negado'}
+          </CardTitle>
           <CardDescription>
-            Você não tem permissão para acessar esta página
+            {error 
+              ? 'Ocorreu um erro ao determinar suas permissões de acesso'
+              : 'Você não tem permissão para acessar esta página'
+            }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -58,9 +67,11 @@ const Unauthorized: React.FC = () => {
           ) : (
             <>
               <p className="text-sm text-muted-foreground text-center">
-                {hasNoAccess 
-                  ? "Você não possui permissão para acessar nenhuma funcionalidade do sistema."
-                  : "Redirecionaremos você para uma página permitida ou entre em contato com o administrador."
+                {error 
+                  ? "Houve um problema ao verificar suas permissões. Tente novamente ou entre em contato com o suporte."
+                  : hasNoAccess 
+                    ? "Você não possui permissão para acessar nenhuma funcionalidade do sistema."
+                    : "Redirecionaremos você para uma página permitida ou entre em contato com o administrador."
                 }
               </p>
               
@@ -70,32 +81,26 @@ const Unauthorized: React.FC = () => {
                   Voltar
                 </Button>
                 
-                {firstAccessibleRoute ? (
+                {error ? (
+                  <Button onClick={handleRetryNavigation} className="w-full">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Tentar Novamente
+                  </Button>
+                ) : firstAccessibleRoute ? (
                   <Button onClick={redirectToFirstAccessible} className="w-full">
                     {getIconComponent(firstAccessibleRoute.route)}
                     Ir para {firstAccessibleRoute.displayName}
                   </Button>
-                ) : (
-                  <Button 
-                    variant="ghost" 
-                    className="w-full"
-                    onClick={() => window.location.href = 'mailto:suporte@eventrix.com.br'}
-                  >
-                    <Mail className="mr-2 h-4 w-4" />
-                    Contatar Suporte
-                  </Button>
-                )}
+                ) : null}
                 
-                {firstAccessibleRoute && (
-                  <Button 
-                    variant="ghost" 
-                    className="w-full"
-                    onClick={() => window.location.href = 'mailto:suporte@eventrix.com.br'}
-                  >
-                    <Mail className="mr-2 h-4 w-4" />
-                    Contatar Suporte
-                  </Button>
-                )}
+                <Button 
+                  variant="ghost" 
+                  className="w-full"
+                  onClick={() => window.location.href = 'mailto:suporte@eventrix.com.br'}
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  Contatar Suporte
+                </Button>
               </div>
             </>
           )}
