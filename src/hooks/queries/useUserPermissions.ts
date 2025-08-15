@@ -1,4 +1,5 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getUserPermissions, UserPermissionsResponse } from '@/services/permissionsService';
 import { Permission, getRolePermissions } from '@/utils/permissions';
@@ -34,8 +35,8 @@ export const useUserPermissions = (): UseUserPermissionsReturn => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // Sistema híbrido: usa backend se disponível, senão fallback para frontend
-  const getEffectivePermissions = (): Permission[] => {
+  // Memoizar as permissões efetivas para evitar recálculos desnecessários
+  const effectivePermissions = useMemo((): Permission[] => {
     // Se tem dados do backend, usa eles
     if (query.data?.permissions && query.data.permissions.length > 0) {
       return query.data.permissions;
@@ -43,7 +44,7 @@ export const useUserPermissions = (): UseUserPermissionsReturn => {
 
     // Fallback para permissões hardcoded se:
     // 1. Ainda está carregando pela primeira vez
-    // 2. Houve erro na consulta
+    // 2. Houve erro na consulta  
     // 3. Backend retornou vazio mas temos role
     if (userRole?.code) {
       const fallbackPermissions = getRolePermissions(userRole.code);
@@ -54,15 +55,15 @@ export const useUserPermissions = (): UseUserPermissionsReturn => {
     }
 
     return [];
-  };
+  }, [query.data?.permissions, userRole?.code]);
 
-  const getEffectiveRoleCode = (): string | null => {
+  const effectiveRoleCode = useMemo((): string | null => {
     return query.data?.roleCode || userRole?.code || null;
-  };
+  }, [query.data?.roleCode, userRole?.code]);
 
   return {
-    permissions: getEffectivePermissions(),
-    roleCode: getEffectiveRoleCode(),
+    permissions: effectivePermissions,
+    roleCode: effectiveRoleCode,
     roleName: query.data?.roleName,
     isLoading: query.isLoading,
     error: query.error,
