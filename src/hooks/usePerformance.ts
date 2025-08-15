@@ -1,5 +1,4 @@
-import { useMemo, useCallback, useRef } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useState, useCallback, useMemo } from 'react';
 import { Permission } from '@/utils/permissions';
 
 interface PerformanceMetrics {
@@ -31,54 +30,58 @@ interface UsePerformanceReturn {
 const CACHE_EXPIRY_TIME = 5 * 60 * 1000; // 5 minutos
 const CACHE_KEY = 'eventrix_route_cache';
 
-export const usePerformance = (): UsePerformanceReturn => {
-  const { userRole } = useAuth();
-  const metricsRef = useRef<PerformanceMetrics>({
+// Singleton para métricas e cache para evitar problemas de dependência circular
+class PerformanceManager {
+  private static instance: PerformanceManager;
+  private metrics: PerformanceMetrics = {
     authLoadTime: 0,
     permissionCalculationTime: 0,
     routeCalculationTime: 0,
     redirectTime: 0,
     totalLoginTime: 0,
-  });
-  const timersRef = useRef<Record<string, number>>({});
+  };
+  private timers: Record<string, number> = {};
+  private cache = new Map<string, RouteCache>();
 
-  // Cache em memória para performance
-  const cacheRef = useRef<Map<string, RouteCache>>(new Map());
+  static getInstance(): PerformanceManager {
+    if (!PerformanceManager.instance) {
+      PerformanceManager.instance = new PerformanceManager();
+    }
+    return PerformanceManager.instance;
+  }
 
-  // Memoização agressiva do cache key
-  const getCacheKey = useCallback((userRole: string, permissions: Permission[]) => {
+  getCacheKey(userRole: string, permissions: Permission[]): string {
     return `${userRole}_${permissions.sort().join(',')}`;
-  }, []);
+  }
 
-  const startTimer = useCallback((key: keyof PerformanceMetrics) => {
+  startTimer(key: keyof PerformanceMetrics): () => void {
     const startTime = performance.now();
-    timersRef.current[key] = startTime;
+    this.timers[key] = startTime;
     
     return () => {
       const endTime = performance.now();
       const duration = endTime - startTime;
-      metricsRef.current[key] = duration;
+      this.metrics[key] = duration;
       
       if (process.env.NODE_ENV === 'development') {
         console.log(`⏱️ Performance ${key}: ${duration.toFixed(2)}ms`);
       }
     };
-  }, []);
+  }
 
-  const clearMetrics = useCallback(() => {
-    metricsRef.current = {
+  clearMetrics(): void {
+    this.metrics = {
       authLoadTime: 0,
       permissionCalculationTime: 0,
       routeCalculationTime: 0,
       redirectTime: 0,
       totalLoginTime: 0,
     };
-    timersRef.current = {};
-  }, []);
+    this.timers = {};
+  }
 
-  // Cache de rotas com expiração
-  const cacheRoute = useCallback((userRole: string, permissions: Permission[], route: any) => {
-    const cacheKey = getCacheKey(userRole, permissions);
+  cacheRoute(userRole: string, permissions: Permission[], route: any): void {
+    const cacheKey = this.getCacheKey(userRole, permissions);
     const cacheEntry: RouteCache = {
       userRole,
       permissions: [...permissions],
@@ -87,7 +90,7 @@ export const usePerformance = (): UsePerformanceReturn => {
       expiryTime: Date.now() + CACHE_EXPIRY_TIME,
     };
     
-    cacheRef.current.set(cacheKey, cacheEntry);
+    this.cache.set(cacheKey, cacheEntry);
     
     // Persistir no localStorage para sessões futuras
     try {
@@ -97,13 +100,13 @@ export const usePerformance = (): UsePerformanceReturn => {
     } catch (error) {
       console.warn('Erro ao salvar cache de rotas:', error);
     }
-  }, [getCacheKey]);
+  }
 
-  const getCachedRoute = useCallback((userRole: string, permissions: Permission[]): any | null => {
-    const cacheKey = getCacheKey(userRole, permissions);
+  getCachedRoute(userRole: string, permissions: Permission[]): any | null {
+    const cacheKey = this.getCacheKey(userRole, permissions);
     
     // Verificar cache em memória primeiro
-    let cached = cacheRef.current.get(cacheKey);
+    let cached = this.cache.get(cacheKey);
     
     // Se não encontrou em memória, verificar localStorage
     if (!cached) {
@@ -113,7 +116,7 @@ export const usePerformance = (): UsePerformanceReturn => {
         
         if (cached) {
           // Restaurar no cache em memória
-          cacheRef.current.set(cacheKey, cached);
+          this.cache.set(cacheKey, cached);
         }
       } catch (error) {
         console.warn('Erro ao carregar cache de rotas:', error);
@@ -130,7 +133,7 @@ export const usePerformance = (): UsePerformanceReturn => {
     
     // Remover cache expirado
     if (cached) {
-      cacheRef.current.delete(cacheKey);
+      this.cache.delete(cacheKey);
       try {
         const storedCache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
         delete storedCache[cacheKey];
@@ -141,19 +144,18 @@ export const usePerformance = (): UsePerformanceReturn => {
     }
     
     return null;
-  }, [getCacheKey]);
+  }
 
-  const clearCache = useCallback(() => {
-    cacheRef.current.clear();
+  clearCache(): void {
+    this.cache.clear();
     try {
       localStorage.removeItem(CACHE_KEY);
     } catch (error) {
       console.warn('Erro ao limpar cache:', error);
     }
-  }, []);
+  }
 
-  // Prefetch da rota para melhor performance
-  const prefetchRoute = useCallback((route: string) => {
+  prefetchRoute(route: string): void {
     if (!route || typeof window === 'undefined') return;
     
     // Prefetch do chunk da rota
@@ -165,13 +167,55 @@ export const usePerformance = (): UsePerformanceReturn => {
     // Simular carregamento da rota
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => {
-        // Fazer fetch dos dados críticos da página se necessário
         console.log(`🚀 Prefetching route: ${route}`);
       });
     }
+  }
+
+  getMetrics(): PerformanceMetrics {
+    return { ...this.metrics };
+  }
+}
+
+export const usePerformance = (): UsePerformanceReturn => {
+  const [, forceUpdate] = useState({});
+  const manager = useMemo(() => PerformanceManager.getInstance(), []);
+
+  // Força re-render quando métricas mudam
+  const triggerUpdate = useCallback(() => {
+    forceUpdate({});
   }, []);
 
-  const metrics = useMemo(() => metricsRef.current, []);
+  const startTimer = useCallback((key: keyof PerformanceMetrics) => {
+    const stopTimer = manager.startTimer(key);
+    return () => {
+      stopTimer();
+      triggerUpdate(); // Força re-render para atualizar métricas na UI
+    };
+  }, [manager, triggerUpdate]);
+
+  const clearMetrics = useCallback(() => {
+    manager.clearMetrics();
+    triggerUpdate();
+  }, [manager, triggerUpdate]);
+
+  const cacheRoute = useCallback((userRole: string, permissions: Permission[], route: any) => {
+    manager.cacheRoute(userRole, permissions, route);
+  }, [manager]);
+
+  const getCachedRoute = useCallback((userRole: string, permissions: Permission[]) => {
+    return manager.getCachedRoute(userRole, permissions);
+  }, [manager]);
+
+  const clearCache = useCallback(() => {
+    manager.clearCache();
+  }, [manager]);
+
+  const prefetchRoute = useCallback((route: string) => {
+    manager.prefetchRoute(route);
+  }, [manager]);
+
+  const metrics = useMemo(() => manager.getMetrics(), [manager, forceUpdate]);
 
   return {
     metrics,

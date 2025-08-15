@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [roleCache, setRoleCache] = useState<Map<string, UserRole>>(new Map())
   const [tenantCache, setTenantCache] = useState<Map<string, Tenant>>(new Map())
 
-  // Performance e debug hooks
+  // Performance hooks - não usar useAuth aqui para evitar dependência circular
   const { startTimer } = usePerformance()
 
   // Validação RBAC em desenvolvimento
