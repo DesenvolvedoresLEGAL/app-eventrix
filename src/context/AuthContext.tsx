@@ -26,6 +26,7 @@ interface Profile {
   full_name: string
   email: string
   whatsapp_number: string | null
+  tenant_id: string
 }
 
 interface AuthError {
@@ -85,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [])
 
-  const loadTenant = useCallback(async (userEmail: string) => {
+  const loadTenant = useCallback(async (userTenantId: string) => {
     try {
       const { data, error } = await supabase
         .from('tenants')
@@ -102,8 +103,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           features_enabled,
           onboarding_completed
         `)
-        .eq('contact_email', userEmail)
-        .eq('deleted_at', null)
+        .eq('id', userTenantId)
+        .is('deleted_at', null)
         .single()
 
       if (error) {
@@ -121,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshTenant = useCallback(async () => {
     if (!user?.email) return
 
-    const tenantData = await loadTenant(user.email)
+    const tenantData = await loadTenant(profile.tenant_id);
     setTenant(tenantData)
   }, [user?.email, loadTenant])
 
@@ -178,13 +179,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(async () => {
             if (!mounted) return
 
-            const [profileData, tenantData] = await Promise.all([
-              loadProfile(currentSession.user.id),
-              loadTenant(currentSession.user.email!)
-            ])
+            const profileData = await loadProfile(currentSession.user.id);
+            const tenantData = await loadTenant(profileData.tenant_id);
 
             if (mounted) {
-              setProfile(profileData)
+              setProfile(profileData);
               setTenant(tenantData)
             }
           }, 0)
