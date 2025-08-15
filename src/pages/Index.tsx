@@ -10,7 +10,7 @@ const Index = () => {
     setInterval(() => {
       navigate('/login');
     }, 2000);
-  }, [navigate]);
+  }, []);
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted">
