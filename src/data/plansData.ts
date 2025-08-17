@@ -133,9 +133,9 @@ export const comparisonFeatures = [
       },
       {
         name: 'Visitantes por evento',
-        start: 'até 5.000',
-        scale: '5.001 a 25.000',
-        boom: '25.001 a 50.000',
+        start: 'até 10.000',
+        scale: '10.000 a 50.000',
+        boom: '50.000 a 100.000',
         enterprise: 'Ilimitado'
       },
       {
