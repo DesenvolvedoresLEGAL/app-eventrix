@@ -28,7 +28,7 @@ export const mainPlans = [
     popular: true,
     features: {
       events: '5 a 10',
-      visitors: '5.001 a 25.000',
+      visitors: '+25.000',
       exhibitors: 'até 500',
       admins: 'até 3',
       support: 'E-mail + chat prior.'
