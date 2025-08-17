@@ -9,7 +9,7 @@ export const mainPlans = [
     popular: false,
     features: {
       events: 'até 5',
-      visitors: 'até 5.000',
+      visitors: 'até 10.000',
       exhibitors: 'até 200',
       admins: '1',
       support: 'E-mail básico'
@@ -28,7 +28,7 @@ export const mainPlans = [
     popular: true,
     features: {
       events: '5 a 10',
-      visitors: '5.000 a 25.000',
+      visitors: '10.000 a 50.000',
       exhibitors: 'até 500',
       admins: 'até 3',
       support: 'E-mail + chat prior.'
@@ -47,7 +47,7 @@ export const mainPlans = [
     popular: false,
     features: {
       events: '10 a 15',
-      visitors: '25.001 a 50.000',
+      visitors: '50.000 a 100.000',
       exhibitors: 'até 2.000',
       admins: 'até 10',
       support: '24/7 com SLA'
