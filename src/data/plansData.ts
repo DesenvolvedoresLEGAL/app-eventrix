@@ -5,7 +5,7 @@ export const mainPlans = [
   {
     name: 'Start',
     description: 'Para organizadores iniciantes',
-    price: { annual: 7900, monthly: 990 },
+    price: { annual: 19900, monthly: 1990 },
     popular: false,
     features: {
       events: 'até 5',
@@ -24,7 +24,7 @@ export const mainPlans = [
   {
     name: 'Scale',
     description: 'Para empresas em crescimento',
-    price: { annual: 18900, monthly: 2290 },
+    price: { annual: 49900, monthly: 4990 },
     popular: true,
     features: {
       events: '5 a 10',
@@ -43,7 +43,7 @@ export const mainPlans = [
   {
     name: 'Boom',
     description: 'Para grandes eventos',
-    price: { annual: 37900, monthly: 4490 },
+    price: { annual: 79900, monthly: 7990 },
     popular: false,
     features: {
       events: '10 a 15',
