@@ -10,7 +10,7 @@ export const mainPlans = [
     features: {
       events: 'até 5',
       visitors: 'até 10.000',
-      exhibitors: 'até 200',
+      exhibitors: 'até 100',
       admins: '1',
       support: 'E-mail básico'
     },
@@ -140,7 +140,7 @@ export const comparisonFeatures = [
       },
       {
         name: 'Expositores',
-        start: 'até 200',
+        start: 'até 100',
         scale: 'até 500',
         boom: 'até 2.000',
         enterprise: 'Custom'
