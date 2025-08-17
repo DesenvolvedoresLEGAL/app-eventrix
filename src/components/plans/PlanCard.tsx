@@ -86,7 +86,9 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, billingCycle, formatPrice }) 
             </div>
             <div>
               <span className="text-muted-foreground">Expositores:</span>
-              <div className="font-semibold">{plan.features.exhibitors} +500</div>
+              <div className="font-semibold">
+                {plan.features.exhibitors === 'até 2.000' ? '+500' : plan.features.exhibitors}
+              </div>
             </div>
           </div>
           <div className="pt-2 border-t border-border">
