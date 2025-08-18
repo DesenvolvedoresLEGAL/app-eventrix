@@ -145,7 +145,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/permissions" 
+              path="/settings/permissions" 
               element={
                 <RoleBasedRoute requiredPermission={Permission.SETTINGS_PERMISSIONS_MANAGE}>
                   <Permissions />
