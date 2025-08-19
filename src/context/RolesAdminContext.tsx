@@ -24,6 +24,7 @@ interface RolesAdminContextValue {
   // Data
   roles: UserRole[];
   filteredRoles: UserRole[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   statistics: any;
   isLoading: boolean;
   error: Error | null;

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useRolesAdmin } from '@/context/RolesAdminContext';
 import { usePermissionsList } from '@/hooks/queries/usePermissionsList';
+import { Permission } from '@/utils/permissions';
 
 export const PermissionMatrix: React.FC = () => {
   const { roles } = useRolesAdmin();
@@ -39,12 +40,12 @@ export const PermissionMatrix: React.FC = () => {
 
   const getRolePermissions = (roleId: string) => {
     const role = roles.find(r => r.id === roleId);
-    return role?.permissions || [];
+    return role?.permissions;
   };
 
   const hasPermission = (roleId: string, permissionKey: string) => {
     const rolePermissions = getRolePermissions(roleId);
-    return rolePermissions.includes(permissionKey as any);
+    return rolePermissions.includes(permissionKey as Permission);
   };
 
   const exportMatrix = () => {
@@ -146,7 +147,7 @@ export const PermissionMatrix: React.FC = () => {
 
           {/* Permissions by Module */}
           {Object.entries(groupedPermissions).map(([module, modulePermissions]) => {
-            const filteredModulePermissions = modulePermissions.filter(p => 
+            const filteredModulePermissions = modulePermissions.permissions.filter(p => 
               filteredPermissions.some(fp => fp.key === p.key)
             );
             

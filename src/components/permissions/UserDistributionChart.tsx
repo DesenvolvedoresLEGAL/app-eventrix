@@ -25,7 +25,7 @@ export const UserDistributionChart: React.FC = () => {
     if (!distribution) return [];
     
     return distribution.map((item, index) => ({
-      name: item.code,
+      name: item.roleName,
       value: item.userCount,
       percentage: item.percentage,
       color: COLORS[index % COLORS.length]
@@ -36,10 +36,10 @@ export const UserDistributionChart: React.FC = () => {
     if (!distribution) return [];
     
     return distribution.map((item, index) => ({
-      name: item.code.length > 8 ? item.code.substring(0, 8) + '...' : item.code,
-      fullName: item.code,
+      name: item.roleName.length > 8 ? item.roleName.substring(0, 8) + '...' : item.roleName,
+      fullName: item.roleName,
       users: item.userCount,
-      permissions: roles.find(r => r.code === item.code)?.permissions.length || 0,
+      permissions: roles.find(r => r.code === item.roleName)?.permissions.length || 0,
       color: COLORS[index % COLORS.length]
     }));
   }, [distribution, roles]);
@@ -54,10 +54,10 @@ export const UserDistributionChart: React.FC = () => {
     const csvContent = [
       ['Perfil', 'Usuários', 'Percentual', 'Permissões'].join(','),
       ...distribution.map(item => [
-        item.code,
+        item.roleName,
         item.userCount,
         `${item.percentage.toFixed(1)}%`,
-        roles.find(r => r.code === item.code)?.permissions.length || 0
+        roles.find(r => r.code === item.roleName)?.permissions.length || 0
       ].join(','))
     ].join('\n');
 

@@ -67,6 +67,7 @@ export interface AuditLogEntry {
   entityType: 'ROLE' | 'PERMISSION' | 'USER_ROLE';
   entityId: string;
   userId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   changes: Record<string, any>;
   timestamp: string;
   ipAddress?: string;
