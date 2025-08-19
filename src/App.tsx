@@ -18,6 +18,7 @@ import Visitors from "./pages/Visitors";
 import Staff from "./pages/Staff";
 import Suppliers from "./pages/Suppliers";
 import Permissions from "./pages/Permissions";
+import OrganizerSettings from "./pages/OrganizerSettings";
 import Lectures from "./pages/Lectures";
 import Tracks from "./pages/Tracks";
 import Activities from "./pages/Activities";
@@ -149,6 +150,14 @@ const App = () => (
               element={
                 <RoleBasedRoute requiredPermission={Permission.SETTINGS_PERMISSIONS_MANAGE}>
                   <Permissions />
+                </RoleBasedRoute>
+              } 
+            />
+            <Route 
+              path="/settings/organizer" 
+              element={
+                <RoleBasedRoute requiredPermission={Permission.SETTINGS_ORGANIZER_MANAGE}>
+                  <OrganizerSettings />
                 </RoleBasedRoute>
               } 
             />
