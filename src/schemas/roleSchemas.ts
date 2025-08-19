@@ -112,16 +112,23 @@ export const roleFormSchema = createRoleSchema.extend({
   )
 });
 
-export const roleEditFormSchema = updateRoleSchema.extend({
+export const roleEditFormSchema = z.object({
   id: z.string().uuid('ID inválido'),
-  code: updateRoleSchema.shape.code?.refine(
-    async (code, ctx) => {
-      if (!code || code.length < 3) return true;
-      const roleId = (ctx.path[0] as any)?.id; // Get role ID from form context
-      return await isRoleCodeAvailable(code, roleId);
-    },
-    'Este código já está em uso'
-  )
+  code: z.string()
+    .min(3, 'Código deve ter pelo menos 3 caracteres')
+    .max(50, 'Código deve ter no máximo 50 caracteres')
+    .regex(/^[a-z0-9_-]+$/, 'Apenas letras minúsculas, números, underscore e hífen')
+    .transform(val => val.toLowerCase().trim())
+    .optional(),
+  description: z.string()
+    .min(10, 'Descrição deve ter pelo menos 10 caracteres')
+    .max(500, 'Descrição deve ter no máximo 500 caracteres')
+    .transform(val => val.trim())
+    .optional(),
+  permissions: z.array(z.nativeEnum(Permission))
+    .min(1, 'Pelo menos uma permissão deve ser selecionada')
+    .max(100, 'Máximo de 100 permissões por perfil')
+    .optional()
 });
 
 // Type exports for components

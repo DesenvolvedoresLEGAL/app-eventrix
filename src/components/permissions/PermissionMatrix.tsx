@@ -1,208 +1,251 @@
-import React, { useMemo, useState } from 'react';
-import { Key, Filter, Download, Eye, EyeOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Combobox, ComboboxOption } from '@/components/ui/combobox';
+import { Search, Download, Eye, EyeOff, Filter, Key } from 'lucide-react';
 import { useRolesAdmin } from '@/context/RolesAdminContext';
 import { usePermissionsList } from '@/hooks/queries/usePermissionsList';
-import { Permission } from '@/utils/permissions';
+import { formatRoleName, groupFormattedPermissions, searchFormattedPermissions } from '@/utils/roleFormatter';
 
 export const PermissionMatrix: React.FC = () => {
   const { roles } = useRolesAdmin();
-  const { permissions, groupedPermissions } = usePermissionsList();
+  const { permissions } = usePermissionsList();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedModule, setSelectedModule] = useState<string>('all');
   const [compactView, setCompactView] = useState(false);
 
-  const filteredPermissions = useMemo(() => {
-    let filtered = permissions;
+  // Memoized filtered permissions with enhanced formatting
+  const { filteredPermissions, formattedModules } = useMemo(() => {
+    const groupedFormatted = groupFormattedPermissions(permissions.map(p => p.key));
     
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(permission => 
-        permission.name.toLowerCase().includes(term) ||
-        permission.description.toLowerCase().includes(term) ||
-        permission.key.toLowerCase().includes(term)
-      );
-    }
-    
-    if (selectedModule !== 'all') {
-      filtered = filtered.filter(permission => permission.module === selectedModule);
-    }
-    
-    return filtered;
-  }, [permissions, searchTerm, selectedModule]);
+    // Create module options for the combobox
+    const moduleOptions: ComboboxOption[] = [
+      { value: 'all', label: 'Todos os Módulos', icon: '📂' },
+      ...groupedFormatted.map(group => ({
+        value: group.module,
+        label: group.module,
+        icon: group.permissions[0]?.icon || '📁'
+      }))
+    ];
 
-  const modules = useMemo(() => {
-    return Array.from(new Set(permissions.map(p => p.module)));
-  }, [permissions]);
+    // Apply search and module filters
+    let filtered = groupedFormatted;
+
+    if (selectedModule && selectedModule !== 'all') {
+      filtered = filtered.filter(group => group.module === selectedModule);
+    }
+
+    if (searchTerm) {
+      filtered = filtered.map(group => ({
+        ...group,
+        permissions: searchFormattedPermissions(group.permissions, searchTerm)
+      })).filter(group => group.permissions.length > 0);
+    }
+
+    return {
+      filteredPermissions: filtered,
+      formattedModules: moduleOptions
+    };
+  }, [permissions, searchTerm, selectedModule]);
 
   const getRolePermissions = (roleId: string) => {
     const role = roles.find(r => r.id === roleId);
-    return role?.permissions;
+    return role?.permissions || [];
   };
 
   const hasPermission = (roleId: string, permissionKey: string) => {
     const rolePermissions = getRolePermissions(roleId);
-    return rolePermissions.includes(permissionKey as Permission);
+    return rolePermissions.includes(permissionKey as any);
   };
 
   const exportMatrix = () => {
-    const csvContent = [
-      ['Permissão', 'Módulo', 'Descrição', ...roles.map(r => r.code)].join(','),
-      ...filteredPermissions.map(permission => [
+    const csvHeaders = ['Permissão', 'Módulo', ...roles.map(role => formatRoleName(role.code))];
+    const csvRows = filteredPermissions.flatMap(group => 
+      group.permissions.map(permission => [
         permission.name,
         permission.module,
-        permission.description,
         ...roles.map(role => hasPermission(role.id, permission.key) ? 'Sim' : 'Não')
-      ].join(','))
+      ])
+    );
+    
+    const csvContent = [
+      csvHeaders.join(','),
+      ...csvRows.map(row => row.join(','))
     ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'matriz-permissoes.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `matriz-permissoes-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
   };
 
   if (roles.length === 0) {
     return (
-      <div className="tech-card p-6">
-        <h2 className="text-xl font-semibold mb-4">Matriz de Permissões</h2>
-        <div className="text-center py-8">
-          <Key size={48} className="mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Nenhum perfil encontrado</p>
-        </div>
-      </div>
+      <Card className="tech-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            Matriz de Permissões
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground text-center py-8">
+            Nenhum perfil encontrado. Crie perfis primeiro para visualizar a matriz de permissões.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="tech-card p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Matriz de Permissões</h2>
-          <p className="text-sm text-muted-foreground">
-            Visualização completa das permissões por perfil ({filteredPermissions.length} permissões)
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline" 
-            size="sm"
-            onClick={() => setCompactView(!compactView)}
-          >
-            {compactView ? <Eye size={16} /> : <EyeOff size={16} />}
-            {compactView ? 'Expandir' : 'Compacto'}
-          </Button>
-          <Button variant="outline" size="sm" onClick={exportMatrix}>
-            <Download size={16} className="mr-2" />
-            Exportar CSV
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex-1">
-          <Input
-            placeholder="Buscar permissões..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
-        <Select value={selectedModule} onValueChange={setSelectedModule}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filtrar por módulo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os Módulos</SelectItem>
-            {modules.map(module => (
-              <SelectItem key={module} value={module}>
-                {module}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Matrix */}
-      <div className="overflow-x-auto">
-        <div className="min-w-full">
-          {/* Header */}
-          <div className="grid gap-2 mb-4" style={{ gridTemplateColumns: `300px repeat(${roles.length}, 120px)` }}>
-            <div className="font-semibold text-sm">Permissão</div>
-            {roles.map(role => (
-              <div key={role.id} className="font-semibold text-sm text-center">
-                <div className="truncate" title={role.code}>
-                  {role.code}
-                </div>
-              </div>
-            ))}
+    <Card className="tech-card">
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              Matriz de Permissões
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Visualização completa das permissões por perfil
+            </p>
           </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCompactView(!compactView)}
+            >
+              {compactView ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
+              {compactView ? 'Expandir' : 'Compactar'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportMatrix}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exportar CSV
+            </Button>
+          </div>
+        </div>
 
-          {/* Permissions by Module */}
-          {Object.entries(groupedPermissions).map(([module, modulePermissions]) => {
-            const filteredModulePermissions = modulePermissions.permissions.filter(p => 
-              filteredPermissions.some(fp => fp.key === p.key)
-            );
-            
-            if (filteredModulePermissions.length === 0) return null;
+        {/* Filters */}
+        <div className="mt-4">
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar permissões por nome, descrição ou módulo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="w-64">
+              <Combobox
+                options={formattedModules}
+                value={selectedModule}
+                onValueChange={setSelectedModule}
+                placeholder="Filtrar por módulo"
+                searchPlaceholder="Buscar módulo..."
+                emptyText="Nenhum módulo encontrado"
+              />
+            </div>
+          </div>
+        </div>
+      </CardHeader>
 
-            return (
-              <div key={module} className="mb-6">
-                <div className="mb-3">
-                  <Badge variant="outline" className="text-xs">
-                    {module} ({filteredModulePermissions.length})
+      <CardContent>
+        {/* Permission Matrix */}
+        <div className="space-y-6">
+          {filteredPermissions.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Filter className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">Nenhuma permissão encontrada</h3>
+              <p>Tente ajustar os filtros de busca ou módulo.</p>
+            </div>
+          ) : (
+            filteredPermissions.map((group) => (
+              <div key={group.module} className="border rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-xl">{group.permissions[0]?.icon || '📁'}</span>
+                  <h3 className="font-semibold text-primary">
+                    {group.module}
+                  </h3>
+                  <Badge variant="outline" className="ml-auto">
+                    {group.permissions.length} {group.permissions.length === 1 ? 'permissão' : 'permissões'}
                   </Badge>
                 </div>
                 
-                <div className="space-y-2">
-                  {filteredModulePermissions.map(permission => (
-                    <div 
-                      key={permission.key}
-                      className="grid gap-2 p-2 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors"
-                      style={{ gridTemplateColumns: `300px repeat(${roles.length}, 120px)` }}
-                    >
-                      <div className="flex flex-col justify-center">
-                        <div className="font-medium text-sm">{permission.name}</div>
-                        {!compactView && (
-                          <div className="text-xs text-muted-foreground truncate" title={permission.description}>
-                            {permission.description}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {roles.map(role => (
-                        <div key={role.id} className="flex items-center justify-center">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                            hasPermission(role.id, permission.key)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
-                          }`}>
-                            {hasPermission(role.id, permission.key) ? '✓' : '✗'}
-                          </div>
-                        </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2 font-medium min-w-[200px]">Permissão</th>
+                        {roles.map(role => (
+                          <th key={role.id} className="text-center p-2 font-medium min-w-[120px]">
+                            <div className="space-y-1">
+                              <div className="font-semibold">{formatRoleName(role.code)}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {getRolePermissions(role.id).length} permissões
+                              </div>
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.permissions.map(permission => (
+                        <tr key={permission.key} className="border-b hover:bg-muted/30 transition-colors">
+                          <td className="p-2">
+                            <div className="flex items-start gap-3">
+                              <span className="text-lg mt-0.5" style={{ color: permission.color }}>
+                                {permission.icon}
+                              </span>
+                              <div className="flex-1">
+                                <div className="font-medium">{permission.name}</div>
+                                <div className="text-sm text-muted-foreground">{permission.description}</div>
+                                <Badge 
+                                  variant="outline" 
+                                  className="mt-1 text-xs"
+                                  style={{ borderColor: permission.color, color: permission.color }}
+                                >
+                                  {permission.level === 'basic' ? 'Básico' : 
+                                   permission.level === 'intermediate' ? 'Intermediário' : 'Avançado'}
+                                </Badge>
+                              </div>
+                            </div>
+                          </td>
+                          {roles.map(role => (
+                            <td key={role.id} className="text-center p-2">
+                              {hasPermission(role.id, permission.key) ? (
+                                <Badge 
+                                  variant="default" 
+                                  className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-100"
+                                >
+                                  ✓ Concedida
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-muted-foreground">
+                                  ✗ Negada
+                                </Badge>
+                              )}
+                            </td>
+                          ))}
+                        </tr>
                       ))}
-                    </div>
-                  ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            );
-          })}
+            ))
+          )}
         </div>
-      </div>
-
-      {filteredPermissions.length === 0 && (
-        <div className="text-center py-8">
-          <Filter size={48} className="mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Nenhuma permissão encontrada com os filtros aplicados</p>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };

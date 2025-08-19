@@ -18,6 +18,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserRole, RoleFormData } from '@/types/roles.types';
 import { Permission } from '@/utils/permissions';
 import { usePermissionsList } from '@/hooks/queries/usePermissionsList';
+import { 
+  formatRoleName, 
+  groupFormattedPermissions, 
+  formatPermission,
+  ROLE_TEMPLATES 
+} from '@/utils/roleFormatter';
 import { useCreateRole } from '@/hooks/mutations/useCreateRole';
 import { useUpdateRole } from '@/hooks/mutations/useUpdateRole';
 import { useToast } from '@/hooks/use-toast';
@@ -42,7 +48,12 @@ const RoleFormModal: React.FC<RoleFormModalProps> = ({
     permissions: []
   });
 
-  const { groupedPermissions } = usePermissionsList();
+  const { permissions } = usePermissionsList();
+  
+  // Group permissions using the formatter utility
+  const groupedPermissions = useMemo(() => {
+    return groupFormattedPermissions(permissions.map(p => p.key));
+  }, [permissions]);
   const { createRole, isLoading: isCreating } = useCreateRole();
   const { updateRole, isLoading: isUpdating } = useUpdateRole();
   const { toast } = useToast();
@@ -219,31 +230,37 @@ const RoleFormModal: React.FC<RoleFormModalProps> = ({
                   const selectionState = getModuleSelectionState(modulePermissions);
                   
                   return (
-                    <div key={group.module} className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`module-${group.module}`}
-                          checked={selectionState === 'all'}
-                          onCheckedChange={(checked) => 
-                            handleSelectAllModule(modulePermissions, checked as boolean)
-                          }
-                          disabled={isReadOnly}
-                          className={selectionState === 'partial' ? 'data-[state=checked]:bg-muted' : ''}
-                        />
-                        <Label 
-                          htmlFor={`module-${group.module}`} 
-                          className="text-sm font-semibold text-primary cursor-pointer"
-                        >
-                          {group.module}
-                          <span className="ml-2 text-xs text-muted-foreground">
-                            ({group.permissions.filter(p => formData.permissions.includes(p.key)).length}/{group.permissions.length})
-                          </span>
-                        </Label>
+                    <div key={group.module} className="space-y-3 border rounded-lg p-4 bg-card">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Checkbox
+                            id={`module-${group.module}`}
+                            checked={selectionState === 'all'}
+                            onCheckedChange={(checked) => 
+                              handleSelectAllModule(modulePermissions, checked as boolean)
+                            }
+                            disabled={isReadOnly}
+                            className={selectionState === 'partial' ? 'data-[state=checked]:bg-muted' : ''}
+                          />
+                          <span className="text-xl">{group.permissions[0]?.icon || '📁'}</span>
+                          <Label 
+                            htmlFor={`module-${group.module}`} 
+                            className="text-sm font-semibold text-primary cursor-pointer"
+                          >
+                            {group.module}
+                          </Label>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {group.permissions.filter(p => formData.permissions.includes(p.key)).length}/{group.permissions.length} selecionadas
+                        </Badge>
                       </div>
                       
-                      <div className="ml-6 grid grid-cols-1 gap-2">
+                      <div className="ml-9 grid grid-cols-1 gap-3">
                         {group.permissions.map((permission) => (
-                          <div key={permission.key} className="flex items-start space-x-2">
+                          <div 
+                            key={permission.key} 
+                            className="flex items-start space-x-3 p-3 rounded-md border hover:bg-muted/30 transition-colors"
+                          >
                             <Checkbox
                               id={permission.key}
                               checked={formData.permissions.includes(permission.key)}
@@ -252,7 +269,10 @@ const RoleFormModal: React.FC<RoleFormModalProps> = ({
                               }
                               disabled={isReadOnly}
                             />
-                            <div className="grid gap-1.5 leading-none">
+                            <span className="text-lg mt-0.5" style={{ color: permission.color }}>
+                              {permission.icon}
+                            </span>
+                            <div className="flex-1 grid gap-1.5 leading-none">
                               <Label 
                                 htmlFor={permission.key}
                                 className="text-sm font-medium leading-none cursor-pointer"
@@ -262,6 +282,14 @@ const RoleFormModal: React.FC<RoleFormModalProps> = ({
                               <p className="text-xs text-muted-foreground">
                                 {permission.description}
                               </p>
+                              <Badge 
+                                variant="outline" 
+                                className="w-fit text-xs mt-1"
+                                style={{ borderColor: permission.color, color: permission.color }}
+                              >
+                                {permission.level === 'basic' ? 'Básico' : 
+                                 permission.level === 'intermediate' ? 'Intermediário' : 'Avançado'}
+                              </Badge>
                             </div>
                           </div>
                         ))}
