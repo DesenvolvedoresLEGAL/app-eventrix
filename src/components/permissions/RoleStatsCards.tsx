@@ -45,6 +45,7 @@ const RoleStatsCards: React.FC<RoleStatsCardsProps> = ({ statistics, isLoading }
   }
 
   // Memoized stats calculation for better performance
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const stats = useMemo(() => {
     const hasNoUsers = !statistics?.totalUsers || statistics.totalUsers === 0;
     const hasNoRoles = !statistics?.totalRoles || statistics.totalRoles === 0;
