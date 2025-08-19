@@ -179,6 +179,7 @@ export const RolesAdminProvider: React.FC<RolesAdminProviderProps> = ({ children
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useRolesAdmin = (): RolesAdminContextValue => {
   const context = useContext(RolesAdminContext);
   if (context === undefined) {
