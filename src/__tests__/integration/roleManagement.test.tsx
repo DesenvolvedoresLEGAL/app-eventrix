@@ -30,7 +30,7 @@ const initialRoles: UserRole[] = [
     id: '1',
     code: 'admin',
     description: 'Administrator role',
-    permissions: [Permission.USERS_READ, Permission.USERS_WRITE, Permission.EVENTS_READ],
+    permissions: [Permission.VISITORS_VIEW, Permission.VISITORS_MANAGE, Permission.EVENTS_VIEW],
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   },
@@ -38,7 +38,7 @@ const initialRoles: UserRole[] = [
     id: '2',
     code: 'editor',
     description: 'Editor role',
-    permissions: [Permission.EVENTS_READ, Permission.EVENTS_WRITE],
+    permissions: [Permission.EVENTS_VIEW, Permission.EVENTS_CREATE],
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   }
@@ -99,10 +99,10 @@ describe('Role Management Integration', () => {
     mockedRolesService.getAllRoles.mockResolvedValue(initialRoles);
     mockedRoleStatsService.getRoleStatistics.mockResolvedValue(mockStats);
     mockedRolesService.getAllPermissionsList.mockReturnValue([
-      { key: Permission.USERS_READ, name: 'Read Users', description: 'Can read users', module: 'Users' },
-      { key: Permission.USERS_WRITE, name: 'Write Users', description: 'Can write users', module: 'Users' },
-      { key: Permission.EVENTS_READ, name: 'Read Events', description: 'Can read events', module: 'Events' },
-      { key: Permission.EVENTS_WRITE, name: 'Write Events', description: 'Can write events', module: 'Events' }
+      { key: Permission.VISITORS_VIEW, name: 'Read Users', description: 'Can read users', module: 'Users' },
+      { key: Permission.VISITORS_MANAGE, name: 'Write Users', description: 'Can write users', module: 'Users' },
+      { key: Permission.EVENTS_VIEW, name: 'Read Events', description: 'Can read events', module: 'Events' },
+      { key: Permission.EVENTS_CREATE, name: 'Write Events', description: 'Can write events', module: 'Events' }
     ]);
     mockedAuditService.logRoleChange.mockResolvedValue();
   });
@@ -113,7 +113,7 @@ describe('Role Management Integration', () => {
         id: '3',
         code: 'viewer',
         description: 'Viewer role with read-only access',
-        permissions: [Permission.EVENTS_READ],
+        permissions: [Permission.EVENTS_VIEW],
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z'
       };
@@ -168,7 +168,7 @@ describe('Role Management Integration', () => {
         expect(mockedRolesService.createRole).toHaveBeenCalledWith({
           code: 'viewer',
           description: 'Viewer role with read-only access',
-          permissions: [Permission.EVENTS_READ]
+          permissions: [Permission.EVENTS_VIEW]
         });
       });
 
@@ -187,7 +187,7 @@ describe('Role Management Integration', () => {
       const updatedRole: UserRole = {
         ...initialRoles[0],
         description: 'Updated Administrator role',
-        permissions: [Permission.USERS_READ, Permission.USERS_WRITE, Permission.EVENTS_READ, Permission.EVENTS_WRITE]
+        permissions: [Permission.VISITORS_VIEW, Permission.VISITORS_MANAGE, Permission.EVENTS_VIEW, Permission.EVENTS_CREATE]
       };
 
       mockedRolesService.updateRole.mockResolvedValue(updatedRole);
@@ -228,7 +228,7 @@ describe('Role Management Integration', () => {
         expect(mockedRolesService.updateRole).toHaveBeenCalledWith('1', {
           code: 'admin',
           description: 'Updated Administrator role',
-          permissions: [Permission.USERS_READ, Permission.USERS_WRITE, Permission.EVENTS_READ, Permission.EVENTS_WRITE]
+          permissions: [Permission.VISITORS_VIEW, Permission.VISITORS_MANAGE, Permission.EVENTS_VIEW, Permission.EVENTS_CREATE]
         });
       });
 

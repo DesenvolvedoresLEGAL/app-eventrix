@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRoles, useRole } from '../queries/useRoles';
 import * as rolesService from '@/services/rolesService';
 import { UserRole } from '@/types/roles.types';
+import { Permission } from '@/utils/permissions';
 
 // Mock the services
 jest.mock('@/services/rolesService');
@@ -14,7 +15,7 @@ const mockRoles: UserRole[] = [
     id: '1',
     code: 'admin',
     description: 'Administrator role',
-    permissions: ['users.read', 'users.write'],
+    permissions: [Permission.VISITORS_VIEW, Permission.VISITORS_MANAGE],
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   },
@@ -22,7 +23,7 @@ const mockRoles: UserRole[] = [
     id: '2', 
     code: 'editor',
     description: 'Editor role',
-    permissions: ['content.read', 'content.write'],
+    permissions: [Permission.ACTIVITIES_VIEW, Permission.ACTIVITIES_MANAGE],
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   }

@@ -27,7 +27,7 @@ const mockRoles: UserRole[] = [
     id: '1',
     code: 'admin',
     description: 'Administrator role',
-    permissions: [Permission.USERS_READ, Permission.USERS_WRITE, Permission.EVENTS_READ],
+    permissions: [Permission.VISITORS_VIEW, Permission.VISITORS_MANAGE, Permission.EVENTS_VIEW],
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   },
@@ -35,7 +35,7 @@ const mockRoles: UserRole[] = [
     id: '2',
     code: 'editor',
     description: 'Editor role',
-    permissions: [Permission.EVENTS_READ, Permission.EVENTS_WRITE],
+    permissions: [Permission.EVENTS_VIEW, Permission.EVENTS_CREATE],
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   }
@@ -91,10 +91,10 @@ describe('PermissionsList', () => {
     mockedRolesService.getAllRoles.mockResolvedValue(mockRoles);
     mockedRoleStatsService.getRoleStatistics.mockResolvedValue(mockStats);
     mockedRolesService.getAllPermissionsList.mockReturnValue([
-      { key: Permission.USERS_READ, name: 'Read Users', description: 'Can read users', module: 'Users' },
-      { key: Permission.USERS_WRITE, name: 'Write Users', description: 'Can write users', module: 'Users' },
-      { key: Permission.EVENTS_READ, name: 'Read Events', description: 'Can read events', module: 'Events' },
-      { key: Permission.EVENTS_WRITE, name: 'Write Events', description: 'Can write events', module: 'Events' }
+      { key: Permission.VISITORS_VIEW, name: 'Read Users', description: 'Can read users', module: 'Users' },
+      { key: Permission.VISITORS_MANAGE, name: 'Write Users', description: 'Can write users', module: 'Users' },
+      { key: Permission.EVENTS_VIEW, name: 'Read Events', description: 'Can read events', module: 'Events' },
+      { key: Permission.EVENTS_CREATE, name: 'Write Events', description: 'Can write events', module: 'Events' }
     ]);
   });
 
@@ -209,13 +209,13 @@ describe('PermissionsList', () => {
       code: 'super-admin',
       description: 'Super admin with many permissions',
       permissions: [
-        Permission.USERS_READ,
-        Permission.USERS_WRITE,
-        Permission.EVENTS_READ,
-        Permission.EVENTS_WRITE,
-        Permission.ANALYTICS_READ,
-        Permission.SETTINGS_READ,
-        Permission.SETTINGS_WRITE
+        Permission.VISITORS_VIEW,
+        Permission.VISITORS_MANAGE,
+        Permission.EVENTS_VIEW,
+        Permission.EVENTS_CREATE,
+        Permission.ANALYTICS_VIEW,
+        Permission.SETTINGS_ORGANIZER_VIEW,
+        Permission.SETTINGS_BRANDING_MANAGE
       ],
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z'

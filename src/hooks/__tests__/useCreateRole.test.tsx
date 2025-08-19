@@ -17,14 +17,14 @@ const mockedUseToast = useToast as jest.MockedFunction<typeof useToast>;
 const mockCreateRequest: CreateRoleRequest = {
   code: 'test-role',
   description: 'Test role description',
-  permissions: [Permission.USERS_READ, Permission.USERS_WRITE]
+  permissions: [Permission.VISITORS_VIEW, Permission.VISITORS_MANAGE]
 };
 
 const mockCreatedRole: UserRole = {
   id: '1',
   code: 'test-role',
   description: 'Test role description',
-  permissions: [Permission.USERS_READ, Permission.USERS_WRITE],
+  permissions: [Permission.VISITORS_VIEW, Permission.VISITORS_MANAGE],
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z'
 };
