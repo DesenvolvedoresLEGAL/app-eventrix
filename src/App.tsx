@@ -60,14 +60,14 @@ import { Permission } from './utils/permissions';
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ErrorBoundary>
-      <AuthProvider>
-        <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Toaster />
+            <Sonner />
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -379,10 +379,10 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-    </ErrorBoundary>
+      </AuthProvider>
+    </TooltipProvider>
   </QueryClientProvider>
+</ErrorBoundary>
 );
 
 export default App;
