@@ -146,7 +146,7 @@ export const PermissionMatrix: React.FC = () => {
 
           {/* Permissions by Module */}
           {Object.entries(groupedPermissions).map(([module, modulePermissions]) => {
-            const filteredModulePermissions = modulePermissions.filter(p => 
+            const filteredModulePermissions = modulePermissions.permissions.filter(p => 
               filteredPermissions.some(fp => fp.key === p.key)
             );
             
