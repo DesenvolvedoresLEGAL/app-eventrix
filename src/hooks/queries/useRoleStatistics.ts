@@ -7,6 +7,7 @@ import {
   getRoleGrowthStats 
 } from '@/services/roleStatsService';
 import { useMemo } from 'react';
+import { useTenant } from '@/hooks/useTenant';
 
 export interface UseRoleStatisticsReturn {
   statistics: RoleStats | null;
@@ -16,9 +17,12 @@ export interface UseRoleStatisticsReturn {
 }
 
 export const useRoleStatistics = (): UseRoleStatisticsReturn => {
+  const { tenantId } = useTenant();
+
   const query: UseQueryResult<RoleStats, Error> = useQuery({
-    queryKey: ['roleStatistics'],
-    queryFn: getRoleStatistics,
+    queryKey: ['roleStatistics', tenantId],
+    queryFn: () => getRoleStatistics(tenantId),
+    enabled: !!tenantId,
     staleTime: 5 * 60 * 1000, // 5 minutes - increased for better performance
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
@@ -47,9 +51,12 @@ export interface UseUserDistributionReturn {
 }
 
 export const useUserRoleDistribution = (): UseUserDistributionReturn => {
+  const { tenantId } = useTenant();
+
   const query: UseQueryResult<Array<{ roleName: string; userCount: number; percentage: number }>, Error> = useQuery({
-    queryKey: ['userRoleDistribution'],
-    queryFn: getUserRoleDistribution,
+    queryKey: ['userRoleDistribution', tenantId],
+    queryFn: () => getUserRoleDistribution(tenantId),
+    enabled: !!tenantId,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
@@ -72,9 +79,12 @@ export interface UsePermissionUsageReturn {
 }
 
 export const usePermissionUsageStats = (): UsePermissionUsageReturn => {
+  const { tenantId } = useTenant();
+
   const query: UseQueryResult<Array<{ permission: string; roleCount: number; userCount: number }>, Error> = useQuery({
-    queryKey: ['permissionUsageStats'],
-    queryFn: getPermissionUsageStats,
+    queryKey: ['permissionUsageStats', tenantId],
+    queryFn: () => getPermissionUsageStats(tenantId),
+    enabled: !!tenantId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,

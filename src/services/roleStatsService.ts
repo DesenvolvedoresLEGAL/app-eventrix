@@ -6,19 +6,24 @@ import capitalize from '@/utils/stringUtils';
  * Service for role statistics and analytics
  */
 
-export const getRoleStatistics = async (): Promise<RoleStats> => {
+export const getRoleStatistics = async (tenantId?: string | null): Promise<RoleStats> => {
   try {
-    // Optimized parallel queries
+    // Optimized parallel queries - filtered by tenant
     const [rolesResult, usersResult, rolesWithPermissions] = await Promise.all([
       // Get total roles count
       supabase
         .from('user_roles')
         .select('*', { count: 'exact', head: true }),
       
-      // Get total users count  
-      supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true }),
+      // Get total users count - filtered by tenant
+      tenantId
+        ? supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .eq('tenant_id', tenantId)
+        : supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true }),
       
       // Get roles with permissions for unique permissions calculation
       supabase
@@ -55,8 +60,8 @@ export const getRoleStatistics = async (): Promise<RoleStats> => {
       totalPermissions = allPermissionsSet.size;
     }
 
-    // Get user distribution by role (optimized query)
-    const { data: userDistribution, error: distributionError } = await supabase
+    // Get user distribution by role (optimized query) - filtered by tenant
+    const userDistributionQuery = supabase
       .from('profiles')
       .select(`
         role,
@@ -67,6 +72,12 @@ export const getRoleStatistics = async (): Promise<RoleStats> => {
         )
       `)
       .not('role', 'is', null);
+
+    if (tenantId) {
+      userDistributionQuery.eq('tenant_id', tenantId);
+    }
+
+    const { data: userDistribution, error: distributionError } = await userDistributionQuery;
 
     if (distributionError) {
       console.error('Erro ao buscar distribuição de roles:', distributionError);
@@ -136,9 +147,9 @@ export const getRoleStatistics = async (): Promise<RoleStats> => {
   }
 };
 
-export const getUserRoleDistribution = async (): Promise<Array<{ roleName: string; userCount: number; percentage: number }>> => {
+export const getUserRoleDistribution = async (tenantId?: string | null): Promise<Array<{ roleName: string; userCount: number; percentage: number }>> => {
   try {
-    const { data: distribution, error } = await supabase
+    const distributionQuery = supabase
       .from('profiles')
       .select(`
         role,
@@ -147,6 +158,12 @@ export const getUserRoleDistribution = async (): Promise<Array<{ roleName: strin
           description
         )
       `);
+
+    if (tenantId) {
+      distributionQuery.eq('tenant_id', tenantId);
+    }
+
+    const { data: distribution, error } = await distributionQuery;
 
     if (error) {
       console.error('Erro ao buscar distribuição de usuários:', error);
@@ -188,7 +205,7 @@ export const getUserRoleDistribution = async (): Promise<Array<{ roleName: strin
   }
 };
 
-export const getPermissionUsageStats = async (): Promise<Array<{ permission: string; roleCount: number; userCount: number }>> => {
+export const getPermissionUsageStats = async (tenantId?: string | null): Promise<Array<{ permission: string; roleCount: number; userCount: number }>> => {
   try {
     const { data: roles, error: rolesError } = await supabase
       .from('user_roles')
@@ -220,10 +237,16 @@ export const getPermissionUsageStats = async (): Promise<Array<{ permission: str
       }
     });
 
-    // Get user counts for each role
-    const { data: userCounts, error: userCountsError } = await supabase
+    // Get user counts for each role - filtered by tenant
+    const userCountsQuery = supabase
       .from('profiles')
       .select('role');
+
+    if (tenantId) {
+      userCountsQuery.eq('tenant_id', tenantId);
+    }
+
+    const { data: userCounts, error: userCountsError } = await userCountsQuery;
 
     if (userCountsError) {
       console.error('Erro ao buscar contagem de usuários:', userCountsError);
