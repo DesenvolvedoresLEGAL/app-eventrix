@@ -1,4 +1,4 @@
-import supabase from '@/utils/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { RoleStats } from '@/types/roles.types';
 import capitalize from '@/utils/stringUtils';
 
@@ -8,26 +8,55 @@ import capitalize from '@/utils/stringUtils';
 
 export const getRoleStatistics = async (): Promise<RoleStats> => {
   try {
-    // Get total roles count
-    const { count: totalRoles, error: rolesError } = await supabase
-      .from('user_roles')
-      .select('*', { count: 'exact', head: true });
+    // Optimized parallel queries
+    const [rolesResult, usersResult, rolesWithPermissions] = await Promise.all([
+      // Get total roles count
+      supabase
+        .from('user_roles')
+        .select('*', { count: 'exact', head: true }),
+      
+      // Get total users count  
+      supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true }),
+      
+      // Get roles with permissions for unique permissions calculation
+      supabase
+        .from('user_roles')
+        .select('id, code, description, permissions')
+    ]);
+
+    const { count: totalRoles, error: rolesError } = rolesResult;
+    const { count: totalUsers, error: usersError } = usersResult;
+    const { data: allRoles, error: allRolesError } = rolesWithPermissions;
 
     if (rolesError) {
       console.error('Erro ao contar roles:', rolesError);
     }
-
-    // Get total users count
-    const { count: totalUsers, error: usersError } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true });
-
     if (usersError) {
       console.error('Erro ao contar usuários:', usersError);
     }
+    if (allRolesError) {
+      console.error('Erro ao buscar roles:', allRolesError);
+    }
 
-    // Get user distribution by role
-    const { data: roleDistribution, error: distributionError } = await supabase
+    // Calculate unique permissions efficiently
+    let totalPermissions = 0;
+    const allPermissionsSet = new Set<string>();
+    
+    if (allRoles) {
+      allRoles.forEach(role => {
+        if (Array.isArray(role.permissions)) {
+          role.permissions.forEach((permission: string) => {
+            allPermissionsSet.add(permission);
+          });
+        }
+      });
+      totalPermissions = allPermissionsSet.size;
+    }
+
+    // Get user distribution by role (optimized query)
+    const { data: userDistribution, error: distributionError } = await supabase
       .from('profiles')
       .select(`
         role,
@@ -36,26 +65,29 @@ export const getRoleStatistics = async (): Promise<RoleStats> => {
           code,
           description
         )
-      `);
+      `)
+      .not('role', 'is', null);
 
     if (distributionError) {
       console.error('Erro ao buscar distribuição de roles:', distributionError);
     }
 
-    // Process distribution data
+    // Process distribution data efficiently
     const distributionMap = new Map<string, { code: string; description: string; count: number }>();
     
-    if (roleDistribution) {
-      roleDistribution.forEach(profile => {
+    if (userDistribution) {
+      userDistribution.forEach(profile => {
         if (profile.user_roles) {
           const role = profile.user_roles as any;
           const key = role.code;
-          if (distributionMap.has(key)) {
-            distributionMap.get(key)!.count++;
+          const existing = distributionMap.get(key);
+          
+          if (existing) {
+            existing.count++;
           } else {
             distributionMap.set(key, {
               code: role.code,
-              description: role.description || role.code,
+              description: role.description || capitalize(role.code.replace('_', ' ')),
               count: 1
             });
           }
@@ -68,45 +100,31 @@ export const getRoleStatistics = async (): Promise<RoleStats> => {
         code: item.code,
         description: item.description,
         userCount: item.count,
-        percentage: totalUsers ? Math.round((item.count / totalUsers) * 100) : 0
+        percentage: totalUsers && totalUsers > 0 ? Math.round((item.count / totalUsers) * 100) : 0
       }))
       .sort((a, b) => b.userCount - a.userCount);
 
-    // Find most used role
+    // Find most used role with better fallback
     const mostUsedRole = distributionByRole.length > 0 ? {
       code: distributionByRole[0].code,
       description: distributionByRole[0].description,
       userCount: distributionByRole[0].userCount
     } : null;
 
-    // Count total unique permissions across all roles
-    const { data: allRoles, error: allRolesError } = await supabase
-      .from('user_roles')
-      .select('permissions');
-
-    let totalPermissions = 0;
-    if (!allRolesError && allRoles) {
-      const allPermissionsSet = new Set<string>();
-      allRoles.forEach(role => {
-        if (Array.isArray((role as any).permissions)) {
-          (role as any).permissions.forEach((permission: string) => {
-            allPermissionsSet.add(permission);
-          });
-        }
-      });
-      totalPermissions = allPermissionsSet.size;
-    }
+    // Count active roles (roles that have users assigned)
+    const activeRoles = distributionByRole.length;
 
     return {
       totalRoles: totalRoles || 0,
       totalUsers: totalUsers || 0,
       totalPermissions,
-      activeRoles: distributionByRole.length,
+      activeRoles,
       mostUsedRole,
       distributionByRole
     };
   } catch (error) {
     console.error('Erro ao buscar estatísticas de roles:', error);
+    // Return safe fallback values
     return {
       totalRoles: 0,
       totalUsers: 0,

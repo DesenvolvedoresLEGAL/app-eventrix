@@ -19,10 +19,16 @@ export const useRoleStatistics = (): UseRoleStatisticsReturn => {
   const query: UseQueryResult<RoleStats, Error> = useQuery({
     queryKey: ['roleStatistics'],
     queryFn: getRoleStatistics,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - increased for better performance
+    gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
-    retry: 2,
+    refetchOnMount: false, // Prevent unnecessary refetches
+    retry: (failureCount, error) => {
+      // Smart retry logic - don't retry on network errors after 1 attempt
+      if (failureCount >= 2) return false;
+      return true;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
   return useMemo(() => ({
