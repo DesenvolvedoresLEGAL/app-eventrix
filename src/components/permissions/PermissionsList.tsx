@@ -8,6 +8,7 @@ import RoleStatsCards from './RoleStatsCards';
 import { PermissionMatrix } from './PermissionMatrix';
 import { UserDistributionChart } from './UserDistributionChart';
 import RoleFormModal from './RoleFormModal';
+import RoleCard from './RoleCard';
 import capitalize from '@/utils/stringUtils';
 
 const PermissionsList = () => {
@@ -45,10 +46,6 @@ const PermissionsList = () => {
         </div>
       </div>
     );
-  }
-
-  function formatRoleName(roleName: string): string {
-    return capitalize(roleName.replace('_', ' '));
   }
 
   return (
@@ -90,48 +87,45 @@ const PermissionsList = () => {
       </div>
 
       {/* Roles List */}
-      <div className="tech-card p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Perfis de Acesso</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredRoles.map((role) => (
-              <div key={role.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 rounded-full bg-primary" />
-                    <div>
-                      <h3 className="font-semibold">{formatRoleName(role.code)}</h3>
-                      <p className="text-sm text-muted-foreground">{role.description}</p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => openModal('edit', role)}
-                  >
-                    Editar
-                  </Button>
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">Permissões ({role.permissions.length}):</p>
-                  <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
-                    {role.permissions.slice(0, 5).map((permission) => (
-                      <span key={permission} className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
-                        {permission}
-                      </span>
-                    ))}
-                    {role.permissions.length > 5 && (
-                      <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded-full">
-                        +{role.permissions.length - 5} mais
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Perfis de Acesso</h2>
+          <p className="text-sm text-muted-foreground">
+            {filteredRoles.length} perfis encontrados
+          </p>
         </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredRoles.map((role) => (
+            <RoleCard
+              key={role.id}
+              role={{
+                ...role,
+                userCount: Math.floor(Math.random() * 50) // TODO: Replace with real user count
+              }}
+              onEdit={() => openModal('edit', role)}
+            />
+          ))}
+        </div>
+
+        {filteredRoles.length === 0 && (
+          <div className="tech-card p-12 text-center">
+            <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum perfil encontrado</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm 
+                ? `Nenhum perfil corresponde aos critérios de busca "${searchTerm}"`
+                : "Não há perfis cadastrados no sistema"
+              }
+            </p>
+            {!searchTerm && (
+              <Button onClick={() => openModal('create')} className="tech-button">
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Primeiro Perfil
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Permission Matrix */}
