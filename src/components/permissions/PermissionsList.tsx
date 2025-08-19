@@ -8,6 +8,7 @@ import RoleStatsCards from './RoleStatsCards';
 import { PermissionMatrix } from './PermissionMatrix';
 import { UserDistributionChart } from './UserDistributionChart';
 import RoleFormModal from './RoleFormModal';
+import capitalize from '@/utils/stringUtils';
 
 const PermissionsList = () => {
   const {
@@ -44,6 +45,10 @@ const PermissionsList = () => {
         </div>
       </div>
     );
+  }
+
+  function formatRoleName(roleName: string): string {
+    return capitalize(roleName.replace('_', ' '));
   }
 
   return (
@@ -95,7 +100,7 @@ const PermissionsList = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-4 h-4 rounded-full bg-primary" />
                     <div>
-                      <h3 className="font-semibold">{role.code}</h3>
+                      <h3 className="font-semibold">{formatRoleName(role.code)}</h3>
                       <p className="text-sm text-muted-foreground">{role.description}</p>
                     </div>
                   </div>
