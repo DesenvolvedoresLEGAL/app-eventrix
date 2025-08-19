@@ -40,26 +40,52 @@ type OrganizerFormData = z.infer<typeof organizerSchema>;
 export const OrganizerDataForm: React.FC = () => {
   const { data: organizerData, isLoading, updateOrganizer, isUpdating } = useOrganizerData();
 
-  const defaultValues = useMemo(() => ({
-    razao_social: organizerData?.razao_social || '',
-    nome_fantasia: organizerData?.nome_fantasia || '',
-    cnpj: organizerData?.cnpj || '',
-    inscricao_estadual: organizerData?.inscricao_estadual || '',
-    cnae_principal: organizerData?.cnae_principal || '',
-    contact_email: organizerData?.contact_email || '',
-    contact_phone: organizerData?.contact_phone || '',
-    whatsapp_number: organizerData?.whatsapp_number || '',
-    website_url: organizerData?.website_url || '',
-    endereco_logradouro: organizerData?.endereco_logradouro || '',
-    endereco_numero: organizerData?.endereco_numero || '',
-    endereco_complemento: organizerData?.endereco_complemento || '',
-    endereco_bairro: organizerData?.endereco_bairro || '',
-    endereco_cidade: organizerData?.endereco_cidade || '',
-    cep: organizerData?.cep || '',
-    primary_color: organizerData?.primary_color || '#4D2BFB',
-    secondary_color: organizerData?.secondary_color || '#03F9FF',
-    font_family: organizerData?.font_family || 'Neue Haas Unica',
-  }), [organizerData]);
+  const defaultValues = useMemo(() => {
+    // Se não tem dados ainda, retorna valores vazios para evitar re-renders
+    if (!organizerData) {
+      return {
+        razao_social: '',
+        nome_fantasia: '',
+        cnpj: '',
+        inscricao_estadual: '',
+        cnae_principal: '',
+        contact_email: '',
+        contact_phone: '',
+        whatsapp_number: '',
+        website_url: '',
+        endereco_logradouro: '',
+        endereco_numero: '',
+        endereco_complemento: '',
+        endereco_bairro: '',
+        endereco_cidade: '',
+        cep: '',
+        primary_color: '#4D2BFB',
+        secondary_color: '#03F9FF',
+        font_family: 'Neue Haas Unica',
+      };
+    }
+    
+    return {
+      razao_social: organizerData.razao_social || '',
+      nome_fantasia: organizerData.nome_fantasia || '',
+      cnpj: organizerData.cnpj || '',
+      inscricao_estadual: organizerData.inscricao_estadual || '',
+      cnae_principal: organizerData.cnae_principal || '',
+      contact_email: organizerData.contact_email || '',
+      contact_phone: organizerData.contact_phone || '',
+      whatsapp_number: organizerData.whatsapp_number || '',
+      website_url: organizerData.website_url || '',
+      endereco_logradouro: organizerData.endereco_logradouro || '',
+      endereco_numero: organizerData.endereco_numero || '',
+      endereco_complemento: organizerData.endereco_complemento || '',
+      endereco_bairro: organizerData.endereco_bairro || '',
+      endereco_cidade: organizerData.endereco_cidade || '',
+      cep: organizerData.cep || '',
+      primary_color: organizerData.primary_color || '#4D2BFB',
+      secondary_color: organizerData.secondary_color || '#03F9FF',
+      font_family: organizerData.font_family || 'Neue Haas Unica',
+    };
+  }, [organizerData]);
 
   const form = useForm<OrganizerFormData>({
     resolver: zodResolver(organizerSchema),

@@ -6,6 +6,7 @@ import { User, Session } from '@supabase/supabase-js'
 import { Tables } from '@/utils/supabase/types'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
 import { Permission, hasPermission, canAccessRoute, getAllowedRoutes } from '@/utils/permissions'
+import { organizerService, type OrganizerData } from '@/services/organizerService'
 
 // Interfaces baseadas nos tipos do Supabase
 export type UserRole = Tables<'user_roles'>
@@ -24,7 +25,9 @@ interface AuthContextValue {
   profile: Profile | null
   tenant: Tenant | null
   userRole: UserRole | null
+  organizer: OrganizerData | null
   loading: boolean
+  isOrganizerLoading: boolean
   error: AuthError | null
   isAuthenticated: boolean
   signUp: typeof signUp
@@ -48,13 +51,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null)
   const [tenant, setTenant] = useState<Tenant | null>(null)
   const [userRole, setUserRole] = useState<UserRole | null>(null)
+  const [organizer, setOrganizer] = useState<OrganizerData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isOrganizerLoading, setIsOrganizerLoading] = useState(false)
   const [error, setError] = useState<AuthError | null>(null)
   
   // Cache para otimizar carregamento de dados
   const [profileCache, setProfileCache] = useState<Map<string, Profile>>(new Map())
   const [roleCache, setRoleCache] = useState<Map<string, UserRole>>(new Map())
   const [tenantCache, setTenantCache] = useState<Map<string, Tenant>>(new Map())
+  const [organizerCache, setOrganizerCache] = useState<Map<string, OrganizerData>>(new Map())
 
   // Validação RBAC temporariamente desabilitada para evitar problemas de dispatcher
   // useRBACValidator()
@@ -147,6 +153,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return null
     }
   }, [tenantCache])
+
+  const loadOrganizerData = useCallback(async (tenantId: string): Promise<OrganizerData | null> => {
+    // Verificar cache primeiro
+    if (organizerCache.has(tenantId)) {
+      return organizerCache.get(tenantId)!
+    }
+
+    try {
+      const organizerData = await organizerService.getCurrentOrganizer()
+      // Adicionar ao cache
+      setOrganizerCache(prev => new Map(prev).set(tenantId, organizerData))
+      return organizerData
+    } catch (error) {
+      console.warn('Erro ao carregar dados do organizer:', error)
+      return null
+    }
+  }, [organizerCache])
 
   const refreshTenant = useCallback(async () => {
     if (!user?.email || !profile?.tenant_id) return
@@ -245,10 +268,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 profileData.role ? loadUserRole(profileData.role) : Promise.resolve(null)
               ])
 
+              // Carregar dados do organizer após ter os dados do tenant
+              let organizerData = null
+              if (profileData.tenant_id) {
+                setIsOrganizerLoading(true)
+                organizerData = await loadOrganizerData(profileData.tenant_id)
+                setIsOrganizerLoading(false)
+              }
+
               if (mounted) {
                 setProfile(profileData);
                 setTenant(tenantData)
                 setUserRole(roleData)
+                setOrganizer(organizerData)
                 setLoadingWithTimeout(false)
               }
             } catch (error) {
@@ -262,6 +294,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null)
           setTenant(null)
           setUserRole(null)
+          setOrganizer(null)
           setLoadingWithTimeout(false)
         }
 
@@ -269,10 +302,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null)
           setTenant(null)
           setUserRole(null)
+          setOrganizer(null)
           // Limpar caches ao fazer logout
           setProfileCache(new Map())
           setRoleCache(new Map())
           setTenantCache(new Map())
+          setOrganizerCache(new Map())
           setLoadingWithTimeout(false)
         }
       }
@@ -295,7 +330,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (loadingTimeout) clearTimeout(loadingTimeout)
       subscription.unsubscribe()
     }
-  }, [loadProfile, loadTenant, loadUserRole])
+  }, [loadProfile, loadTenant, loadUserRole, loadOrganizerData])
 
   const isAuthenticated = useMemo(() => !!user && !!session, [user, session])
 
@@ -318,7 +353,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile,
     tenant,
     userRole,
+    organizer,
     loading,
+    isOrganizerLoading,
     error,
     isAuthenticated,
     signUp,
@@ -338,7 +375,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile,
     tenant,
     userRole,
+    organizer,
     loading,
+    isOrganizerLoading,
     error,
     isAuthenticated,
     enhancedSignIn,
