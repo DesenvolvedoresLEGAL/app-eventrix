@@ -60,10 +60,7 @@ const RoleCard: React.FC<RoleCardProps> = ({ role, onEdit }) => {
           <div className="flex items-start gap-3 flex-1">
             {/* Role Icon */}
             <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center tech-float">
-              {React.createElement(formattedRole.icon, {
-                className: "h-5 w-5 text-primary",
-                size: 20
-              })}
+              <formattedRole.icon className={`h-5 w-5 ${formattedRole.colorClass}`} />
             </div>
 
             {/* Role Info */}
@@ -117,13 +114,9 @@ const RoleCard: React.FC<RoleCardProps> = ({ role, onEdit }) => {
               <Badge 
                 key={index}
                 variant="outline" 
-                className="text-xs px-2 py-1 bg-accent/50 hover:bg-accent transition-colors"
-                style={{ color: permission.color }}
+                className={`text-xs px-2 py-1 bg-accent/50 hover:bg-accent transition-colors ${permission.colorClass} flex items-center gap-1`}
               >
-                {React.createElement(permission.icon, {
-                  className: "h-3 w-3 mr-1",
-                  size: 12
-                })}
+                <permission.icon className="h-3 w-3" />
                 {permission.name}
               </Badge>
             ))}

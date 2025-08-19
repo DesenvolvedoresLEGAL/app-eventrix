@@ -242,7 +242,9 @@ const RoleFormModal: React.FC<RoleFormModalProps> = ({
                             disabled={isReadOnly}
                             className={selectionState === 'partial' ? 'data-[state=checked]:bg-muted' : ''}
                           />
-                          <span className="text-xl">{group.permissions[0]?.icon || '📁'}</span>
+                          {React.createElement(group.permissions[0].icon, { 
+                            className: `h-5 w-5 ${group.permissions[0]?.colorClass || 'text-muted-foreground'}` 
+                          })}
                           <Label 
                             htmlFor={`module-${group.module}`} 
                             className="text-sm font-semibold text-primary cursor-pointer"
@@ -269,9 +271,9 @@ const RoleFormModal: React.FC<RoleFormModalProps> = ({
                               }
                               disabled={isReadOnly}
                             />
-                            <span className="text-lg mt-0.5" style={{ color: permission.color }}>
-                              {permission.icon}
-                            </span>
+                            {React.createElement(permission.icon, { 
+                              className: `h-5 w-5 mt-0.5 ${permission.colorClass}` 
+                            })}
                             <div className="flex-1 grid gap-1.5 leading-none">
                               <Label 
                                 htmlFor={permission.key}
@@ -284,10 +286,9 @@ const RoleFormModal: React.FC<RoleFormModalProps> = ({
                               </p>
                               <Badge 
                                 variant="outline" 
-                                className="w-fit text-xs mt-1"
-                                style={{ borderColor: permission.color, color: permission.color }}
+                                className={`w-fit text-xs mt-1 ${permission.colorClass}`}
                               >
-                                {permission.level === 'basic' ? 'Básico' : 
+                                {permission.level === 'basic' ? 'Básico' :
                                  permission.level === 'intermediate' ? 'Intermediário' : 'Avançado'}
                               </Badge>
                             </div>

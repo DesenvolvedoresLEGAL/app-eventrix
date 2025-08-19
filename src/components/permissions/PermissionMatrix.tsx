@@ -26,7 +26,7 @@ export const PermissionMatrix: React.FC = () => {
       ...groupedFormatted.map(group => ({
         value: group.module,
         label: group.module,
-        icon: group.permissions[0]?.icon || '📁'
+        icon: React.createElement(group.permissions[0].icon, { className: 'h-4 w-4' })
       }))
     ];
 
@@ -172,7 +172,9 @@ export const PermissionMatrix: React.FC = () => {
             filteredPermissions.map((group) => (
               <div key={group.module} className="border rounded-lg p-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="text-xl">{group.permissions[0]?.icon || '📁'}</span>
+                  {React.createElement(group.permissions[0].icon, { 
+                    className: `h-5 w-5 ${group.permissions[0]?.colorClass || 'text-muted-foreground'}` 
+                  })}
                   <h3 className="font-semibold text-primary">
                     {group.module}
                   </h3>
@@ -203,16 +205,15 @@ export const PermissionMatrix: React.FC = () => {
                         <tr key={permission.key} className="border-b hover:bg-muted/30 transition-colors">
                           <td className="p-2">
                             <div className="flex items-start gap-3">
-                              <span className="text-lg mt-0.5" style={{ color: permission.color }}>
-                                {permission.icon}
-                              </span>
+                              {React.createElement(permission.icon, { 
+                                className: `h-5 w-5 mt-0.5 ${permission.colorClass}` 
+                              })}
                               <div className="flex-1">
                                 <div className="font-medium">{permission.name}</div>
                                 <div className="text-sm text-muted-foreground">{permission.description}</div>
                                 <Badge 
                                   variant="outline" 
-                                  className="mt-1 text-xs"
-                                  style={{ borderColor: permission.color, color: permission.color }}
+                                  className={`mt-1 text-xs ${permission.colorClass}`}
                                 >
                                   {permission.level === 'basic' ? 'Básico' : 
                                    permission.level === 'intermediate' ? 'Intermediário' : 'Avançado'}

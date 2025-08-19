@@ -1,5 +1,21 @@
 import { Permission } from '@/utils/permissions';
 import capitalize from '@/utils/stringUtils';
+import { 
+  BarChart3, 
+  Calendar, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Users, 
+  User, 
+  UserCheck, 
+  UserCog, 
+  TrendingUp,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  type LucideIcon
+} from 'lucide-react';
 
 /**
  * Utilitário para formatação amigável de roles e permissões
@@ -10,9 +26,9 @@ export interface FormattedPermission {
   name: string;
   description: string;
   module: string;
-  icon: string;
+  icon: LucideIcon;
   level: 'basic' | 'intermediate' | 'advanced';
-  color: string;
+  colorClass: string;
 }
 
 export interface FormattedRole {
@@ -20,8 +36,8 @@ export interface FormattedRole {
   name: string;
   description: string;
   level: 'basic' | 'intermediate' | 'advanced';
-  color: string;
-  icon: string;
+  colorClass: string;
+  icon: LucideIcon;
 }
 
 /**
@@ -33,9 +49,9 @@ const PERMISSION_TRANSLATIONS: Partial<Record<Permission, Omit<FormattedPermissi
     name: 'Visualizar Dashboard',
     description: 'Acesso à página principal do dashboard',
     module: 'Dashboard',
-    icon: '📊',
+    icon: BarChart3,
     level: 'basic',
-    color: 'hsl(var(--blue-500))'
+    colorClass: 'text-blue-600'
   },
   
   // Events
@@ -43,33 +59,33 @@ const PERMISSION_TRANSLATIONS: Partial<Record<Permission, Omit<FormattedPermissi
     name: 'Visualizar Eventos',
     description: 'Ver lista e detalhes dos eventos',
     module: 'Eventos',
-    icon: '📅',
+    icon: Calendar,
     level: 'basic',
-    color: 'hsl(var(--green-500))'
+    colorClass: 'text-green-600'
   },
   [Permission.EVENTS_CREATE]: {
     name: 'Criar Eventos',
     description: 'Criar novos eventos na plataforma',
     module: 'Eventos',
-    icon: '➕',
+    icon: Plus,
     level: 'intermediate',
-    color: 'hsl(var(--green-600))'
+    colorClass: 'text-green-700'
   },
   [Permission.EVENTS_EDIT]: {
     name: 'Editar Eventos',
     description: 'Modificar eventos existentes',
     module: 'Eventos',
-    icon: '✏️',
+    icon: Edit,
     level: 'intermediate',
-    color: 'hsl(var(--green-600))'
+    colorClass: 'text-green-700'
   },
   [Permission.EVENTS_DELETE]: {
     name: 'Excluir Eventos',
     description: 'Remover eventos da plataforma',
     module: 'Eventos',
-    icon: '🗑️',
+    icon: Trash2,
     level: 'advanced',
-    color: 'hsl(var(--red-600))'
+    colorClass: 'text-red-600'
   },
 
   // Visitors
@@ -77,17 +93,17 @@ const PERMISSION_TRANSLATIONS: Partial<Record<Permission, Omit<FormattedPermissi
     name: 'Visualizar Visitantes',
     description: 'Ver lista e detalhes dos visitantes',
     module: 'Visitantes',
-    icon: '👥',
+    icon: Users,
     level: 'basic',
-    color: 'hsl(var(--purple-500))'
+    colorClass: 'text-purple-600'
   },
   [Permission.VISITORS_MANAGE]: {
     name: 'Gerenciar Visitantes',
     description: 'Adicionar, editar e remover visitantes',
     module: 'Visitantes',
-    icon: '👤',
+    icon: User,
     level: 'intermediate',
-    color: 'hsl(var(--purple-600))'
+    colorClass: 'text-purple-700'
   },
 
   // Staff
@@ -95,17 +111,17 @@ const PERMISSION_TRANSLATIONS: Partial<Record<Permission, Omit<FormattedPermissi
     name: 'Visualizar Equipe',
     description: 'Ver membros da equipe',
     module: 'Equipe',
-    icon: '👨‍💼',
+    icon: UserCheck,
     level: 'basic',
-    color: 'hsl(var(--indigo-500))'
+    colorClass: 'text-indigo-600'
   },
   [Permission.STAFF_MANAGE]: {
     name: 'Gerenciar Equipe',
     description: 'Adicionar e gerenciar membros da equipe',
     module: 'Equipe',
-    icon: '👩‍💼',
+    icon: UserCog,
     level: 'advanced',
-    color: 'hsl(var(--indigo-600))'
+    colorClass: 'text-indigo-700'
   },
 
   // Analytics
@@ -113,9 +129,9 @@ const PERMISSION_TRANSLATIONS: Partial<Record<Permission, Omit<FormattedPermissi
     name: 'Visualizar Relatórios',
     description: 'Acesso aos relatórios e analytics',
     module: 'Analytics',
-    icon: '📈',
+    icon: TrendingUp,
     level: 'intermediate',
-    color: 'hsl(var(--orange-500))'
+    colorClass: 'text-orange-600'
   }
 };
 
@@ -172,9 +188,9 @@ export const formatPermission = (permission: Permission): FormattedPermission =>
       name: `${action} ${module}`,
       description: `Permissão para ${action.toLowerCase()} em ${module.toLowerCase()}`,
       module,
-      icon: '🔒',
+      icon: Shield,
       level: 'basic',
-      color: 'hsl(var(--muted))'
+      colorClass: 'text-muted-foreground'
     };
   }
 
@@ -239,16 +255,16 @@ export const formatRole = (
 ): FormattedRole => {
   const level = getRoleLevel(permissions);
   
-  const levelColors = {
-    basic: 'hsl(var(--blue-500))',
-    intermediate: 'hsl(var(--amber-500))', 
-    advanced: 'hsl(var(--red-500))'
+  const levelColorClasses = {
+    basic: 'text-blue-600',
+    intermediate: 'text-amber-600', 
+    advanced: 'text-red-600'
   };
 
   const levelIcons = {
-    basic: '🟢',
-    intermediate: '🟡',
-    advanced: '🔴'
+    basic: Shield,
+    intermediate: ShieldAlert,
+    advanced: ShieldCheck
   };
 
   return {
@@ -256,7 +272,7 @@ export const formatRole = (
     name: formatRoleName(code),
     description: description || `Role ${formatRoleName(code)}`,
     level,
-    color: levelColors[level],
+    colorClass: levelColorClasses[level],
     icon: levelIcons[level]
   };
 };
