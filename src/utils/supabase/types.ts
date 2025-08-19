@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -898,16 +898,19 @@ export type Database = {
           code: string
           description: string | null
           id: string
+          permissions: Json
         }
         Insert: {
           code: string
           description?: string | null
           id?: string
+          permissions?: Json
         }
         Update: {
           code?: string
           description?: string | null
           id?: string
+          permissions?: Json
         }
         Relationships: []
       }
