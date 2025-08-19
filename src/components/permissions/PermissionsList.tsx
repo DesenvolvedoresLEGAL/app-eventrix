@@ -85,7 +85,7 @@ const PermissionsList = () => {
       <RoleStatsCards statistics={statistics} isLoading={isLoading} />
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div>
         <UserDistributionChart />
       </div>
 

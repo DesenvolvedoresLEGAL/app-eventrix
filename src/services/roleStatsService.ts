@@ -1,5 +1,6 @@
 import supabase from '@/utils/supabase/client';
 import { RoleStats } from '@/types/roles.types';
+import capitalize from '@/utils/stringUtils';
 
 /**
  * Service for role statistics and analytics
@@ -142,8 +143,9 @@ export const getUserRoleDistribution = async (): Promise<Array<{ roleName: strin
 
     distribution.forEach(profile => {
       if (profile.user_roles) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const role = profile.user_roles as any;
-        const roleName = role.description || role.code;
+        const roleName = role.code || role.description;
         
         if (roleCount.has(roleName)) {
           roleCount.get(roleName)!.count++;
@@ -157,7 +159,7 @@ export const getUserRoleDistribution = async (): Promise<Array<{ roleName: strin
     // Convert to array with percentages
     return Array.from(roleCount.values())
       .map(role => ({
-        roleName: role.name,
+        roleName: capitalize(role.name.replace('_', ' ')),
         userCount: role.count,
         percentage: totalUsers > 0 ? Math.round((role.count / totalUsers) * 100) : 0
       }))

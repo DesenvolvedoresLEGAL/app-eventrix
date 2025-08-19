@@ -111,7 +111,7 @@ export const UserDistributionChart: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full grid grid-cols-2 gap-6">
       {/* Pie Chart */}
       <Card className="tech-card">
         <CardHeader>
