@@ -110,7 +110,7 @@ export const OrganizerDataForm: React.FC = () => {
       email: organizerData?.contact_email || '',
       address: organizerData?.endereco_logradouro || '',
       city: organizerData?.endereco_cidade || '',
-      state: organizerData?.endereco_bairro || '',
+      state: '', // Will be populated by finding the state code from the state_id
       cep: organizerData?.cep || '',
       primary_color: organizerData?.primary_color || '',
       secondary_color: organizerData?.secondary_color || '',
@@ -120,15 +120,44 @@ export const OrganizerDataForm: React.FC = () => {
 
   const onSubmit = async (data: OrganizerFormData) => {
     try {
-      await updateOrganizer.mutateAsync(data);
+      // Transform form data to match the database structure
+      const updates = {
+        nome_fantasia: data.company_name || null,
+        razao_social: data.legal_name || null,
+        cnpj: data.cnpj || null,
+        contact_email: data.email || null,
+        contact_phone: data.phone || null,
+        website_url: data.website || null,
+        endereco_logradouro: data.address || null,
+        endereco_cidade: data.city || null,
+        cep: data.cep || null,
+        primary_color: data.primary_color || null,
+        secondary_color: data.secondary_color || null,
+        // Find state_id by code if state is selected
+        state_id: data.state ? states?.find(s => s.code === data.state)?.id : null,
+        // Set business segment if selected
+        primary_segment_id: data.business_segment_id || null,
+      };
+
+      // Filter out null/empty values
+      const filteredUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([_, value]) => value !== null && value !== '')
+      );
+
+      await updateOrganizer.mutateAsync(filteredUpdates);
+      
       toast({
         title: "Sucesso",
         description: "Dados da organização atualizados com sucesso!",
       });
+      
+      // Reset form dirty state
+      form.reset(data);
     } catch (error) {
+      console.error('Erro ao atualizar organização:', error);
       toast({
         title: "Erro",
-        description: "Erro ao atualizar dados da organização. Tente novamente.",
+        description: error instanceof Error ? error.message : "Erro ao atualizar dados da organização. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -153,7 +182,7 @@ export const OrganizerDataForm: React.FC = () => {
         email: organizerData.contact_email || '',
         address: organizerData.endereco_logradouro || '',
         city: organizerData.endereco_cidade || '',
-        state: organizerData.endereco_bairro || '',
+        state: '', // Will be populated by finding the state code from the state_id
         cep: organizerData.cep || '',
         primary_color: organizerData.primary_color || '',
         secondary_color: organizerData.secondary_color || '',
