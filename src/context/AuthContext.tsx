@@ -7,7 +7,6 @@ import { Tables } from '@/utils/supabase/types'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
 import { Permission, hasPermission, canAccessRoute, getAllowedRoutes } from '@/utils/permissions'
 import { organizerService, type OrganizerData } from '@/services/organizerService'
-import { OrganizerDataForm } from '@/components/settings/OrganizerDataForm'
 
 // Interfaces baseadas nos tipos do Supabase
 export type UserRole = Tables<'user_roles'>
