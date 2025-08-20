@@ -47,8 +47,6 @@ export interface UpdateOrganizerData {
   endereco_bairro?: string;
   endereco_cidade?: string;
   cep?: string;
-  state_id?: string;
-  primary_segment_id?: string;
   primary_color?: string;
   secondary_color?: string;
   font_family?: string;
