@@ -59,7 +59,8 @@ export function classifyError(error: unknown): ErrorDetails {
   };
 }
 
-export function handleFormError(error: unknown): void {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function handleFormError(error: any): void {
   const errorDetails = classifyError(error);
   
   toast({
@@ -75,6 +76,8 @@ export function handleFormError(error: unknown): void {
     field: errorDetails.field,
     originalError: error
   });
+  
+  console.error('Error stack:', error.stack);
 }
 
 function getErrorTitle(type: ErrorDetails['type']): string {
