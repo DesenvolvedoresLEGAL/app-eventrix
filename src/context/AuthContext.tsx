@@ -7,6 +7,7 @@ import { Tables } from '@/utils/supabase/types'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
 import { Permission, hasPermission, canAccessRoute, getAllowedRoutes } from '@/utils/permissions'
 import { organizerService, type OrganizerData } from '@/services/organizerService'
+import { OrganizerDataForm } from '@/components/settings/OrganizerDataForm'
 
 // Interfaces baseadas nos tipos do Supabase
 export type UserRole = Tables<'user_roles'>
@@ -154,22 +155,126 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [tenantCache])
 
-  const loadOrganizerData = useCallback(async (tenantId: string): Promise<OrganizerData | null> => {
-    // Verificar cache primeiro
-    if (organizerCache.has(tenantId)) {
-      return organizerCache.get(tenantId)!
-    }
-
+  const loadOrganizerData = useCallback(async (): Promise<OrganizerData | null> => {
     try {
-      const organizerData = await organizerService.getCurrentOrganizer()
-      // Adicionar ao cache
-      setOrganizerCache(prev => new Map(prev).set(tenantId, organizerData))
-      return organizerData
-    } catch (error) {
-      console.warn('Erro ao carregar dados do organizer:', error)
-      return null
+      // Obter usuário autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Verificar cache primeiro (usando user ID como chave)
+      if (organizerCache.has(user.id)) {
+        return organizerCache.get(user.id)!;
+      }
+
+      // Primeiro buscar o profile para obter o tenant_id
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        throw new Error(`Erro ao buscar perfil: ${profileError.message}`);
+      }
+
+      if (!profile?.tenant_id) {
+        throw new Error('Usuário não está associado a uma organização');
+      }
+
+      // Buscar dados do tenant diretamente
+      const { data, error } = await supabase
+        .from('tenants')
+        .select(`
+          id,
+          slug,
+          cnpj,
+          razao_social,
+          nome_fantasia,
+          inscricao_estadual,
+          cnae_principal,
+          contact_email,
+          contact_phone,
+          whatsapp_number,
+          website_url,
+          endereco_logradouro,
+          endereco_numero,
+          endereco_complemento,
+          endereco_bairro,
+          endereco_cidade,
+          cep,
+          primary_color,
+          secondary_color,
+          font_family,
+          logo_url,
+          favicon_url,
+          timezone,
+          locale,
+          plan_id,
+          status_id,
+          created_at,
+          updated_at
+        `)
+        .eq('id', profile.tenant_id)
+        .single();
+
+      if (error) {
+        throw new Error(`Erro ao buscar dados da organização: ${error.message}`);
+      }
+
+      if (!data) {
+        throw new Error('Dados da organização não encontrados');
+      }
+
+      const organizerData = data as OrganizerData;
+      
+      // Adicionar ao cache (usando user ID como chave)
+      setOrganizerCache(prev => new Map(prev).set(user.id, organizerData));
+      return organizerData;
+    } catch (error: any) {
+      console.warn('Erro ao carregar dados do organizer:', error);
+      
+      // Para alguns erros específicos, podemos retornar um objeto vazio para inicializar o formulário
+      // mas para outros erros (como problemas de rede), talvez seja melhor tentar novamente
+      if (error?.message?.includes('não encontrados') || error?.message?.includes('não está associado')) {
+        // Retorna um objeto vazio para inicializar o formulário com campos vazios
+        return {
+          id: '',
+          slug: '',
+          cnpj: '',
+          razao_social: '',
+          nome_fantasia: null,
+          inscricao_estadual: null,
+          cnae_principal: null,
+          contact_email: '',
+          contact_phone: null,
+          whatsapp_number: null,
+          website_url: null,
+          endereco_logradouro: '',
+          endereco_numero: null,
+          endereco_complemento: null,
+          endereco_bairro: '',
+          endereco_cidade: '',
+          cep: '',
+          primary_color: '#4D2BFB',
+          secondary_color: '#03F9FF',
+          font_family: 'Neue Haas Unica',
+          logo_url: null,
+          favicon_url: null,
+          timezone: 'America/Sao_Paulo',
+          locale: 'pt-BR',
+          plan_id: '',
+          status_id: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as OrganizerData;
+      }
+      
+      // Para outros erros, retorna null
+      return null;
     }
-  }, [organizerCache])
+  }, [organizerCache]);
 
   const refreshTenant = useCallback(async () => {
     if (!user?.email || !profile?.tenant_id) return
@@ -268,11 +373,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 profileData.role ? loadUserRole(profileData.role) : Promise.resolve(null)
               ])
 
-              // Carregar dados do organizer após ter os dados do tenant
+              // Carregar dados do organizer
               let organizerData = null
               if (profileData.tenant_id) {
                 setIsOrganizerLoading(true)
-                organizerData = await loadOrganizerData(profileData.tenant_id)
+                organizerData = await loadOrganizerData()
                 setIsOrganizerLoading(false)
               }
 
