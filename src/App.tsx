@@ -154,6 +154,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/settings/organizer" 
+              element={
+                <RoleBasedRoute requiredPermission={Permission.SETTINGS_ORGANIZER_VIEW}>
+                  <OrganizerSettings />
+                </RoleBasedRoute>
+              } 
+            />
+            <Route 
               path="/lectures" 
               element={
                 <RoleBasedRoute requiredPermission={Permission.LECTURES_VIEW}>
