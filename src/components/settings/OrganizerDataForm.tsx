@@ -104,14 +104,6 @@ export const OrganizerDataForm: React.FC = () => {
 
   const handleSubmitWithOptimizations = useCallback(async (data: OrganizerFormData) => {
     setIsSubmitting(true);
-    
-    // Captura os valores ANTES de qualquer operação para garantir integridade
-    const formValues = form.getValues();
-    console.log('🚀 Iniciando submissão');
-    console.log('📝 Dados recebidos pelo submit:', data);
-    console.log('📋 Valores atuais do formulário:', formValues);
-    console.log('🔄 Campos modificados:', dirtyFields);
-    
     try {
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -134,7 +126,7 @@ export const OrganizerDataForm: React.FC = () => {
         throw new Error('Usuário não está associado a uma organização');
       }
 
-      // Build update object with only dirty fields usando os valores capturados
+      // Build update object with only dirty fields
       const updateData: Record<string, any> = {
         updated_at: new Date().toISOString()
       };
@@ -143,18 +135,14 @@ export const OrganizerDataForm: React.FC = () => {
       Object.keys(dirtyFields).forEach(key => {
         const fieldKey = key as keyof OrganizerFormData;
         if (dirtyFields[fieldKey]) {
-          // Usa os valores capturados, não os do parâmetro data
-          const value = formValues[fieldKey];
           // Handle null/empty values appropriately
-          if (value === '' || value === null || value === undefined) {
+          if (data[fieldKey] === '' || data[fieldKey] === null || data[fieldKey] === undefined) {
             updateData[fieldKey] = null;
           } else {
-            updateData[fieldKey] = value;
+            updateData[fieldKey] = data[fieldKey];
           }
         }
       });
-
-      console.log('💾 Dados finais para atualização:', updateData);
 
       // Only proceed with update if there are dirty fields
       if (Object.keys(updateData).length <= 1) { // Only updated_at would be present
@@ -182,22 +170,18 @@ export const OrganizerDataForm: React.FC = () => {
         throw new Error('Dados atualizados não retornados');
       }
 
-      console.log('✅ Atualização bem-sucedida, agora resetando dirty fields');
-      
-      // APENAS AGORA, após sucesso, resetamos os dirty fields
+      // Success
       resetDirtyFields();
-      
       toast({
         title: "Dados atualizados",
         description: "Os dados da organização foram atualizados com sucesso.",
       });
     } catch (error) {
-      console.error('❌ Erro na submissão:', error);
       handleFormError(error);
     } finally {
       setIsSubmitting(false);
     }
-  }, [dirtyFields, resetDirtyFields, form]);
+  }, [dirtyFields, resetDirtyFields]);
 
   const { handleSubmit, canSubmit, shouldPreventReset } = useFormOptimizations({
     form,
