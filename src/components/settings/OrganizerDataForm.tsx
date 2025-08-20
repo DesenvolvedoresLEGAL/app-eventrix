@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useOrganizerData, useBrazilianStates, useBusinessSegments } from '@/hooks/queries/useOrganizerData';
+import { useAuthValidation } from '@/hooks/useAuthValidation';
 import { useToast } from '@/hooks/use-toast';
 import { UpdateOrganizerData } from '@/services/organizerService';
 
@@ -42,6 +43,7 @@ export const OrganizerDataForm: React.FC = () => {
   const { toast } = useToast();
   const { data: organizerData, isLoading, updateOrganizer, isUpdating } = useOrganizerData();
   const { data: states } = useBrazilianStates();
+  const { isAuthenticated, isValidating, validateAuth, refreshSession } = useAuthValidation();
 
   // Memoização dos dados do formulário conforme solicitado
   const memoizedFormData = useMemo(() => {
@@ -83,7 +85,38 @@ export const OrganizerDataForm: React.FC = () => {
   }, [memoizedFormData, form]);
 
   const onSubmit = async (data: FormData) => {
+    console.log('OrganizerDataForm.onSubmit: Iniciando envio...', { data, isAuthenticated });
+    
     try {
+      // 1. Verificar autenticação antes de tentar enviar
+      if (!isAuthenticated) {
+        toast({
+          title: "Erro de Autenticação",
+          description: "Você não está autenticado. Faça login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 2. Validar autenticação com o servidor
+      const isAuthValid = await validateAuth();
+      if (!isAuthValid) {
+        console.warn('OrganizerDataForm.onSubmit: Auth validation failed, trying to refresh...');
+        
+        // 3. Tentar refresh da sessão
+        const refreshed = await refreshSession();
+        if (!refreshed) {
+          toast({
+            title: "Sessão Expirada",
+            description: "Sua sessão expirou. Faça login novamente.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      console.log('OrganizerDataForm.onSubmit: Auth validated, proceeding with update...');
+      
       const updateData: UpdateOrganizerData = {
         ...data,
         website_url: data.website_url || null,
@@ -95,6 +128,7 @@ export const OrganizerDataForm: React.FC = () => {
         endereco_complemento: data.endereco_complemento || null,
       };
 
+      // 4. Tentar atualizar os dados
       await updateOrganizer.mutateAsync(updateData);
       
       toast({
@@ -102,12 +136,35 @@ export const OrganizerDataForm: React.FC = () => {
         description: "Dados da organização atualizados com sucesso!",
       });
     } catch (error) {
-      console.error('Erro ao atualizar organização:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar dados da organização. Tente novamente.",
-        variant: "destructive",
-      });
+      console.error('OrganizerDataForm.onSubmit: Erro ao atualizar organização:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido ao atualizar dados.";
+      
+      // Verificar se é erro de autenticação
+      if (errorMessage.includes('não autenticado') || errorMessage.includes('Usuário não autenticado') || errorMessage.includes('Sessão')) {
+        toast({
+          title: "Erro de Autenticação",
+          description: "Sua sessão expirou. Tente fazer login novamente.",
+          variant: "destructive",
+        });
+        
+        // Tentar refresh automático
+        setTimeout(async () => {
+          const refreshed = await refreshSession();
+          if (refreshed) {
+            toast({
+              title: "Sessão Renovada",
+              description: "Tente enviar o formulário novamente.",
+            });
+          }
+        }, 1000);
+      } else {
+        toast({
+          title: "Erro",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -511,13 +568,13 @@ export const OrganizerDataForm: React.FC = () => {
           </Tabs>
 
           {isDirty && (
-            <div className="flex justify-end">
+            <div className="flex justify-end flex-col items-end gap-2">
               <Button
                 type="submit"
-                disabled={isUpdating}
+                disabled={isUpdating || !isAuthenticated || isValidating}
                 className="min-w-32"
               >
-                {isUpdating ? (
+                {isValidating ? "Verificando..." : isUpdating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Salvando...
@@ -526,6 +583,12 @@ export const OrganizerDataForm: React.FC = () => {
                   'Salvar Alterações'
                 )}
               </Button>
+              
+              {!isAuthenticated && (
+                <div className="text-sm text-destructive">
+                  ⚠️ Você precisa estar autenticado para salvar alterações
+                </div>
+              )}
             </div>
           )}
         </form>
