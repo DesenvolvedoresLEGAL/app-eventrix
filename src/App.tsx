@@ -54,6 +54,7 @@ import PlanSelectionPage from "./pages/PlanSelection";
 import Teste from './pages/Test';
 import Unauthorized from './pages/Unauthorized';
 import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
 import RoleBasedRoute from './components/RoleBasedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Permission } from './utils/permissions';
@@ -154,7 +155,17 @@ const App = () => (
               } 
             />
             <Route 
-              path="/lectures" 
+              path="/settings/organizer" 
+              element={
+                <PrivateRoute>
+                  <RoleBasedRoute requiredPermission={Permission.SETTINGS_ORGANIZER_MANAGE}>
+                    <OrganizerSettings />
+                  </RoleBasedRoute>
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/lectures"
               element={
                 <RoleBasedRoute requiredPermission={Permission.LECTURES_VIEW}>
                   <Lectures />
