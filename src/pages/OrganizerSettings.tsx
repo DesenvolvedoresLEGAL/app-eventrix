@@ -17,7 +17,12 @@ const OrganizerSettings: React.FC = () => {
   const { data: linkedUsers, isLoading: usersLoading } = useQuery({
     queryKey: ['linked-users', organizerData?.id],
     queryFn: async () => {
-      if (!organizerData?.id) return [];
+      if (!organizerData?.id) {
+        console.log('OrganizerSettings: organizerData.id is missing');
+        return [];
+      }
+      
+      console.log('OrganizerSettings: Searching users for tenant_id:', organizerData.id);
       
       const { data, error } = await supabase
         .from('profiles')
@@ -31,13 +36,17 @@ const OrganizerSettings: React.FC = () => {
           is_active,
           created_at,
           role,
-          user_roles!inner(code, description)
+          user_roles(code, description)
         `)
-        .eq('tenant_id', organizerData.id)
-        .eq('is_active', true);
+        .eq('tenant_id', organizerData.id);
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('OrganizerSettings: Query error:', error);
+        throw error;
+      }
+      
+      console.log('OrganizerSettings: Query result:', data);
+      return data || [];
     },
     enabled: !!organizerData?.id,
     staleTime: 5 * 60 * 1000,
