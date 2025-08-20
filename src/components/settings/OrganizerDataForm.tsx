@@ -88,27 +88,35 @@ export const OrganizerDataForm: React.FC = () => {
     console.log('OrganizerDataForm.onSubmit: Iniciando envio...', { data, isAuthenticated });
     
     try {
-      // 1. Verificar autenticação antes de tentar enviar
+      // Estratégia de Recovery em 3 níveis
+      
+      // Nível 1: Verificação básica de estado React
       if (!isAuthenticated) {
         toast({
-          title: "Erro de Autenticação",
-          description: "Você não está autenticado. Faça login novamente.",
+          title: "Não autenticado",
+          description: "Você precisa estar logado para salvar as alterações.",
           variant: "destructive",
         });
         return;
       }
 
-      // 2. Validar autenticação com o servidor
+      // Nível 2: Validação completa com sincronização
       const isAuthValid = await validateAuth();
       if (!isAuthValid) {
-        console.warn('OrganizerDataForm.onSubmit: Auth validation failed, trying to refresh...');
+        console.log('Auth validation failed, attempting session refresh...');
         
-        // 3. Tentar refresh da sessão
-        const refreshed = await refreshSession();
-        if (!refreshed) {
+        // Nível 3: Tentativa de refresh ou redirect
+        const refreshSuccessful = await refreshSession();
+        if (!refreshSuccessful) {
+          return; // refreshSession já mostra o toast e redireciona
+        }
+        
+        // Revalidar após refresh bem-sucedido
+        const isStillValid = await validateAuth();
+        if (!isStillValid) {
           toast({
-            title: "Sessão Expirada",
-            description: "Sua sessão expirou. Faça login novamente.",
+            title: "Falha na Autenticação",
+            description: "Não foi possível validar sua sessão. Tente fazer login novamente.",
             variant: "destructive",
           });
           return;

@@ -20,23 +20,33 @@ export const useAuthValidation = (): UseAuthValidationReturn => {
     setIsValidating(true);
     
     try {
-      // Verificar se temos user e session básicos
-      if (!user || !session) {
-        console.warn('Auth validation failed: No user or session');
+      // Nível 1: Verificação simples do Supabase
+      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+      
+      if (error || !currentSession) {
+        console.warn('Auth validation failed: No session in Supabase', error);
         return false;
       }
 
-      // Verificar se a sessão ainda é válida no Supabase
-      const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+      // Verificar se há usuário na sessão
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
       
-      if (error || !currentUser) {
-        console.warn('Auth validation failed: Supabase auth check failed', error);
+      if (userError || !currentUser) {
+        console.warn('Auth validation failed: No user found', userError);
         return false;
       }
 
       // Verificar se o token não expirou
-      if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000)) {
+      if (currentSession.expires_at && currentSession.expires_at < Math.floor(Date.now() / 1000)) {
         console.warn('Auth validation failed: Session expired');
+        return false;
+      }
+
+      // Verificar sincronização com estado React
+      if (!user || !session) {
+        console.warn('Auth validation failed: React state desynchronized, triggering sync');
+        // Forçar re-sincronização disparando onAuthStateChange
+        await supabase.auth.getUser();
         return false;
       }
 
@@ -53,17 +63,37 @@ export const useAuthValidation = (): UseAuthValidationReturn => {
     setIsValidating(true);
     
     try {
-      const { data, error } = await supabase.auth.refreshSession();
+      // Primeiro verificar se existe uma sessão para refresh
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      if (error || !data.session) {
-        console.error('Session refresh failed:', error);
+      if (!currentSession) {
+        console.warn('Cannot refresh session: No active session found');
         toast({
-          title: "Sessão Expirada",
-          description: "Sua sessão expirou. Você será redirecionado para o login.",
+          title: "Sessão Perdida",
+          description: "Sua sessão foi perdida. Você será redirecionado para o login.",
           variant: "destructive",
         });
         
-        // Aguardar um pouco para mostrar o toast antes de redirecionar
+        setTimeout(() => {
+          navigate('/login', { replace: true });
+        }, 2000);
+        
+        return false;
+      }
+
+      // Nível 2: Tentar refresh do token
+      const { data, error } = await supabase.auth.refreshSession(currentSession);
+      
+      if (error || !data.session) {
+        console.error('Session refresh failed:', error);
+        
+        // Nível 3: Redirect para re-login completo
+        toast({
+          title: "Falha na Renovação",
+          description: "Não foi possível renovar sua sessão. Faça login novamente.",
+          variant: "destructive",
+        });
+        
         setTimeout(() => {
           navigate('/login', { replace: true });
         }, 2000);
@@ -75,6 +105,18 @@ export const useAuthValidation = (): UseAuthValidationReturn => {
       return true;
     } catch (error) {
       console.error('Session refresh error:', error);
+      
+      // Em caso de erro, sempre redirecionar para login
+      toast({
+        title: "Erro de Autenticação",
+        description: "Ocorreu um erro com sua sessão. Faça login novamente.",
+        variant: "destructive",
+      });
+      
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 2000);
+      
       return false;
     } finally {
       setIsValidating(false);
