@@ -17,6 +17,7 @@ import { useFormOptimizations } from '@/hooks/useFormOptimizations';
 import { useDirtyFields } from '@/hooks/useDirtyFields';
 import { handleFormError } from '@/utils/errorHandlers';
 import { UnsavedChangesDialog } from '@/components/form/UnsavedChangesDialog';
+import supabase from '@/utils/supabase/client';
 
 const organizerSchema = z.object({
   razao_social: z.string().min(2, 'Razão social é obrigatória'),
@@ -42,8 +43,9 @@ const organizerSchema = z.object({
 type OrganizerFormData = z.infer<typeof organizerSchema>;
 
 export const OrganizerDataForm: React.FC = () => {
-  const { data: organizerData, isLoading, updateOrganizer, isUpdating } = useOrganizerData();
+  const { data: organizerData, isLoading } = useOrganizerData();
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const defaultValues = useMemo(() => {
     // Se não tem dados ainda, retorna valores vazios para evitar re-renders
@@ -101,18 +103,87 @@ export const OrganizerDataForm: React.FC = () => {
   const { dirtyFields, hasDirtyFields, dirtyFieldsCount, resetDirtyFields } = useDirtyFields({ form });
 
   const handleSubmitWithOptimizations = useCallback(async (data: OrganizerFormData) => {
+    setIsSubmitting(true);
     try {
-      await updateOrganizer.mutateAsync(data);
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Get user's profile to get tenant_id
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        throw new Error(`Erro ao buscar perfil: ${profileError.message}`);
+      }
+
+      if (!profile?.tenant_id) {
+        throw new Error('Usuário não está associado a uma organização');
+      }
+
+      // Build update object with only dirty fields
+      const updateData: Record<string, any> = {
+        updated_at: new Date().toISOString()
+      };
+
+      // Only include fields that have been modified
+      Object.keys(dirtyFields).forEach(key => {
+        const fieldKey = key as keyof OrganizerFormData;
+        if (dirtyFields[fieldKey]) {
+          // Handle null/empty values appropriately
+          if (data[fieldKey] === '' || data[fieldKey] === null || data[fieldKey] === undefined) {
+            updateData[fieldKey] = null;
+          } else {
+            updateData[fieldKey] = data[fieldKey];
+          }
+        }
+      });
+
+      // Only proceed with update if there are dirty fields
+      if (Object.keys(updateData).length <= 1) { // Only updated_at would be present
+        toast({
+          title: "Nenhuma alteração",
+          description: "Nenhum dado foi modificado.",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Update tenant data directly with only modified fields
+      const { data: updatedData, error } = await supabase
+        .from('tenants')
+        .update(updateData)
+        .eq('id', profile.tenant_id)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Erro ao atualizar dados: ${error.message}`);
+      }
+
+      if (!updatedData) {
+        throw new Error('Dados atualizados não retornados');
+      }
+
+      // Success
+      resetDirtyFields();
       toast({
         title: "Dados atualizados",
         description: "Os dados da organização foram atualizados com sucesso.",
       });
     } catch (error) {
       handleFormError(error);
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [updateOrganizer]);
+  }, [dirtyFields, resetDirtyFields]);
 
-  const { handleSubmit, isSubmitting, canSubmit, shouldPreventReset } = useFormOptimizations({
+  const { handleSubmit, canSubmit, shouldPreventReset } = useFormOptimizations({
     form,
     onSubmit: handleSubmitWithOptimizations
   });
