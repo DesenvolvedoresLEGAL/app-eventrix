@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { UseFormReturn, FieldValues, Path } from 'react-hook-form';
 
 interface UseDirtyFieldsProps<T extends FieldValues> {
@@ -32,9 +32,16 @@ export function useDirtyFields<T extends FieldValues>({
     return dirtyFieldsCount > 0;
   }, [dirtyFieldsCount]);
 
-  const resetDirtyFields = () => {
-    form.reset(form.getValues());
-  };
+  const resetDirtyFields = useCallback(() => {
+    // Não reseta os valores, apenas limpa o estado dirty
+    // Preserva os valores atuais do formulário
+    const currentValues = form.getValues();
+    form.reset(currentValues, {
+      keepValues: true,
+      keepDirty: false,
+      keepDirtyValues: false
+    });
+  }, [form]);
 
   return {
     dirtyFields,
