@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,6 +13,10 @@ import { Badge } from '@/components/ui/badge';
 import { useOrganizerData } from '@/hooks/queries/useOrganizerData';
 import { Building2, MapPin, Phone, Palette, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useFormOptimizations } from '@/hooks/useFormOptimizations';
+import { useDirtyFields } from '@/hooks/useDirtyFields';
+import { handleFormError } from '@/utils/errorHandlers';
+import { UnsavedChangesDialog } from '@/components/form/UnsavedChangesDialog';
 
 const organizerSchema = z.object({
   razao_social: z.string().min(2, 'Razão social é obrigatória'),
@@ -39,6 +43,7 @@ type OrganizerFormData = z.infer<typeof organizerSchema>;
 
 export const OrganizerDataForm: React.FC = () => {
   const { data: organizerData, isLoading, updateOrganizer, isUpdating } = useOrganizerData();
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
   const defaultValues = useMemo(() => {
     // Se não tem dados ainda, retorna valores vazios para evitar re-renders
@@ -93,13 +98,9 @@ export const OrganizerDataForm: React.FC = () => {
     mode: 'onChange',
   });
 
-  React.useEffect(() => {
-    if (organizerData) {
-      form.reset(defaultValues);
-    }
-  }, [form, organizerData, defaultValues]);
+  const { dirtyFields, hasDirtyFields, dirtyFieldsCount, resetDirtyFields } = useDirtyFields({ form });
 
-  const onSubmit = async (data: OrganizerFormData) => {
+  const handleSubmitWithOptimizations = useCallback(async (data: OrganizerFormData) => {
     try {
       await updateOrganizer.mutateAsync(data);
       toast({
@@ -107,13 +108,32 @@ export const OrganizerDataForm: React.FC = () => {
         description: "Os dados da organização foram atualizados com sucesso.",
       });
     } catch (error) {
-      toast({
-        title: "Erro ao atualizar",
-        description: "Ocorreu um erro ao atualizar os dados. Tente novamente.",
-        variant: "destructive",
-      });
+      handleFormError(error);
     }
-  };
+  }, [updateOrganizer]);
+
+  const { handleSubmit, isSubmitting, canSubmit, shouldPreventReset } = useFormOptimizations({
+    form,
+    onSubmit: handleSubmitWithOptimizations
+  });
+
+  // Smart reset - only reset if user hasn't made changes
+  React.useEffect(() => {
+    if (organizerData && !shouldPreventReset) {
+      form.reset(defaultValues);
+    }
+  }, [form, organizerData, defaultValues, shouldPreventReset]);
+
+  const handleDiscardChanges = useCallback(() => {
+    form.reset(defaultValues);
+    setShowUnsavedDialog(false);
+  }, [form, defaultValues]);
+
+  const handleShowDiscardDialog = useCallback(() => {
+    if (hasDirtyFields) {
+      setShowUnsavedDialog(true);
+    }
+  }, [hasDirtyFields]);
 
   if (isLoading) {
     return (
@@ -135,8 +155,9 @@ export const OrganizerDataForm: React.FC = () => {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {/* Dados Básicos */}
         <Card className="border-primary/20">
           <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg">
@@ -466,12 +487,22 @@ export const OrganizerDataForm: React.FC = () => {
 
         {/* Actions */}
         <div className="flex justify-end gap-4">
+          {hasDirtyFields && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleShowDiscardDialog}
+              disabled={isSubmitting}
+            >
+              Descartar Alterações ({dirtyFieldsCount})
+            </Button>
+          )}
           <Button 
             type="submit" 
-            disabled={isUpdating}
+            disabled={!canSubmit || isSubmitting}
             className="min-w-32"
           >
-            {isUpdating ? (
+            {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Salvando...
@@ -484,7 +515,16 @@ export const OrganizerDataForm: React.FC = () => {
             )}
           </Button>
         </div>
-      </form>
-    </Form>
+        </form>
+      </Form>
+
+      <UnsavedChangesDialog
+        open={showUnsavedDialog}
+        onOpenChange={setShowUnsavedDialog}
+        onConfirm={handleDiscardChanges}
+        onCancel={() => setShowUnsavedDialog(false)}
+        changedFieldsCount={dirtyFieldsCount}
+      />
+    </>
   );
 };
