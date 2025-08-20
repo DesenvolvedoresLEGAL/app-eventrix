@@ -57,7 +57,20 @@ class OrganizerService {
    * Buscar dados da organização atual do usuário
    */
   async getCurrentOrganizer(): Promise<OrganizerData> {
-    const { data: { user } } = await supabase.auth.getUser();
+    console.log('organizerService.getCurrentOrganizer: Iniciando busca...');
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    console.log('organizerService.getCurrentOrganizer: Auth result', { 
+      hasUser: !!user, 
+      userId: user?.id,
+      authError: authError?.message 
+    });
+    
+    if (authError) {
+      throw new Error(`Erro de autenticação: ${authError.message}`);
+    }
+    
     if (!user) {
       throw new Error('Usuário não autenticado');
     }
@@ -128,7 +141,43 @@ class OrganizerService {
    * Atualizar dados da organização
    */
   async updateOrganizer(updates: UpdateOrganizerData): Promise<OrganizerData> {
-    const { data: { user } } = await supabase.auth.getUser();
+    console.log('organizerService.updateOrganizer: Iniciando atualização...', { updates });
+    
+    // Verificar sessão atual primeiro
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    console.log('organizerService.updateOrganizer: Session check', {
+      hasSession: !!session,
+      sessionExpiry: session?.expires_at,
+      currentTime: Math.floor(Date.now() / 1000),
+      sessionError: sessionError?.message
+    });
+    
+    if (sessionError) {
+      throw new Error(`Erro ao verificar sessão: ${sessionError.message}`);
+    }
+    
+    if (!session) {
+      throw new Error('Sessão não encontrada - faça login novamente');
+    }
+    
+    // Verificar se a sessão não expirou
+    if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000)) {
+      throw new Error('Sessão expirada - faça login novamente');
+    }
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    console.log('organizerService.updateOrganizer: Auth result', { 
+      hasUser: !!user, 
+      userId: user?.id,
+      authError: authError?.message 
+    });
+    
+    if (authError) {
+      throw new Error(`Erro de autenticação: ${authError.message}`);
+    }
+    
     if (!user) {
       throw new Error('Usuário não autenticado');
     }
