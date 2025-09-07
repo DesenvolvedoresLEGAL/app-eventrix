@@ -49,6 +49,8 @@ import DynamicPricing from "./pages/DynamicPricing";
 import LegalAI from "./pages/LegalAI";
 import UserOnboarding from "./pages/UserOnboarding";
 import TenantOnboarding from "./pages/TenantOnboarding";
+import ModernOnboarding from "./pages/ModernOnboarding";
+import Landing from "./pages/Landing";
 import TenantDashboard from "./pages/TenantDashboard";
 import PlanSelectionPage from "./pages/PlanSelection";
 import Teste from './pages/Test';
@@ -70,6 +72,7 @@ const App = () => (
             <Sonner />
             <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/welcome" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -79,6 +82,7 @@ const App = () => (
             <Route path="/onboarding/user" element={<UserOnboarding />} />
             <Route path="/onboarding/tenant" element={<TenantOnboarding />} />
             <Route path="/onboarding/plan" element={<PlanSelectionPage />} />
+            <Route path="/onboarding" element={<ModernOnboarding />} />
             
             {/* Protected Routes */}
             <Route 

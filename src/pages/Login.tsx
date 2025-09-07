@@ -299,7 +299,7 @@ const Login = () => {
             
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Ainda não tem uma conta? <a href="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">Criar conta</a>
+                Ainda não tem uma conta? <a href="/onboarding" className="text-primary hover:text-primary/80 font-medium transition-colors">Criar conta</a>
               </p>
               <p className="text-sm text-muted-foreground mt-2">
                 Quer conhecer nossos planos? <a href="/plans" className="text-primary hover:text-primary/80 font-medium transition-colors">Ver planos</a>

@@ -8,9 +8,9 @@ const Index = () => {
   const { redirectToFirstAccessible, hasNoAccess, isLoading: isLoadingNavigation } = useSmartNavigation();
   
   useEffect(() => {
-    // Se não está autenticado, redireciona para login
+    // Se não está autenticado, redireciona para landing
     if (!loading && !isAuthenticated) {
-      window.location.href = '/login';
+      window.location.href = '/welcome';
       return;
     }
     
