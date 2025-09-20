@@ -34,12 +34,20 @@ import {
   Briefcase,
   Presentation,
   Target,
-  Package
+  Package,
+  ShoppingCart,
+  Store,
+  Gamepad2,
+  Video,
+  Trophy,
+  BookOpen,
+  GraduationCap,
+  Languages
 } from 'lucide-react';
 
 export const dashboardItem = { 
   icon: <Home size={16} />, 
-  label: 'Painel do Organizador', 
+  label: 'Dashboard', 
   to: '/dashboard' 
 };
 
@@ -50,16 +58,23 @@ export const eventsItems = [
 
 export const menuGroups = [
   {
+    id: 'caex',
+    icon: <Store size={16} />,
+    label: 'CAEX',
+    priority: 'high' as const,
+    items: [
+      { icon: <Building size={16} />, label: 'Expositores', to: '/exhibitors' },
+      { icon: <Briefcase size={16} />, label: 'Fornecedores', to: '/suppliers' },
+    ]
+  },
+  {
     id: 'users',
     icon: <Users size={16} />,
     label: 'Usuários',
     priority: 'high' as const,
     items: [
-      { icon: <Building size={16} />, label: 'Expositores', to: '/exhibitors' },
-      { icon: <Briefcase size={16} />, label: 'Fornecedores', to: '/suppliers' },
       { icon: <Shield size={16} />, label: 'Permissões e Perfis', to: '/permissions' },
       { icon: <UserPlus size={16} />, label: 'Staff', to: '/staff' },
-      { icon: <UserCheck size={16} />, label: 'Visitantes', to: '/visitors' },
     ]
   },
   {
@@ -75,25 +90,15 @@ export const menuGroups = [
     ]
   },
   {
-    id: 'tasks',
-    icon: <CheckSquare size={16} />,
-    label: 'Tarefas',
-    priority: 'medium' as const,
-    items: [
-      { icon: <CheckSquare size={16} />, label: 'Checklist', to: '/checklist' },
-      { icon: <Users size={16} />, label: 'Por Equipe', to: '/team-tasks' },
-      { icon: <Package size={16} />, label: 'Por Fornecedor', to: '/supplier-tasks' },
-    ]
-  },
-  {
     id: 'credentialing',
     icon: <QrCode size={16} />,
-    label: 'Credenciamento Digital',
+    label: 'Credenciamento & Acesso',
     priority: 'medium' as const,
     items: [
       { icon: <Scan size={16} />, label: 'Check-in/Check-out', to: '/checkin' },
       { icon: <QrCode size={16} />, label: 'Geração QR Code/Badge', to: '/registration' },
       { icon: <History size={16} />, label: 'Histórico de Acessos', to: '/access-history' },
+      { icon: <UserCheck size={16} />, label: 'Visitantes', to: '/visitors' },
     ]
   },
   {
@@ -142,7 +147,7 @@ export const menuGroups = [
   {
     id: 'legal-ai',
     icon: <Zap size={16} />,
-    label: 'LEGAL IA',
+    label: 'LEGAL AI',
     priority: 'high' as const,
     items: [
       { icon: <Bot size={16} />, label: 'Integrações', to: '/ai-validator' },
