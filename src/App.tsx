@@ -41,6 +41,32 @@ import MarketingAds from "./pages/MarketingAds";
 import MarketingPages from "./pages/MarketingPages";
 import CommunicationHumanGPT from "./pages/CommunicationHumanGPT";
 import CommunicationLinkAI from "./pages/CommunicationLinkAI";
+// New Pages
+import BillingOverview from "./pages/BillingOverview";
+import TicketSales from "./pages/TicketSales";
+import PaymentGateway from "./pages/PaymentGateway";
+import FinancialReports from "./pages/FinancialReports";
+import BillingIntegration from "./pages/BillingIntegration";
+import CaexOverview from "./pages/CaexOverview";
+import Sponsors from "./pages/Sponsors";
+import ExhibitorManual from "./pages/ExhibitorManual";
+import Contracts from "./pages/Contracts";
+import VirtualStands from "./pages/VirtualStands";
+import Marketplace365 from "./pages/Marketplace365";
+import RoiDashboard from "./pages/RoiDashboard";
+import AgendaOverview from "./pages/AgendaOverview";
+import LinkAIOverview from "./pages/LinkAIOverview";
+import IntelligentNetworking from "./pages/IntelligentNetworking";
+import AIRecommendations from "./pages/AIRecommendations";
+import ConnectionAnalytics from "./pages/ConnectionAnalytics";
+import SmartMatching from "./pages/SmartMatching";
+import NetworkingInsights from "./pages/NetworkingInsights";
+import AccessOverview from "./pages/AccessOverview";
+import HybridOverview from "./pages/HybridOverview";
+import StreamingPlatform from "./pages/StreamingPlatform";
+import VirtualParticipation from "./pages/VirtualParticipation";
+import HybridInteractions from "./pages/HybridInteractions";
+import Transcriptions from "./pages/Transcriptions";
 import CommunicationNotifications from "./pages/CommunicationNotifications";
 import Finance from "./pages/Finance";
 import DynamicPricing from "./pages/DynamicPricing";
@@ -121,6 +147,44 @@ const App = () => (
             <Route path="/communication/humangpt" element={<CommunicationHumanGPT />} />
             <Route path="/communication/linkai" element={<CommunicationLinkAI />} />
             <Route path="/communication/notifications" element={<CommunicationNotifications />} />
+            
+            {/* Bilheteria Routes */}
+            <Route path="/billing/overview" element={<BillingOverview />} />
+            <Route path="/ticket-sales" element={<TicketSales />} />
+            <Route path="/payment-gateway" element={<PaymentGateway />} />
+            <Route path="/financial-reports" element={<FinancialReports />} />
+            <Route path="/billing-integration" element={<BillingIntegration />} />
+            
+            {/* CAEX Routes */}
+            <Route path="/caex/overview" element={<CaexOverview />} />
+            <Route path="/sponsors" element={<Sponsors />} />
+            <Route path="/exhibitor-manual" element={<ExhibitorManual />} />
+            <Route path="/contracts" element={<Contracts />} />
+            <Route path="/virtual-stands" element={<VirtualStands />} />
+            <Route path="/marketplace365" element={<Marketplace365/>} />
+            <Route path="/roi-dashboard" element={<RoiDashboard />} />
+            
+            {/* Agenda Routes */}
+            <Route path="/agenda/overview" element={<AgendaOverview />} />
+            
+            {/* LinkAI Routes */}
+            <Route path="/linkai/overview" element={<LinkAIOverview />} />
+            <Route path="/intelligent-networking" element={<IntelligentNetworking />} />
+            <Route path="/ai-recommendations" element={<AIRecommendations />} />
+            <Route path="/connection-analytics" element={<ConnectionAnalytics />} />
+            <Route path="/smart-matching" element={<SmartMatching />} />
+            <Route path="/networking-insights" element={<NetworkingInsights />} />
+            
+            {/* Credenciamento Routes */}
+            <Route path="/access/overview" element={<AccessOverview />} />
+            
+            {/* Experiência Híbrida Routes */}
+            <Route path="/hybrid/overview" element={<HybridOverview />} />
+            <Route path="/streaming-platform" element={<StreamingPlatform />} />
+            <Route path="/virtual-participation" element={<VirtualParticipation />} />
+            <Route path="/hybrid-interactions" element={<HybridInteractions />} />
+            <Route path="/transcriptions" element={<Transcriptions />} />
+            
             <Route path="/finance" element={<Finance />} />
             <Route path="/dynamic-pricing" element={<DynamicPricing />} />
             <Route path="/live-ops" element={<LiveOps />} />
