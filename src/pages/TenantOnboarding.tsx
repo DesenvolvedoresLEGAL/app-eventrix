@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import type { Tenant } from '@/context/AuthContext'
+import type { Tenant } from '@/context/FixedAuthContext'
 
 // Esquema básico para cadastro de tenant
 const tenantSchema = z.object({
@@ -28,7 +28,7 @@ const TenantOnboarding: React.FC = () => {
       razao_social: data.razao_social,
       nome_fantasia: data.nome_fantasia || '',
       cnpj: data.cnpj,
-      contact_email: data.contact_email,
+      email: data.contact_email,
     }
     // Envio para API ou contexto
     console.log('Novo tenant', tenant)

@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Zap, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/FixedAuthContext'
 import { useToast } from '@/hooks/use-toast'
 
 const ResetPassword = () => {

@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Zap } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/FixedAuthContext'
 import { InviteOnboardingProvider, useInviteOnboarding } from '../context/InviteOnboardingContext'
 import { useInviteValidation } from '../hooks/useInviteValidation'
 import { useTenantBranding } from '../hooks/useTenantBranding'

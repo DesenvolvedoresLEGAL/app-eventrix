@@ -2,7 +2,7 @@
 import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useInviteOnboarding } from '../context/InviteOnboardingContext'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/FixedAuthContext'
 import { useToast } from '@/hooks/use-toast'
 import supabase from '@/utils/supabase/client'
 

@@ -1,14 +1,58 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
-import { Tables } from '@/integrations/supabase/types'
 import { signUp, signIn, signOut, sendMagicLink, resetPassword, updatePassword } from '@/services/authService'
 import { Permission, hasPermission, canAccessRoute, getAllowedRoutes } from '@/utils/permissions'
 
-// Interfaces baseadas nos tipos do Supabase
-export type UserRole = Tables<'user_roles'>
-export type Profile = Tables<'profiles'>
-export type Tenant = Tables<'tenants'>
+// Interfaces simplificadas baseadas na estrutura real do banco
+interface Profile {
+  id: string;
+  user_id: string;
+  tenant_id: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  full_name: string | null;
+  email: string | null;
+  whatsapp_number: string | null;
+  is_active: boolean;
+  role: 'user' | 'admin' | 'moderator' | 'organizer';
+  created_at: string;
+  updated_at: string;
+}
+
+interface Tenant {
+  id: string;
+  slug: string;
+  cnpj: string | null;
+  razao_social: string | null;
+  nome_fantasia: string | null;
+  email: string | null;
+  telefone: string | null;
+  whatsapp: string | null;
+  cep: string | null;
+  endereco: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
+  segmento_id: string | null;
+  cor_primaria: string | null;
+  cor_secundaria: string | null;
+  logo_url: string | null;
+  website: string | null;
+  descricao: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface UserRole {
+  id: string;
+  user_id: string;
+  role: 'user' | 'admin' | 'moderator' | 'organizer';
+  tenant_id: string | null;
+  created_at: string;
+}
 
 interface AuthError {
   message: string
@@ -37,9 +81,9 @@ interface AuthContextValue {
   getAllowedRoutes: () => string[]
 }
 
-const OptimizedAuthContext = createContext<AuthContextValue | undefined>(undefined)
+const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-export const OptimizedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -66,9 +110,9 @@ export const OptimizedAuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return
       }
 
-      setProfile(profileData)
-
       if (profileData) {
+        setProfile(profileData as Profile)
+
         // Carregar tenant se existe
         if (profileData.tenant_id) {
           const { data: tenantData, error: tenantError } = await supabase
@@ -78,7 +122,7 @@ export const OptimizedAuthProvider: React.FC<{ children: React.ReactNode }> = ({
             .maybeSingle()
 
           if (!tenantError && tenantData) {
-            setTenant(tenantData)
+            setTenant(tenantData as Tenant)
           }
         }
 
@@ -90,7 +134,7 @@ export const OptimizedAuthProvider: React.FC<{ children: React.ReactNode }> = ({
           .maybeSingle()
 
         if (!roleError && roleData) {
-          setUserRole(roleData)
+          setUserRole(roleData as UserRole)
         }
       }
     } catch (err) {
@@ -108,7 +152,7 @@ export const OptimizedAuthProvider: React.FC<{ children: React.ReactNode }> = ({
       .maybeSingle()
 
     if (!error && tenantData) {
-      setTenant(tenantData)
+      setTenant(tenantData as Tenant)
     }
   }, [user?.id, profile?.tenant_id])
 
@@ -170,18 +214,48 @@ export const OptimizedAuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const isAuthenticated = useMemo(() => !!user && !!session, [user, session])
 
-  // Memoizar checadores de permissão
+  // Funções de permissão simplificadas
   const hasPermissionCheck = useCallback((permission: Permission) => {
-    return hasPermission(userRole, permission)
-  }, [userRole])
+    // Implementação básica baseada no role do profile
+    if (!profile?.role) return false
+    
+    // Admin tem todas as permissões
+    if (profile.role === 'admin') return true
+    
+    // Organizer tem permissões de organização
+    if (profile.role === 'organizer') {
+      return ['events', 'dashboard', 'analytics', 'settings'].some(p => permission.includes(p))
+    }
+    
+    // User tem permissões básicas
+    return ['dashboard', 'profile'].some(p => permission.includes(p))
+  }, [profile])
 
   const canAccessRouteCheck = useCallback((route: string) => {
-    return canAccessRoute(userRole, route)
-  }, [userRole])
+    // Implementação básica de acesso a rotas
+    if (!profile?.role) return false
+    
+    if (profile.role === 'admin') return true
+    if (profile.role === 'organizer') return !route.includes('admin')
+    
+    return route === '/dashboard' || route === '/profile'
+  }, [profile])
 
   const getAllowedRoutesCheck = useCallback(() => {
-    return getAllowedRoutes(userRole)
-  }, [userRole])
+    if (!profile?.role) return []
+    
+    const baseRoutes = ['/dashboard']
+    
+    if (profile.role === 'admin') {
+      return [...baseRoutes, '/admin', '/settings', '/users', '/analytics']
+    }
+    
+    if (profile.role === 'organizer') {
+      return [...baseRoutes, '/events', '/analytics', '/settings']
+    }
+    
+    return baseRoutes
+  }, [profile])
 
   const value = useMemo(() => ({
     user,
@@ -221,16 +295,19 @@ export const OptimizedAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   ])
 
   return (
-    <OptimizedAuthContext.Provider value={value}>
+    <AuthContext.Provider value={value}>
       {children}
-    </OptimizedAuthContext.Provider>
+    </AuthContext.Provider>
   )
 }
 
-export const useOptimizedAuth = () => {
-  const context = useContext(OptimizedAuthContext)
+export const useAuth = () => {
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useOptimizedAuth must be used within an OptimizedAuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
 }
+
+// Export dos tipos para compatibilidade
+export type { Profile, Tenant, UserRole }

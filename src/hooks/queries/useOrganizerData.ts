@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { organizerService, type OrganizerData, type UpdateOrganizerData } from '@/services/organizerService';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/FixedAuthContext';
 
 const QUERY_KEYS = {
   organizer: ['organizer'] as const,
@@ -13,7 +13,7 @@ const QUERY_KEYS = {
  */
 export const useOrganizerData = () => {
   const queryClient = useQueryClient();
-  const { organizer, isOrganizerLoading } = useAuth();
+  const { tenant } = useAuth();
 
   // Query para dados da organização - apenas executa se não tiver dados no AuthContext
   const organizerQuery = useQuery({
@@ -21,7 +21,7 @@ export const useOrganizerData = () => {
     queryFn: () => organizerService.getCurrentOrganizer(),
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
-    enabled: !organizer, // Só executa se não tiver dados do AuthContext
+    enabled: !tenant, // Só executa se não tiver dados do AuthContext
     retry: (failureCount, error) => {
       // Não retry para erros de autenticação ou permissão
       if (error?.message?.includes('não autenticado') || 
@@ -56,8 +56,8 @@ export const useOrganizerData = () => {
   });
 
   // Priorizar dados do AuthContext, fallback para Query
-  const data = organizer || organizerQuery.data;
-  const isLoading = isOrganizerLoading || (organizerQuery.isLoading && !organizer);
+  const data = tenant || organizerQuery.data;
+  const isLoading = organizerQuery.isLoading && !tenant;
 
   return {
     // Dados

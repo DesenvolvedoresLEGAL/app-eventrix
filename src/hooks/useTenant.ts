@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/FixedAuthContext';
 
 /**
  * Hook para obter informações do tenant atual
