@@ -3,30 +3,25 @@ import { supabase } from '@/integrations/supabase/client';
 export interface OrganizerData {
   id: string;
   slug: string;
-  cnpj: string;
-  razao_social: string;
+  cnpj: string | null;
+  razao_social: string | null;
   nome_fantasia: string | null;
-  inscricao_estadual: string | null;
-  cnae_principal: string | null;
-  contact_email: string;
-  contact_phone: string | null;
-  whatsapp_number: string | null;
-  website_url: string | null;
-  endereco_logradouro: string;
-  endereco_numero: string | null;
-  endereco_complemento: string | null;
-  endereco_bairro: string;
-  endereco_cidade: string;
-  cep: string;
-  primary_color: string;
-  secondary_color: string;
-  font_family: string;
+  email: string | null;
+  telefone: string | null;
+  whatsapp: string | null;
+  cep: string | null;
+  endereco: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
+  segmento_id: string | null;
+  cor_primaria: string | null;
+  cor_secundaria: string | null;
   logo_url: string | null;
-  favicon_url: string | null;
-  timezone: string;
-  locale: string;
-  plan_id: string;
-  status_id: string;
+  website: string | null;
+  descricao: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -35,21 +30,22 @@ export interface UpdateOrganizerData {
   razao_social?: string;
   nome_fantasia?: string;
   cnpj?: string;
-  inscricao_estadual?: string;
-  cnae_principal?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  whatsapp_number?: string;
-  website_url?: string;
-  endereco_logradouro?: string;
-  endereco_numero?: string;
-  endereco_complemento?: string;
-  endereco_bairro?: string;
-  endereco_cidade?: string;
+  email?: string;
+  telefone?: string;
+  whatsapp?: string;
+  website?: string;
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  segmento_id?: string;
   cep?: string;
-  primary_color?: string;
-  secondary_color?: string;
-  font_family?: string;
+  cor_primaria?: string;
+  cor_secundaria?: string;
+  logo_url?: string;
+  descricao?: string;
 }
 
 class OrganizerService {
@@ -79,7 +75,7 @@ class OrganizerService {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('tenant_id')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (profileError) {
@@ -99,27 +95,22 @@ class OrganizerService {
         cnpj,
         razao_social,
         nome_fantasia,
-        inscricao_estadual,
-        cnae_principal,
-        contact_email,
-        contact_phone,
-        whatsapp_number,
-        website_url,
-        endereco_logradouro,
-        endereco_numero,
-        endereco_complemento,
-        endereco_bairro,
-        endereco_cidade,
+        email,
+        telefone,
+        whatsapp,
         cep,
-        primary_color,
-        secondary_color,
-        font_family,
+        endereco,
+        numero,
+        complemento,
+        bairro,
+        cidade,
+        estado,
+        segmento_id,
+        cor_primaria,
+        cor_secundaria,
         logo_url,
-        favicon_url,
-        timezone,
-        locale,
-        plan_id,
-        status_id,
+        website,
+        descricao,
         created_at,
         updated_at
       `)
@@ -186,7 +177,7 @@ class OrganizerService {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('tenant_id')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (profileError) {
@@ -200,7 +191,7 @@ class OrganizerService {
     // Validar CNPJ se fornecido
     if (updates.cnpj) {
       const { data: isValidCnpj, error: cnpjError } = await supabase
-        .rpc('validate_cnpj', { cnpj_input: updates.cnpj });
+        .rpc('validate_cnpj', { cnpj: updates.cnpj });
 
       if (cnpjError) {
         throw new Error(`Erro ao validar CNPJ: ${cnpjError.message}`);
@@ -214,7 +205,7 @@ class OrganizerService {
     // Validar CEP se fornecido
     if (updates.cep) {
       const { data: isValidCep, error: cepError } = await supabase
-        .rpc('validate_cep', { cep_input: updates.cep });
+        .rpc('validate_cep', { cep: updates.cep });
 
       if (cepError) {
         throw new Error(`Erro ao validar CEP: ${cepError.message}`);
@@ -226,18 +217,18 @@ class OrganizerService {
     }
 
     // Validar cores se fornecidas
-    if (updates.primary_color) {
+    if (updates.cor_primaria) {
       const { data: isValidColor, error: colorError } = await supabase
-        .rpc('validate_hex_color', { color_input: updates.primary_color });
+        .rpc('validate_hex_color', { color: updates.cor_primaria });
 
       if (colorError || !isValidColor) {
         throw new Error('Cor primária inválida - deve ser hexadecimal (#RRGGBB)');
       }
     }
 
-    if (updates.secondary_color) {
+    if (updates.cor_secundaria) {
       const { data: isValidColor, error: colorError } = await supabase
-        .rpc('validate_hex_color', { color_input: updates.secondary_color });
+        .rpc('validate_hex_color', { color: updates.cor_secundaria });
 
       if (colorError || !isValidColor) {
         throw new Error('Cor secundária inválida - deve ser hexadecimal (#RRGGBB)');
@@ -258,27 +249,22 @@ class OrganizerService {
         cnpj,
         razao_social,
         nome_fantasia,
-        inscricao_estadual,
-        cnae_principal,
-        contact_email,
-        contact_phone,
-        whatsapp_number,
-        website_url,
-        endereco_logradouro,
-        endereco_numero,
-        endereco_complemento,
-        endereco_bairro,
-        endereco_cidade,
+        email,
+        telefone,
+        whatsapp,
         cep,
-        primary_color,
-        secondary_color,
-        font_family,
+        endereco,
+        numero,
+        complemento,
+        bairro,
+        cidade,
+        estado,
+        segmento_id,
+        cor_primaria,
+        cor_secundaria,
         logo_url,
-        favicon_url,
-        timezone,
-        locale,
-        plan_id,
-        status_id,
+        website,
+        descricao,
         created_at,
         updated_at
       `)
@@ -318,9 +304,9 @@ class OrganizerService {
   async getBusinessSegments() {
     const { data, error } = await supabase
       .from('business_segments')
-      .select('id, code, name, description')
+      .select('id, code, name, descriptions')
       .eq('is_active', true)
-      .order('sort_order, name');
+      .order('name');
 
     if (error) {
       throw new Error(`Erro ao buscar segmentos: ${error.message}`);

@@ -79,11 +79,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
-        .single()
+        .eq('user_id', userId)
+        .maybeSingle()
 
       if (error) {
         console.warn('Erro ao carregar profile:', error)
+        return null
+      }
+
+      if (!data) {
+        console.warn('Profile não encontrado para usuário:', userId)
         return null
       }
 
@@ -97,27 +102,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [profileCache])
 
-  const loadUserRole = useCallback(async (roleId: string): Promise<UserRole | null> => {
+  const loadUserRole = useCallback(async (userId: string): Promise<UserRole | null> => {
     // Verificar cache primeiro
-    if (roleCache.has(roleId)) {
-      return roleCache.get(roleId)!
+    if (roleCache.has(userId)) {
+      return roleCache.get(userId)!
     }
 
     try {
       const { data, error } = await supabase
         .from('user_roles')
         .select('*')
-        .eq('id', roleId)
-        .single()
+        .eq('user_id', userId)
+        .maybeSingle()
 
       if (error) {
         console.warn('Erro ao carregar role:', error)
         return null
       }
 
+      if (!data) {
+        console.warn('Role não encontrada para usuário:', userId)
+        return null
+      }
+
       const roleData = data as UserRole
       // Adicionar ao cache
-      setRoleCache(prev => new Map(prev).set(roleId, roleData))
+      setRoleCache(prev => new Map(prev).set(userId, roleData))
       return roleData
     } catch (err) {
       console.warn('Erro ao carregar role:', err)
@@ -136,7 +146,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('tenants')
         .select('*')
         .eq('id', userTenantId)
-        .is('deleted_at', null)
         .single()
 
       if (error) {
@@ -171,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('tenant_id')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (profileError) {
@@ -191,27 +200,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           cnpj,
           razao_social,
           nome_fantasia,
-          inscricao_estadual,
-          cnae_principal,
-          contact_email,
-          contact_phone,
-          whatsapp_number,
-          website_url,
-          endereco_logradouro,
-          endereco_numero,
-          endereco_complemento,
-          endereco_bairro,
-          endereco_cidade,
+          email,
+          telefone,
+          whatsapp,
           cep,
-          primary_color,
-          secondary_color,
-          font_family,
+          endereco,
+          numero,
+          complemento,
+          bairro,
+          cidade,
+          estado,
+          segmento_id,
+          cor_primaria,
+          cor_secundaria,
           logo_url,
-          favicon_url,
-          timezone,
-          locale,
-          plan_id,
-          status_id,
+          website,
+          descricao,
           created_at,
           updated_at
         `)
@@ -244,27 +248,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           cnpj: '',
           razao_social: '',
           nome_fantasia: null,
-          inscricao_estadual: null,
-          cnae_principal: null,
-          contact_email: '',
-          contact_phone: null,
-          whatsapp_number: null,
-          website_url: null,
-          endereco_logradouro: '',
-          endereco_numero: null,
-          endereco_complemento: null,
-          endereco_bairro: '',
-          endereco_cidade: '',
+          email: '',
+          telefone: null,
+          whatsapp: null,
           cep: '',
-          primary_color: '#4D2BFB',
-          secondary_color: '#03F9FF',
-          font_family: 'Neue Haas Unica',
+          endereco: '',
+          numero: null,
+          complemento: null,
+          bairro: '',
+          cidade: '',
+          estado: '',
+          segmento_id: null,
+          cor_primaria: '#4D2BFB',
+          cor_secundaria: '#03F9FF',
           logo_url: null,
-          favicon_url: null,
-          timezone: 'America/Sao_Paulo',
-          locale: 'pt-BR',
-          plan_id: '',
-          status_id: '',
+          website: null,
+          descricao: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         } as OrganizerData;
@@ -369,7 +368,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // Carregar tenant e role em paralelo se os IDs estão disponíveis
               const [tenantData, roleData] = await Promise.all([
                 profileData.tenant_id ? loadTenant(profileData.tenant_id) : Promise.resolve(null),
-                profileData.role ? loadUserRole(profileData.role) : Promise.resolve(null)
+                loadUserRole(currentSession.user.id)
               ])
 
               // Carregar dados do organizer

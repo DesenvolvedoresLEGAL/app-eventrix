@@ -16,43 +16,55 @@ export type Database = {
     Tables: {
       brazilian_states: {
         Row: {
+          capital: string | null
           code: string
           created_at: string
           id: string
           is_active: boolean | null
           name: string
+          region: string | null
         }
         Insert: {
+          capital?: string | null
           code: string
           created_at?: string
           id?: string
           is_active?: boolean | null
           name: string
+          region?: string | null
         }
         Update: {
+          capital?: string | null
           code?: string
           created_at?: string
           id?: string
           is_active?: boolean | null
           name?: string
+          region?: string | null
         }
         Relationships: []
       }
       business_segments: {
         Row: {
+          code: string | null
           created_at: string
+          descriptions: string | null
           id: string
           is_active: boolean | null
           name: string
         }
         Insert: {
+          code?: string | null
           created_at?: string
+          descriptions?: string | null
           id?: string
           is_active?: boolean | null
           name: string
         }
         Update: {
+          code?: string | null
           created_at?: string
+          descriptions?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
@@ -83,6 +95,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           last_name: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
           tenant_id: string | null
           updated_at: string
           user_id: string
@@ -96,6 +109,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           last_name?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           tenant_id?: string | null
           updated_at?: string
           user_id: string
@@ -109,6 +123,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           last_name?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           tenant_id?: string | null
           updated_at?: string
           user_id?: string
