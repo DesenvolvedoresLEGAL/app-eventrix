@@ -84,6 +84,43 @@ import MultiLanguageSupport from "./pages/MultiLanguageSupport";
 import GlobalTimezones from "./pages/GlobalTimezones";
 import UserManagement from "./pages/UserManagement";
 import SystemConfiguration from "./pages/SystemConfiguration";
+// New pages for missing routes
+import BilheteriaTypes from "./pages/BilheteriaTypes";
+import BilheteriaCupons from "./pages/BilheteriaCupons";
+import BilheteriaRetargeting from "./pages/BilheteriaRetargeting";
+import BilheteriaRelatorios from "./pages/BilheteriaRelatorios";
+import CaexPatrocinadores from "./pages/CaexPatrocinadores";
+import CaexManual from "./pages/CaexManual";
+import CaexContratos from "./pages/CaexContratos";
+import CaexStandsVirtuais from "./pages/CaexStandsVirtuais";
+import CaexMarketplace from "./pages/CaexMarketplace";
+import CaexRoi from "./pages/CaexRoi";
+import LinkaiMatchmaking from "./pages/LinkaiMatchmaking";
+import LinkaiSugestoes from "./pages/LinkaiSugestoes";
+import LinkaiReunioes from "./pages/LinkaiReunioes";
+import CredenciamentoMagicpass from "./pages/CredenciamentoMagicpass";
+import CredenciamentoMagicgates from "./pages/CredenciamentoMagicgates";
+import CredenciamentoSmartBadge from "./pages/CredenciamentoSmartBadge";
+import GamificacaoLeaderboards from "./pages/GamificacaoLeaderboards";
+import GamificacaoBadges from "./pages/GamificacaoBadges";
+import GamificacaoRecompensas from "./pages/GamificacaoRecompensas";
+import HibridaStreaming from "./pages/HibridaStreaming";
+import HibridaEnquetes from "./pages/HibridaEnquetes";
+import HibridaGravacoes from "./pages/HibridaGravacoes";
+import HibridaTranscricoes from "./pages/HibridaTranscricoes";
+import HibridaIntegracao from "./pages/HibridaIntegracao";
+import LegalaiValidadorStand from "./pages/LegalaiValidadorStand";
+import LegalclubDiscussoes from "./pages/LegalclubDiscussoes";
+import LegalclubConteudo from "./pages/LegalclubConteudo";
+import LegalclubWebinars from "./pages/LegalclubWebinars";
+import LegalclubMetricas from "./pages/LegalclubMetricas";
+import AcademicoSubmissao from "./pages/AcademicoSubmissao";
+import AcademicoRevisao from "./pages/AcademicoRevisao";
+import AcademicoPublicacoes from "./pages/AcademicoPublicacoes";
+import AcademicoMetricas from "./pages/AcademicoMetricas";
+import InternacionalMultilingue from "./pages/InternacionalMultilingue";
+import InternacionalMoedas from "./pages/InternacionalMoedas";
+import InternacionalTemplates from "./pages/InternacionalTemplates";
 import CommunicationNotifications from "./pages/CommunicationNotifications";
 import Finance from "./pages/Finance";
 import DynamicPricing from "./pages/DynamicPricing";
@@ -167,6 +204,10 @@ const App = () => (
             
             {/* Bilheteria Routes */}
             <Route path="/billing/overview" element={<BillingOverview />} />
+            <Route path="/bilheteria/tipos" element={<BilheteriaTypes />} />
+            <Route path="/bilheteria/cupons" element={<BilheteriaCupons />} />
+            <Route path="/bilheteria/retargeting" element={<BilheteriaRetargeting />} />
+            <Route path="/bilheteria/relatorios" element={<BilheteriaRelatorios />} />
             <Route path="/ticket-sales" element={<TicketSales />} />
             <Route path="/payment-gateway" element={<PaymentGateway />} />
             <Route path="/financial-reports" element={<FinancialReports />} />
@@ -174,6 +215,12 @@ const App = () => (
             
             {/* CAEX Routes */}
             <Route path="/caex/overview" element={<CaexOverview />} />
+            <Route path="/caex/patrocinadores" element={<CaexPatrocinadores />} />
+            <Route path="/caex/manual" element={<CaexManual />} />
+            <Route path="/caex/contratos" element={<CaexContratos />} />
+            <Route path="/caex/stands-virtuais" element={<CaexStandsVirtuais />} />
+            <Route path="/caex/marketplace" element={<CaexMarketplace />} />
+            <Route path="/caex/roi" element={<CaexRoi />} />
             <Route path="/sponsors" element={<Sponsors />} />
             <Route path="/exhibitor-manual" element={<ExhibitorManual />} />
             <Route path="/contracts" element={<Contracts />} />
@@ -186,11 +233,52 @@ const App = () => (
             
             {/* LinkAI Routes */}
             <Route path="/linkai/overview" element={<LinkAIOverview />} />
+            <Route path="/linkai/matchmaking" element={<LinkaiMatchmaking />} />
+            <Route path="/linkai/sugestoes" element={<LinkaiSugestoes />} />
+            <Route path="/linkai/reunioes" element={<LinkaiReunioes />} />
             <Route path="/intelligent-networking" element={<IntelligentNetworking />} />
             <Route path="/ai-recommendations" element={<AIRecommendations />} />
             <Route path="/connection-analytics" element={<ConnectionAnalytics />} />
             <Route path="/smart-matching" element={<SmartMatching />} />
             <Route path="/networking-insights" element={<NetworkingInsights />} />
+            
+            {/* Credenciamento Routes */}
+            <Route path="/credenciamento/overview" element={<AccessOverview />} />
+            <Route path="/credenciamento/magicpass" element={<CredenciamentoMagicpass />} />
+            <Route path="/credenciamento/magicgates" element={<CredenciamentoMagicgates />} />
+            <Route path="/credenciamento/smart-badge" element={<CredenciamentoSmartBadge />} />
+            
+            {/* Gamificação Routes */}
+            <Route path="/gamificacao/leaderboards" element={<GamificacaoLeaderboards />} />
+            <Route path="/gamificacao/badges" element={<GamificacaoBadges />} />
+            <Route path="/gamificacao/recompensas" element={<GamificacaoRecompensas />} />
+            
+            {/* Experiência Híbrida Routes */}
+            <Route path="/hibrida/streaming" element={<HibridaStreaming />} />
+            <Route path="/hibrida/enquetes" element={<HibridaEnquetes />} />
+            <Route path="/hibrida/gravacoes" element={<HibridaGravacoes />} />
+            <Route path="/hibrida/transcricoes" element={<HibridaTranscricoes />} />
+            <Route path="/hibrida/integracao" element={<HibridaIntegracao />} />
+            
+            {/* LEGAL AI Routes */}
+            <Route path="/legal-ai/validador-stand" element={<LegalaiValidadorStand />} />
+            
+            {/* LEGAL Club Routes */}
+            <Route path="/legal-club/discussoes" element={<LegalclubDiscussoes />} />
+            <Route path="/legal-club/conteudo" element={<LegalclubConteudo />} />
+            <Route path="/legal-club/webinars" element={<LegalclubWebinars />} />
+            <Route path="/legal-club/metricas" element={<LegalclubMetricas />} />
+            
+            {/* Acadêmico Routes */}
+            <Route path="/academico/submissao" element={<AcademicoSubmissao />} />
+            <Route path="/academico/revisao" element={<AcademicoRevisao />} />
+            <Route path="/academico/publicacoes" element={<AcademicoPublicacoes />} />
+            <Route path="/academico/metricas" element={<AcademicoMetricas />} />
+            
+            {/* Internacionalização Routes */}
+            <Route path="/internacional/multilingue" element={<InternacionalMultilingue />} />
+            <Route path="/internacional/moedas" element={<InternacionalMoedas />} />
+            <Route path="/internacional/templates" element={<InternacionalTemplates />} />
             
             {/* Credenciamento Routes */}
             <Route path="/access/overview" element={<AccessOverview />} />
