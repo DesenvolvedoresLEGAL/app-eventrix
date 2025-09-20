@@ -74,7 +74,9 @@ import {
   KeyRound,
   Nfc,
   MessageCircleHeart,
-  Phone
+  Phone,
+  LayoutDashboard,
+  FileAudio
 } from 'lucide-react';
 
 export const dashboardItem = { 
@@ -94,17 +96,6 @@ export const eventsItems = [
 ];
 
 export const menuGroups = [
-  // Eventos (manter atual)
-  {
-    id: 'events',
-    icon: <Calendar size={16} />,
-    label: 'Eventos',
-    priority: 'high' as const,
-    items: [
-      { icon: <Calendar size={16} />, label: 'Lista de Eventos', to: '/events' },
-      { icon: <Plus size={16} />, label: 'Novo Evento', to: '/events/new', highlighted: true, badge: 'Novo' },
-    ]
-  },
   // Bilheteria (NOVO módulo)
   {
     id: 'bilheteria',
@@ -118,69 +109,59 @@ export const menuGroups = [
       { icon: <Receipt size={16} />, label: 'Relatórios de receita', to: '/bilheteria/relatorios' },
     ]
   },
-  // CAEX (expandir atual)
+  // CAEX (reorganizado)
   {
     id: 'caex',
     icon: <Store size={16} />,
     label: 'CAEX',
     priority: 'high' as const,
     items: [
-      { icon: <FileText size={16} />, label: 'Manual do Expositor', to: '/caex/manual' },
-      { icon: <Bot size={16} />, label: 'Validador IA de Stand', to: '/caex/validador' },
-      { icon: <FileCheck size={16} />, label: 'Contratos', to: '/caex/contratos' },
-      { icon: <Monitor size={16} />, label: 'Estandes virtuais', to: '/caex/estandes-virtuais' },
-      { icon: <ShoppingCart size={16} />, label: 'Marketplace 365', to: '/caex/marketplace' },
-      { icon: <PieChart size={16} />, label: 'ROI dashboards', to: '/caex/roi' },
-      { icon: <Gift size={16} />, label: 'Patrocínios A-la-carte', to: '/caex/patrocinios' },
+      { icon: <LayoutDashboard size={16} />, label: 'Visão Geral', to: '/caex/overview' },
       { icon: <Building size={16} />, label: 'Expositores', to: '/exhibitors' },
       { icon: <Briefcase size={16} />, label: 'Fornecedores', to: '/suppliers' },
+      { icon: <Handshake size={16} />, label: 'Patrocinadores', to: '/caex/patrocinadores' },
+      { icon: <FileText size={16} />, label: 'Manual do Expositor', to: '/caex/manual' },
+      { icon: <FileCheck size={16} />, label: 'Contratos', to: '/caex/contratos' },
+      { icon: <Monitor size={16} />, label: 'Stands Virtuais', to: '/caex/stands-virtuais' },
+      { icon: <ShoppingCart size={16} />, label: 'Marketplace 365', to: '/caex/marketplace' },
+      { icon: <PieChart size={16} />, label: 'ROI Dashboard', to: '/caex/roi' },
     ]
   },
-  // Usuários (reorganizar atual)
-  {
-    id: 'users',
-    icon: <Users size={16} />,
-    label: 'Usuários',
-    priority: 'high' as const,
-    items: [
-      { icon: <Briefcase size={16} />, label: 'Fornecedores', to: '/suppliers' },
-      { icon: <Shield size={16} />, label: 'Permissões e Perfis', to: '/permissions' },
-      { icon: <UserPlus size={16} />, label: 'Staff', to: '/staff' },
-      { icon: <UserCheck size={16} />, label: 'Visitantes', to: '/visitors' },
-    ]
-  },
-  // Agenda (manter atual)
+  // Agenda (com visão geral)
   {
     id: 'agenda',
     icon: <Calendar size={16} />,
     label: 'Agenda',
     priority: 'high' as const,
     items: [
+      { icon: <LayoutDashboard size={16} />, label: 'Visão Geral', to: '/agenda/overview' },
       { icon: <Activity size={16} />, label: 'Atividades', to: '/activities' },
       { icon: <Presentation size={16} />, label: 'Palestras', to: '/lectures' },
       { icon: <MapPin size={16} />, label: 'Salas/Locais', to: '/venues' },
       { icon: <Target size={16} />, label: 'Trilhas', to: '/tracks' },
     ]
   },
-  // LinkAI (NOVO módulo)
+  // LinkAI (com visão geral)
   {
     id: 'linkai',
     icon: <Link size={16} />,
     label: 'LinkAI',
     priority: 'high' as const,
     items: [
+      { icon: <LayoutDashboard size={16} />, label: 'Visão Geral', to: '/linkai/overview' },
       { icon: <Network size={16} />, label: 'Matchmaking inteligente', to: '/linkai/matchmaking' },
       { icon: <Users2 size={16} />, label: 'Sugestões de conexões', to: '/linkai/sugestoes' },
       { icon: <CalendarIcon size={16} />, label: 'Agenda de reuniões 1-a-1', to: '/linkai/reunioes' },
     ]
   },
-  // Credenciamento & Acesso (expandir atual)
+  // Credenciamento & Acesso (com visão geral)
   {
     id: 'credentialing',
     icon: <QrCode size={16} />,
     label: 'Credenciamento & Acesso',
     priority: 'medium' as const,
     items: [
+      { icon: <LayoutDashboard size={16} />, label: 'Visão Geral', to: '/credenciamento/overview' },
       { icon: <Camera size={16} />, label: 'MagicPass (reconhecimento facial)', to: '/credenciamento/magicpass' },
       { icon: <KeyRound size={16} />, label: 'MagicGates (portais entrada/saída)', to: '/credenciamento/magicgates' },
       { icon: <Nfc size={16} />, label: 'Smart Badge NFC', to: '/credenciamento/smart-badge' },
@@ -201,7 +182,7 @@ export const menuGroups = [
       { icon: <Gift size={16} />, label: 'Recompensas', to: '/gamificacao/recompensas' },
     ]
   },
-  // Experiência Híbrida (NOVO módulo)
+  // Experiência Híbrida (com transcrições)
   {
     id: 'experiencia-hibrida',
     icon: <Video size={16} />,
@@ -211,6 +192,7 @@ export const menuGroups = [
       { icon: <Video size={16} />, label: 'Streaming integrado', to: '/hibrida/streaming' },
       { icon: <MessageCircle size={16} />, label: 'Enquetes e Q&A ao vivo', to: '/hibrida/enquetes' },
       { icon: <Play size={16} />, label: 'Gravações on-demand', to: '/hibrida/gravacoes' },
+      { icon: <FileAudio size={16} />, label: 'Transcrições', to: '/hibrida/transcricoes' },
       { icon: <Wifi size={16} />, label: 'Integração MagicPass/MagicGates', to: '/hibrida/integracao' },
     ]
   },
@@ -227,7 +209,7 @@ export const menuGroups = [
       { icon: <Globe size={16} />, label: 'Pages', to: '/marketing/pages' },
     ]
   },
-  // Comunicação (expandir atual)
+  // Comunicação (sem LinkAI)
   {
     id: 'communication',
     icon: <MessageSquare size={16} />,
@@ -236,10 +218,9 @@ export const menuGroups = [
     items: [
       { icon: <Bot size={16} />, label: 'HumanGPT', to: '/communication/humangpt' },
       { icon: <Bell size={16} />, label: 'Notificações', to: '/communication/notifications' },
-      { icon: <Link size={16} />, label: 'LinkAI (integração)', to: '/communication/linkai' },
     ]
   },
-  // LEGAL AI (manter com nome alterado)
+  // LEGAL AI (com validador de stand)
   {
     id: 'legal-ai',
     icon: <Zap size={16} />,
@@ -250,6 +231,7 @@ export const menuGroups = [
       { icon: <Eye size={16} />, label: 'Heatmap & Incident', to: '/heatmap' },
       { icon: <DollarSign size={16} />, label: 'Pricing Dinâmico', to: '/dynamic-pricing' },
       { icon: <Shield size={16} />, label: 'Validador IA', to: '/legal-ai' },
+      { icon: <Bot size={16} />, label: 'Validador IA de Stand', to: '/legal-ai/validador-stand' },
     ]
   },
   // Analytics & Relatórios (manter atual)
@@ -313,7 +295,7 @@ export const menuGroups = [
       { icon: <Puzzle size={16} />, label: 'Plugins', to: '/integrations' },
     ]
   },
-  // Configurações (manter atual)
+  // Configurações (com staff e permissões)
   {
     id: 'settings',
     icon: <Settings size={16} />,
@@ -324,6 +306,8 @@ export const menuGroups = [
       { icon: <Star size={16} />, label: 'Identidade Visual', to: '/settings/branding' },
       { icon: <Shield size={16} />, label: 'LGPD', to: '/settings/privacy' },
       { icon: <Users size={16} />, label: 'Permissões/Acesso', to: '/settings/permissions' },
+      { icon: <UserPlus size={16} />, label: 'Staff', to: '/staff' },
+      { icon: <Shield size={16} />, label: 'Permissões e Perfis', to: '/permissions' },
     ]
   },
   // Ajuda & Suporte (manter atual)
