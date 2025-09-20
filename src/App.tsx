@@ -67,6 +67,23 @@ import StreamingPlatform from "./pages/StreamingPlatform";
 import VirtualParticipation from "./pages/VirtualParticipation";
 import HybridInteractions from "./pages/HybridInteractions";
 import Transcriptions from "./pages/Transcriptions";
+// Additional new pages
+import GamificationOverview from "./pages/GamificationOverview";
+import PointsRewards from "./pages/PointsRewards";
+import ChallengesQuests from "./pages/ChallengesQuests";
+import GamificationAnalytics from "./pages/GamificationAnalytics";
+import LegalClubOverview from "./pages/LegalClubOverview";
+import SmartContracts from "./pages/SmartContracts";
+import ComplianceMonitor from "./pages/ComplianceMonitor";
+import AcademicOverview from "./pages/AcademicOverview";
+import CoursesPrograms from "./pages/CoursesPrograms";
+import CertificationsLearning from "./pages/CertificationsLearning";
+import LearningAnalytics from "./pages/LearningAnalytics";
+import InternationalOverview from "./pages/InternationalOverview";
+import MultiLanguageSupport from "./pages/MultiLanguageSupport";
+import GlobalTimezones from "./pages/GlobalTimezones";
+import UserManagement from "./pages/UserManagement";
+import SystemConfiguration from "./pages/SystemConfiguration";
 import CommunicationNotifications from "./pages/CommunicationNotifications";
 import Finance from "./pages/Finance";
 import DynamicPricing from "./pages/DynamicPricing";
@@ -184,6 +201,33 @@ const App = () => (
             <Route path="/virtual-participation" element={<VirtualParticipation />} />
             <Route path="/hybrid-interactions" element={<HybridInteractions />} />
             <Route path="/transcriptions" element={<Transcriptions />} />
+            
+            
+            {/* Gamificação Routes */}
+            <Route path="/gamification/overview" element={<GamificationOverview />} />
+            <Route path="/points-rewards" element={<PointsRewards />} />
+            <Route path="/challenges-quests" element={<ChallengesQuests />} />
+            <Route path="/gamification-analytics" element={<GamificationAnalytics />} />
+            
+            {/* LEGAL Club Routes */}
+            <Route path="/legal-club/overview" element={<LegalClubOverview />} />
+            <Route path="/smart-contracts" element={<SmartContracts />} />
+            <Route path="/compliance-monitor" element={<ComplianceMonitor />} />
+            
+            {/* Acadêmico Routes */}
+            <Route path="/academic/overview" element={<AcademicOverview />} />
+            <Route path="/courses-programs" element={<CoursesPrograms />} />
+            <Route path="/certifications-learning" element={<CertificationsLearning />} />
+            <Route path="/learning-analytics" element={<LearningAnalytics />} />
+            
+            {/* Internacionalização Routes */}
+            <Route path="/international/overview" element={<InternationalOverview />} />
+            <Route path="/multi-language" element={<MultiLanguageSupport />} />
+            <Route path="/global-timezones" element={<GlobalTimezones />} />
+            
+            {/* Configurações Routes */}
+            <Route path="/user-management" element={<UserManagement />} />
+            <Route path="/system-configuration" element={<SystemConfiguration />} />
             
             <Route path="/finance" element={<Finance />} />
             <Route path="/dynamic-pricing" element={<DynamicPricing />} />
